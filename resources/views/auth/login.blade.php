@@ -8,18 +8,20 @@
 </head>
 <body>
 
-    <div id="login-wrapper">
+    <div id="login-wrapper" class="min-h-screen flex items-center justify-center bg-gray-50">
+        <div class="card w-full max-w-sm">
+        <div class="card-body">
 
-        <h1>Autoescuela</h1>
-        <h2>Iniciar sesión</h2>
+        <h1 style="text-align:center; margin-bottom: var(--space-xs);">Autoescuela</h1>
+        <h2 style="text-align:center; margin-bottom: var(--space-l);">Iniciar sesión</h2>
 
         {{-- Contenedor de errores --}}
-        <div id="login-error" class="hidden"></div>
+        <div id="login-error" class="toast toast-error hidden" style="margin-bottom: var(--space-m);"></div>
 
         {{-- Formulario de login --}}
         <form id="login-form" novalidate>
 
-            <div>
+            <div class="input-group">
                 <label for="login-email">Email</label>
                 <input
                     type="email"
@@ -31,7 +33,7 @@
                 >
             </div>
 
-            <div>
+            <div class="input-group">
                 <label for="login-password">Contraseña</label>
                 <input
                     type="password"
@@ -46,10 +48,12 @@
             {{-- Spinner (oculto por defecto) --}}
             <div id="login-spinner" class="hidden">Cargando...</div>
 
-            <button type="submit" id="login-submit">Entrar</button>
+            <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg">Entrar</button>
 
         </form>
 
+        </div>{{-- /card-body --}}
+        </div>{{-- /card --}}
     </div>
 
     {{-- Orden de carga obligatorio: auth → api → login --}}

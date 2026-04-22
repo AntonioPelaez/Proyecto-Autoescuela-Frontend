@@ -50,9 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
             student: [
                 { label: 'Dashboard',        href: '/dashboard' },
                 { label: 'Disponibilidad',   href: '/student/availability' },
+                { label: 'Mis clases',       href: '/student/my-classes' },
             ],
             teacher: [
                 { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Mi agenda', href: '/teacher/bookings' },
             ],
         };
 

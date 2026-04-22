@@ -57,10 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		try {
 			clearMessage();
 
+			UI.setLoading(slotsContainer, true);
+
 			const towns = await Api.getTowns();
 			const selectedTown = towns.find((town) => town.id === Number(townId));
 
 			if (!selectedTown) {
+				UI.setLoading(slotsContainer, false);
 				showMessage('La población seleccionada no existe.', 'error');
 				return;
 			}
@@ -70,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const slots = await Api.getAvailabilitySlots(townId, date);
 			renderSlots(slots);
+			UI.setLoading(slotsContainer, false);
 
 			showMessage('Selección guardada correctamente.', 'success');
 		} catch (error) {
@@ -130,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		slotsContainer.innerHTML = sortedSlots
 			.map((slot) => {
-				const vehicle = slot.vehicle ? slot.vehicle : 'No asignado';
+				const vehicle = slot.vehicle ? slot.vehicle : 'Sin vehículo asignado';
 
 				return `
 					<div>

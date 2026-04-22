@@ -3,40 +3,37 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Mis clases - Autoescuela</title>
+	<title>Mi agenda - Autoescuela</title>
 	@vite(['resources/css/app.css'])
 </head>
 <body>
 
-	<div id="student-my-classes-page">
+	<div id="teacher-bookings-page">
 		<header>
-			<h1>Mis clases</h1>
+			<h1>Mi agenda</h1>
 			<a href="/dashboard">Volver al dashboard</a>
 		</header>
 
-		<div id="my-classes-message" class="hidden"></div>
+		<div id="teacher-bookings-message" class="hidden"></div>
 
 		<section>
-			<table id="my-classes-table" border="1">
+			<table id="teacher-bookings-table" border="1">
 				<thead>
 					<tr>
-						<th>Fecha</th>
-						<th>Hora</th>
-						<th>Profesor</th>
+						<th>Alumno</th>
+						<th>Población</th>
 						<th>Vehículo</th>
+						<th>Hora</th>
 						<th>Estado</th>
 					</tr>
 				</thead>
-				<tbody id="my-classes-table-body">
+				<tbody id="teacher-bookings-table-body">
 				</tbody>
 			</table>
 		</section>
 	</div>
 
-	@vite([
-		'resources/js/ui.js',
-		'resources/js/pages/student-my-classes.js',
-	])
+	@vite(['resources/js/pages/teacher-bookings.js'])
 
 </body>
 </html>

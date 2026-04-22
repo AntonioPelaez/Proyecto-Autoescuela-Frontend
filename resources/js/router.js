@@ -9,7 +9,7 @@ const Router = {
     _routes: {
         admin:   ['/dashboard', '/admin/towns', '/admin/professors', '/admin/vehicles'],
         student: ['/dashboard', '/student/availability', '/student/my-classes'],
-        teacher: ['/dashboard', '/teacher/classes'],
+        teacher: ['/dashboard', '/teacher/classes', '/teacher/bookings'],
     },
 
     // Ruta pública (no requiere sesión)

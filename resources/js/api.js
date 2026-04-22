@@ -323,4 +323,48 @@ const Api = {
         });
     },
 
+    getMyBookings() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const headers = _headers(true);
+
+                const bookings = [
+                    { id: 1, date: '2026-04-23', time: '09:00', professorName: 'Laura Gómez', vehicle: 'Toyota Yaris', status: 'confirmada' },
+                    { id: 2, date: '2026-04-24', time: '10:00', professorName: 'Carlos Martín', vehicle: 'Seat Ibiza', status: 'confirmada' },
+                    { id: 3, date: '2026-04-25', time: '08:30', professorName: 'Ana Ruiz', vehicle: '', status: 'confirmada' },
+                ];
+
+                const sorted = bookings.sort((a, b) => {
+                    const dateCompare = a.date.localeCompare(b.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return a.time.localeCompare(b.time);
+                });
+
+                resolve(_clone(sorted));
+            }, 200);
+        });
+    },
+
+    getTeacherBookings() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const headers = _headers(true);
+
+                const bookings = [
+                    { id: 1, studentName: 'Alumno Demo', townName: 'Madrid', vehicle: 'Toyota Yaris', time: '09:00', status: 'confirmada', date: '2026-04-23' },
+                    { id: 2, studentName: 'Otro Alumno', townName: 'Getafe', vehicle: 'Seat Ibiza', time: '11:30', status: 'confirmada', date: '2026-04-23' },
+                    { id: 3, studentName: 'Alumno Tercero', townName: 'Madrid', vehicle: 'Renault Clio', time: '10:00', status: 'confirmada', date: '2026-04-24' },
+                ];
+
+                const sorted = bookings.sort((a, b) => {
+                    const dateCompare = a.date.localeCompare(b.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return a.time.localeCompare(b.time);
+                });
+
+                resolve(_clone(sorted));
+            }, 200);
+        });
+    },
+
 };

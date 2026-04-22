@@ -48,6 +48,7 @@
 		'resources/js/auth.js',
 		'resources/js/router.js',
 		'resources/js/api.js',
+		'resources/js/ui.js',
 		'resources/js/pages/student-availability.js',
 	])
 

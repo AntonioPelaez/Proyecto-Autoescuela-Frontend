@@ -1,0 +1,1 @@
+<h1>Hola José, esto es una vista sin errores</h1>

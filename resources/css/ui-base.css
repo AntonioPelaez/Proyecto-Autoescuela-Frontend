@@ -1,0 +1,232 @@
+/* ═══════════════════════════════════════════════════
+   ui-base.css — Identidad visual global · Sprint UI 0
+   Solo variables, tipografía y layout base.
+   No modifica estructura HTML ni JS.
+   ═══════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   Variables globales
+   ───────────────────────────────────────────── */
+:root {
+    /* Paleta de colores */
+    --color-primary:       #2563eb;
+    --color-primary-light: #93c5fd;
+    --color-primary-dark:  #1e40af;
+    --color-secondary:     #64748b;
+    --color-bg:            #f1f5f9;
+    --color-surface:       #ffffff;
+    --color-border:        #e2e8f0;
+    --color-text:          #1e293b;
+    --color-text-light:    #64748b;
+    --color-success:       #16a34a;
+    --color-warning:       #d97706;
+    --color-error:         #dc2626;
+
+    /* Espaciados */
+    --space-xs:  4px;
+    --space-s:   8px;
+    --space-m:   16px;
+    --space-l:   24px;
+    --space-xl:  40px;
+
+    /* Radios */
+    --radius-s:  4px;
+    --radius-m:  8px;
+    --radius-l:  16px;
+
+    /* Sombras */
+    --shadow-s:  0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-m:  0 4px 12px rgba(0, 0, 0, 0.10);
+    --shadow-l:  0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Tamaños de componente */
+    --size-xs:   24px;
+    --size-s:    32px;
+    --size-m:    48px;
+    --size-l:    64px;
+}
+
+/* ─────────────────────────────────────────────
+   Base global (body y html)
+   ───────────────────────────────────────────── */
+html {
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
+body {
+    font-family: 'Figtree', system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    margin: 0;
+    padding: 0;
+}
+
+/* ─────────────────────────────────────────────
+   Tipografía global
+   ───────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-text);
+    margin-top: 0;
+    margin-bottom: var(--space-m);
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 1rem; }
+
+p {
+    margin-top: 0;
+    margin-bottom: var(--space-m);
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+}
+
+/* ─────────────────────────────────────────────
+   Layout base — contenedor
+   ───────────────────────────────────────────── */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-l);
+}
+
+/* ─────────────────────────────────────────────
+   Espaciados de sección globales
+   ───────────────────────────────────────────── */
+header {
+    margin-bottom: var(--space-l);
+    padding-bottom: var(--space-m);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    gap: var(--space-m);
+    flex-wrap: wrap;
+}
+
+section {
+    margin-bottom: var(--space-xl);
+}
+
+/* ─────────────────────────────────────────────
+   Tablas — base visual
+   ───────────────────────────────────────────── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-m);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-m);
+    overflow: hidden;
+    box-shadow: var(--shadow-s);
+}
+
+th {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--space-m) var(--space-m);
+    text-align: left;
+    border-bottom: 2px solid var(--color-border);
+}
+
+td {
+    padding: var(--space-m);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 0.9375rem;
+    vertical-align: middle;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* ─────────────────────────────────────────────
+   Mensajes de estado vacío
+   ───────────────────────────────────────────── */
+.hidden {
+    display: none !important;
+}
+
+/* ─────────────────────────────────────────────
+   Botones — base visual mínima
+   (sin tocar IDs ni clases funcionales)
+   ───────────────────────────────────────────── */
+button {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    border-radius: var(--radius-s);
+    padding: var(--space-s) var(--space-m);
+    border: 1px solid transparent;
+    transition: opacity 0.15s ease;
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   Inputs y formularios — base visual mínima
+   (sin tocar IDs ni estructura funcional)
+   ───────────────────────────────────────────── */
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: 0.9375rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-s);
+    padding: var(--space-s) var(--space-m);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    width: 100%;
+    transition: border-color 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: var(--space-xs);
+}

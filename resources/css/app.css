@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import './ui-base.css';
+@import './ui-components.css';
+@import './components.css';

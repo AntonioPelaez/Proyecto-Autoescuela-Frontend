@@ -1,0 +1,398 @@
+/* ═══════════════════════════════════════════════════
+   ui-components.css — Componentes reutilizables · Sprint UI 1
+   Depende de variables definidas en ui-base.css.
+   No modifica estructura HTML ni JS.
+   ═══════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   A. BOTONES
+   ───────────────────────────────────────────── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    padding: var(--space-s) var(--space-m);
+    border-radius: var(--radius-s);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+        color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.btn:focus-visible {
+    outline: 3px solid var(--color-primary-light);
+    outline-offset: 2px;
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Variantes */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.btn-primary:active {
+    background-color: var(--color-primary-dark);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-secondary);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.btn-secondary:active {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.10);
+}
+
+.btn-danger {
+    background-color: var(--color-error);
+    color: #ffffff;
+    border-color: var(--color-error);
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.btn-danger:active {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Tamaños */
+.btn-sm {
+    font-size: 0.8125rem;
+    padding: var(--space-xs) var(--space-s);
+    border-radius: var(--radius-s);
+}
+
+.btn-md {
+    font-size: 0.9375rem;
+    padding: var(--space-s) var(--space-m);
+}
+
+.btn-lg {
+    font-size: 1rem;
+    padding: var(--space-m) var(--space-l);
+    border-radius: var(--radius-m);
+}
+
+/* Ancho completo */
+.btn-full {
+    width: 100%;
+    display: flex;
+}
+
+/* Botón solo icono */
+.btn-icon {
+    padding: var(--space-s);
+    width: var(--size-s);
+    height: var(--size-s);
+}
+
+/* ─────────────────────────────────────────────
+   B. INPUTS
+   ───────────────────────────────────────────── */
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-m);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+textarea {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--color-text-light);
+    opacity: 1;
+}
+
+input:disabled,
+textarea:disabled {
+    background-color: var(--color-bg);
+    color: var(--color-text-light);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.input-error,
+input.input-error,
+textarea.input-error {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+.input-error-msg {
+    font-size: 0.8125rem;
+    color: var(--color-error);
+    margin-top: var(--space-xs);
+}
+
+/* ─────────────────────────────────────────────
+   C. SELECTS
+   ───────────────────────────────────────────── */
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-m) center;
+    padding-right: calc(var(--space-m) * 2.5);
+    height: var(--size-m);
+    cursor: pointer;
+}
+
+select:disabled {
+    background-color: var(--color-bg);
+    color: var(--color-text-light);
+    cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   D. TABLAS — Clases adicionales
+   (Los estilos base están en ui-base.css)
+   ───────────────────────────────────────────── */
+
+.table-striped tbody tr:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.table-hover tbody tr:hover td {
+    background-color: #eff6ff;
+    transition: background-color 0.1s ease;
+}
+
+.table-empty {
+    text-align: center;
+    color: var(--color-text-light);
+    font-style: italic;
+    padding: var(--space-xl) var(--space-m) !important;
+}
+
+/* ─────────────────────────────────────────────
+   E. TARJETAS (Cards)
+   ───────────────────────────────────────────── */
+
+.card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-s);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: var(--space-m) var(--space-l);
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+}
+
+.card-header h2,
+.card-header h3 {
+    margin-bottom: 0;
+    font-size: 1.125rem;
+}
+
+.card-body {
+    padding: var(--space-l);
+}
+
+.card-footer {
+    padding: var(--space-m) var(--space-l);
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-s);
+}
+
+/* ─────────────────────────────────────────────
+   F. TOASTS — Mejoras visuales
+   (Sin tocar IDs, estructura HTML ni JS)
+   ───────────────────────────────────────────── */
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; transform: translateY(8px); }
+}
+
+.toast {
+    box-shadow: var(--shadow-m);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    border-radius: var(--radius-m);
+    padding: var(--space-m) var(--space-l);
+    min-width: 240px;
+    max-width: 380px;
+    line-height: 1.5;
+    animation: toastSlideIn 0.3s ease-out forwards;
+}
+
+.toast-success {
+    background-color: #f0fdf4;
+    color: var(--color-success);
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid var(--color-success);
+}
+
+.toast-error {
+    background-color: #fef2f2;
+    color: var(--color-error);
+    border: 1px solid #fecaca;
+    border-left: 4px solid var(--color-error);
+}
+
+.toast-info {
+    background-color: #eff6ff;
+    color: var(--color-primary-dark);
+    border: 1px solid var(--color-primary-light);
+    border-left: 4px solid var(--color-primary);
+}
+
+/* ─────────────────────────────────────────────
+   G. LOADERS — Mejoras visuales
+   (Sin tocar IDs, estructura HTML ni JS)
+   ───────────────────────────────────────────── */
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-s);
+    padding: var(--space-xl) var(--space-m);
+    color: var(--color-text-light);
+    font-size: 0.9375rem;
+    font-weight: 500;
+}
+
+.loader::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────
+   H. MODALES — Estilos base
+   (No existen en HTML funcional aún; base para uso futuro)
+   ───────────────────────────────────────────── */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-m);
+}
+
+.modal {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-m);
+    box-shadow: var(--shadow-l);
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: var(--space-m) var(--space-l);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+}
+
+.modal-header h2,
+.modal-header h3 {
+    margin-bottom: 0;
+    font-size: 1.125rem;
+}
+
+.modal-body {
+    padding: var(--space-l);
+    flex: 1;
+}
+
+.modal-footer {
+    padding: var(--space-m) var(--space-l);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-s);
+}

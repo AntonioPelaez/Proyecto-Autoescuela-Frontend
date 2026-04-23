@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Disponibilidad - Autoescuela</title>
-	@vite(['resources/css/app.css'])
+	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
@@ -44,13 +44,11 @@
 		</section>
 	</div>
 
-	@vite([
-		'resources/js/auth.js',
-		'resources/js/router.js',
-		'resources/js/api.js',
-		'resources/js/ui.js',
-		'resources/js/pages/student-availability.js',
-	])
+	<script src="{{ asset('js/auth.js') }}" defer></script>
+	<script src="{{ asset('js/router.js') }}" defer></script>
+	<script src="{{ asset('js/api.js') }}" defer></script>
+	<script src="{{ asset('js/ui.js') }}" defer></script>
+	<script src="{{ asset('js/pages/student-availability.js') }}" defer></script>
 
 </body>
 </html>

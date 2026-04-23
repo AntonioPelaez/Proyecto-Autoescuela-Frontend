@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Autoescuela</title>
-    @vite(['resources/css/app.css'])
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
@@ -43,11 +43,9 @@
     </div>
 
     {{-- Orden de carga obligatorio: auth → router → dashboard --}}
-    @vite([
-        'resources/js/auth.js',
-        'resources/js/router.js',
-        'resources/js/pages/dashboard.js',
-    ])
+    <script src="{{ asset('js/auth.js') }}" defer></script>
+    <script src="{{ asset('js/router.js') }}" defer></script>
+    <script src="{{ asset('js/pages/dashboard.js') }}" defer></script>
 
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión – Autoescuela</title>
-    @vite(['resources/css/app.css'])
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
@@ -57,11 +57,9 @@
     </div>
 
     {{-- Orden de carga obligatorio: auth → api → login --}}
-    @vite([
-        'resources/js/auth.js',
-        'resources/js/api.js',
-        'resources/js/pages/login.js',
-    ])
+    <script src="{{ asset('js/auth.js') }}" defer></script>
+    <script src="{{ asset('js/api.js') }}" defer></script>
+    <script src="{{ asset('js/pages/login.js') }}" defer></script>
 
 </body>
 </html>

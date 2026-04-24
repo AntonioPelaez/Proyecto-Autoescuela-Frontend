@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 	Router.init();
 
+	const TABLE_BODY_ID = 'professors-table-body';
 	const form = document.getElementById('professor-form');
 	const professorIdInput = document.getElementById('professor-id');
 	const professorNameInput = document.getElementById('professor-name');
@@ -9,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const formTitle = document.getElementById('professor-form-title');
 	const cancelButton = document.getElementById('professor-cancel');
 	const createButton = document.getElementById('professor-create');
-	const tableBody = document.getElementById('professors-table-body');
+	const tableBody = document.getElementById(TABLE_BODY_ID);
 	const messageBox = document.getElementById('professors-message');
 
 	loadProfessors();
@@ -23,36 +24,36 @@ document.addEventListener('DOMContentLoaded', () => {
 		const active = professorActiveInput.checked;
 
 		if (!name || !email) {
-			showMessage('El nombre y el email son obligatorios.', 'error');
+			showState('error', 'El nombre y el email son obligatorios.');
 			return;
 		}
 
 		if (!isValidEmail(email)) {
-			showMessage('El email no es válido.', 'error');
+			showState('error', 'El email no es válido.');
 			return;
 		}
 
 		try {
-			clearMessage();
+			showState('', '');
 
 			if (id) {
 				await Api.updateProfessor(id, { name, email, active });
-				showMessage('Profesor actualizado correctamente.', 'success');
+				showState('success', 'Profesor actualizado correctamente.');
 			} else {
 				await Api.createProfessor({ name, email, active });
-				showMessage('Profesor creado correctamente.', 'success');
+				showState('success', 'Profesor creado correctamente.');
 			}
 
 			resetForm();
 			await loadProfessors();
 		} catch (error) {
-			showMessage(error.message || 'No se pudo guardar el profesor.', 'error');
+			showState('error', error.message || 'No se pudo guardar el profesor.');
 		}
 	});
 
 	cancelButton.addEventListener('click', () => {
 		resetForm();
-		clearMessage();
+		showState('', '');
 	});
 
 	createButton.addEventListener('click', () => {
@@ -69,14 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		const { action, id } = button.dataset;
 
 		try {
-			clearMessage();
+			showState('', '');
 
 			if (action === 'edit') {
 				const professors = await Api.getProfessors();
 				const professor = professors.find((item) => item.id === Number(id));
 
 				if (!professor) {
-					showMessage('El profesor no existe.', 'error');
+					showState('error', 'El profesor no existe.');
 					return;
 				}
 
@@ -92,48 +93,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (action === 'toggle') {
 				await Api.toggleProfessor(id);
-				showMessage('Estado del profesor actualizado.', 'success');
+				showState('success', 'Estado del profesor actualizado.');
 				await loadProfessors();
 			}
 		} catch (error) {
-			showMessage(error.message || 'No se pudo completar la acción.', 'error');
+			showState('error', error.message || 'No se pudo completar la acción.');
 		}
 	});
 
 	async function loadProfessors() {
+		UI.setLoading(TABLE_BODY_ID, true);
 		try {
 			const professors = await Api.getProfessors();
 			renderProfessors(professors);
 		} catch (error) {
-			showMessage(error.message || 'No se pudo cargar el listado.', 'error');
+			showState('error', error.message || 'No se pudo cargar el listado.');
+		} finally {
+			UI.setLoading(TABLE_BODY_ID, false);
 		}
 	}
 
 	function renderProfessors(professors) {
+		tableBody.replaceChildren();
+
 		if (!professors.length) {
-			tableBody.innerHTML = '<tr><td colspan="5">No hay profesores registrados.</td></tr>';
+			const row = document.createElement('tr');
+			row.className = 'table-empty';
+			const cell = document.createElement('td');
+			cell.colSpan = 5;
+			cell.textContent = 'No hay profesores registrados.';
+			row.appendChild(cell);
+			tableBody.appendChild(row);
 			return;
 		}
 
-		tableBody.innerHTML = professors
-			.map((professor) => {
-				const status = professor.active ? 'Activo' : 'Inactivo';
-				const toggleLabel = professor.active ? 'Desactivar' : 'Activar';
+		professors.forEach((professor) => {
+			const row = document.createElement('tr');
+			const status = professor.active ? 'Activo' : 'Inactivo';
+			const toggleLabel = professor.active ? 'Desactivar' : 'Activar';
 
-				return `
-					<tr>
-						<td>${professor.id}</td>
-						<td>${professor.name}</td>
-						<td>${professor.email}</td>
-						<td>${status}</td>
-						<td>
-							<button type="button" data-action="edit" data-id="${professor.id}">Editar</button>
-							<button type="button" data-action="toggle" data-id="${professor.id}">${toggleLabel}</button>
-						</td>
-					</tr>
-				`;
-			})
-			.join('');
+			const idCell = document.createElement('td');
+			idCell.textContent = String(professor.id);
+
+			const nameCell = document.createElement('td');
+			nameCell.textContent = professor.name;
+
+			const emailCell = document.createElement('td');
+			emailCell.textContent = professor.email;
+
+			const statusCell = document.createElement('td');
+			statusCell.textContent = status;
+
+			const actionsCell = document.createElement('td');
+
+			const editButton = document.createElement('button');
+			editButton.type = 'button';
+			editButton.className = 'btn btn-outline btn-sm';
+			editButton.dataset.action = 'edit';
+			editButton.dataset.id = String(professor.id);
+			editButton.textContent = 'Editar';
+
+			const toggleButton = document.createElement('button');
+			toggleButton.type = 'button';
+			toggleButton.className = 'btn btn-secondary btn-sm';
+			toggleButton.dataset.action = 'toggle';
+			toggleButton.dataset.id = String(professor.id);
+			toggleButton.textContent = toggleLabel;
+
+			actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
+			row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
+			tableBody.appendChild(row);
+		});
 	}
 
 	function resetForm() {
@@ -144,16 +174,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		cancelButton.classList.add('hidden');
 	}
 
-	function showMessage(message, type) {
-		messageBox.textContent = message;
-		messageBox.dataset.type = type;
-		messageBox.classList.remove('hidden');
-	}
+	function showState(type, message) {
+		if (!message) {
+			messageBox.textContent = '';
+			messageBox.className = 'hidden';
+			return;
+		}
 
-	function clearMessage() {
-		messageBox.textContent = '';
-		messageBox.dataset.type = '';
-		messageBox.classList.add('hidden');
+		messageBox.textContent = message;
+		messageBox.className = type === 'error' ? 'card card-body input-error' : 'card card-body';
+		if (typeof UI !== 'undefined' && UI.showToast) {
+			UI.showToast(message, type === 'error' ? 'error' : 'success');
+		}
 	}
 
 	function isValidEmail(email) {

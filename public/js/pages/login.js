@@ -12,7 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Redirige si ya está logueado
     if (Auth.isLogged()) {
-        _redirectByRole(Auth.getUser());
+        const currentUser = Auth.getUser();
+        if (currentUser) {
+            _redirectByRole(currentUser);
+        } else {
+            Auth.clearSession();
+        }
         return;
     }
 
@@ -35,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         _clearError();
         _setLoading(true);
+        Auth.clearSession();
 
         try {
             // 1. Llamar a la API de login
@@ -53,8 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             _redirectByRole(user);
 
         } catch (err) {
-            Auth.clearToken();
-            Auth.clearUser();
+            Auth.clearSession();
             _showError(err.message || 'Error al iniciar sesión.');
         } finally {
             _setLoading(false);
@@ -67,7 +72,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function _redirectByRole(user) {
         if (!user) return;
-        window.location.href = '/dashboard';
+
+        const roleHome = {
+            admin: '/admin/towns',
+            student: '/student/home',
+            teacher: '/teacher/home',
+        };
+
+        const target = roleHome[user.role] || '/dashboard';
+        window.location.replace(target);
     }
 
     function _isValidEmail(email) {

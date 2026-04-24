@@ -10,27 +10,29 @@ const UI = {
      * @param {string} type - 'success' | 'error' | 'info' (default: 'info')
      */
     showToast(message, type = 'info') {
+        const allowedTypes = ['success', 'error', 'info'];
+        const toastType = allowedTypes.includes(type) ? type : 'info';
+        const containerClass = 'toast-container';
+        let container = document.querySelector(`.${containerClass}`);
+
+        if (!container) {
+            container = document.createElement('div');
+            container.className = containerClass;
+            document.body.appendChild(container);
+        }
+
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        toast.className = `toast toast-${toastType}`;
         toast.textContent = message;
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
 
-        // Estilos inline mínimos para funcionalidad
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-            z-index: 9999;
-            animation: slideIn 0.3s ease-out;
-        `;
-
-        document.body.appendChild(toast);
+        container.appendChild(toast);
 
         // Auto-eliminar después de 3 segundos
         setTimeout(() => {
-            toast.remove();
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 200);
         }, 3000);
     },
 
@@ -44,29 +46,44 @@ const UI = {
         if (!container) return;
 
         let loader = container.querySelector('.loader');
+        const isTableBody = container.tagName === 'TBODY';
 
         if (isLoading) {
             // Crear loader si no existe
             if (!loader) {
-                loader = document.createElement('div');
-                loader.className = 'loader';
-                loader.textContent = 'Cargando...';
-                loader.style.cssText = `
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 20px;
-                    font-size: 14px;
-                    color: #666;
-                `;
                 container.innerHTML = '';
-                container.appendChild(loader);
+
+                if (isTableBody) {
+                    const row = document.createElement('tr');
+                    row.className = 'table-empty';
+
+                    const cell = document.createElement('td');
+                    cell.colSpan = 99;
+
+                    loader = document.createElement('div');
+                    loader.className = 'loader loader-md loader-table';
+                    loader.textContent = 'Cargando...';
+
+                    cell.appendChild(loader);
+                    row.appendChild(cell);
+                    container.appendChild(row);
+                } else {
+                    loader = document.createElement('div');
+                    loader.className = 'loader loader-md loader-inline';
+                    loader.textContent = 'Cargando...';
+                    container.appendChild(loader);
+                }
             }
-            loader.style.display = 'flex';
+            loader.style.display = 'inline-flex';
         } else {
             // Ocultar loader si existe
             if (loader) {
-                loader.style.display = 'none';
+                const row = loader.closest('tr');
+                if (row && row.parentElement === container) {
+                    row.remove();
+                } else {
+                    loader.remove();
+                }
             }
         }
     },

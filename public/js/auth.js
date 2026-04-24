@@ -1,38 +1,53 @@
 const Auth = {
 
+    _tokenKey: 'token',
+    _userKey: 'user',
+
     // --- Token ---
 
     setToken(token) {
-        localStorage.setItem('token', token);
+        localStorage.setItem(this._tokenKey, token);
     },
 
     getToken() {
-        return localStorage.getItem('token');
+        return localStorage.getItem(this._tokenKey);
     },
 
     clearToken() {
-        localStorage.removeItem('token');
+        localStorage.removeItem(this._tokenKey);
     },
 
     // --- Estado de sesión ---
 
     isLogged() {
-        return !!localStorage.getItem('token');
+        return !!this.getToken();
     },
 
     // --- Usuario ---
 
     setUser(user) {
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem(this._userKey, JSON.stringify(user));
     },
 
     getUser() {
-        const user = localStorage.getItem('user');
-        return user ? JSON.parse(user) : null;
+        const rawUser = localStorage.getItem(this._userKey);
+        if (!rawUser) return null;
+
+        try {
+            return JSON.parse(rawUser);
+        } catch (error) {
+            this.clearUser();
+            return null;
+        }
     },
 
     clearUser() {
-        localStorage.removeItem('user');
+        localStorage.removeItem(this._userKey);
+    },
+
+    clearSession() {
+        this.clearToken();
+        this.clearUser();
     },
 
 };

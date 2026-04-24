@@ -1,0 +1,1 @@
+{{-- Layout base genérico (sin uso directo, ver admin/student/teacher) --}}

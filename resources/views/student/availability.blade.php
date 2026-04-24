@@ -1,54 +1,55 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Disponibilidad - Autoescuela</title>
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-</head>
-<body>
+@extends('layouts.student')
 
-	<div id="student-availability-page">
-		<header>
-			<h1>Buscar disponibilidad</h1>
-			<a href="/dashboard">Volver al dashboard</a>
-		</header>
+@section('title', 'Disponibilidad')
+@section('main-id', 'student-availability-page')
 
-		<div id="availability-message" class="hidden"></div>
+@section('content')
+			<header>
+				<h1>Buscar disponibilidad</h1>
+				<a href="/student/home" class="btn btn-outline btn-sm">Volver al panel</a>
+			</header>
 
-		<section>
+			<div id="availability-message" class="hidden"></div>
+
+			<section class="card">
+				<div class="card-header">
+					<h2>Buscar huecos</h2>
+				</div>
+				<div class="card-body">
 			<form id="availability-form" novalidate>
-				<div>
-					<label for="availability-town">Población</label>
-					<select id="availability-town" name="town" required>
+				<div class="input-group">
+					<label class="input-label" for="availability-town">Población</label>
+					<select id="availability-town" name="town" class="input" required>
 						<option value="">Selecciona una población</option>
 					</select>
 				</div>
 
-				<div>
-					<label for="availability-date">Fecha</label>
+				<div class="input-group">
+					<label class="input-label" for="availability-date">Fecha</label>
 					<input
 						type="date"
 						id="availability-date"
 						name="date"
+						class="input"
 						required
 					>
 				</div>
 
-				<button type="submit" id="availability-submit">Buscar</button>
+				<button type="submit" id="availability-submit" class="btn btn-primary">Buscar</button>
 			</form>
-		</section>
+				</div>
+			</section>
 
-		<section>
+			<section class="card">
+				<div class="card-header">
+					<h2>Resultados</h2>
+				</div>
+				<div class="card-body">
 			<div id="availability-selection-status"></div>
-		</section>
-	</div>
+				</div>
+			</section>
+@endsection
 
-	<script src="{{ asset('js/auth.js') }}" defer></script>
-	<script src="{{ asset('js/router.js') }}" defer></script>
-	<script src="{{ asset('js/api.js') }}" defer></script>
-	<script src="{{ asset('js/ui.js') }}" defer></script>
+@section('scripts')
 	<script src="{{ asset('js/pages/student-availability.js') }}" defer></script>
-
-</body>
-</html>
+@endsection

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookings = await Api.getMyBookings();
             _renderClasses(bookings);
         } catch (error) {
-            _showMessage('Error al cargar tus clases: ' + error.message, true);
+            _showState('error', 'Error al cargar tus clases: ' + error.message);
         } finally {
             UI.setLoading('my-classes-table-body', false);
         }
@@ -29,32 +29,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('my-classes-table-body');
         if (!tbody) return;
 
+        tbody.replaceChildren();
+
         if (bookings.length === 0) {
-            _showMessage('No tienes clases reservadas.', false);
-            tbody.innerHTML = '';
+            _showState('success', 'No tienes clases reservadas.');
             return;
         }
 
-        tbody.innerHTML = bookings
-            .map(booking => `
-                <tr>
-                    <td>${booking.date}</td>
-                    <td>${booking.time}</td>
-                    <td>${booking.professorName}</td>
-                    <td>${booking.vehicle || 'Sin vehículo asignado'}</td>
-                    <td>${booking.status}</td>
-                </tr>
-            `)
-            .join('');
+        bookings.forEach((booking) => {
+            const row = document.createElement('tr');
+            row.append(
+                _createCell(booking.date),
+                _createCell(booking.time),
+                _createCell(booking.professorName),
+                _createCell(booking.vehicle || 'Sin vehículo asignado'),
+                _createCell(booking.status)
+            );
+            tbody.appendChild(row);
+        });
+
+        _showState('success', 'Clases cargadas correctamente.');
     }
 
-    function _showMessage(text, isError) {
+    function _showState(type, text) {
         const msg = document.getElementById('my-classes-message');
         if (!msg) return;
 
+        if (!text) {
+            msg.textContent = '';
+            msg.className = 'hidden';
+            return;
+        }
+
         msg.textContent = text;
-        msg.className = isError ? 'error' : 'success';
-        msg.classList.remove('hidden');
+        msg.className = type === 'error' ? 'card card-body input-error' : 'card card-body';
+        if (typeof UI !== 'undefined' && UI.showToast) {
+            UI.showToast(text, type === 'error' ? 'error' : 'success');
+        }
+    }
+
+    function _createCell(text) {
+        const cell = document.createElement('td');
+        cell.textContent = String(text || '-');
+        return cell;
     }
 
 });

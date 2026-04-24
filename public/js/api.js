@@ -56,6 +56,44 @@ function _findProfessor(id) {
     return _professors.find(professor => professor.id === Number(id));
 }
 
+function _restoreCurrentUserFromStorage() {
+    if (_currentUser) {
+        return _currentUser;
+    }
+
+    const rawUser = localStorage.getItem('user');
+    if (!rawUser) {
+        return null;
+    }
+
+    try {
+        const parsed = JSON.parse(rawUser);
+        const matched = _users.find(
+            user => user.email === parsed?.email && user.role === parsed?.role
+        );
+
+        if (matched) {
+            _currentUser = matched;
+            return _currentUser;
+        }
+    } catch (error) {
+        return null;
+    }
+
+    return null;
+}
+
+function _requireSession(headers) {
+    const hasAuthHeader = Boolean(headers?.Authorization);
+    const currentUser = _restoreCurrentUserFromStorage();
+
+    if (!hasAuthHeader || !currentUser) {
+        throw new Error('No hay sesión activa.');
+    }
+
+    return currentUser;
+}
+
 // ─────────────────────────────────────────────
 // Capa API
 // ─────────────────────────────────────────────
@@ -98,25 +136,30 @@ const Api = {
     getMe() {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                // Cabeceras con token (estructura preparada para la API real)
-                const headers = _headers(true);
+                try {
+                    // Cabeceras con token (estructura preparada para la API real)
+                    const headers = _headers(true);
+                    const currentUser = _requireSession(headers);
 
-                if (!_currentUser) {
-                    reject(new Error('No hay sesión activa.'));
-                    return;
+                    const { password, ...safeUser } = currentUser;
+                    resolve(safeUser);
+                } catch (error) {
+                    reject(error);
                 }
-
-                const { password, ...safeUser } = _currentUser;
-                resolve(safeUser);
             }, 200);
         });
     },
 
     getTowns() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                resolve(_clone(_towns));
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    resolve(_clone(_towns));
+                } catch (error) {
+                    reject(error);
+                }
             }, 200);
         });
     },
@@ -124,22 +167,27 @@ const Api = {
     createTown(data) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const name = data?.name?.trim();
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const name = data?.name?.trim();
 
-                if (!name) {
-                    reject(new Error('El nombre de la población es obligatorio.'));
-                    return;
+                    if (!name) {
+                        reject(new Error('El nombre de la población es obligatorio.'));
+                        return;
+                    }
+
+                    const town = {
+                        id: _nextId(_towns),
+                        name,
+                        active: true,
+                    };
+
+                    _towns.push(town);
+                    resolve(_clone(town));
+                } catch (error) {
+                    reject(error);
                 }
-
-                const town = {
-                    id: _nextId(_towns),
-                    name,
-                    active: true,
-                };
-
-                _towns.push(town);
-                resolve(_clone(town));
             }, 200);
         });
     },
@@ -147,22 +195,27 @@ const Api = {
     updateTown(id, data) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const town = _findTown(id);
-                const name = data?.name?.trim();
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const town = _findTown(id);
+                    const name = data?.name?.trim();
 
-                if (!town) {
-                    reject(new Error('La población no existe.'));
-                    return;
+                    if (!town) {
+                        reject(new Error('La población no existe.'));
+                        return;
+                    }
+
+                    if (!name) {
+                        reject(new Error('El nombre de la población es obligatorio.'));
+                        return;
+                    }
+
+                    town.name = name;
+                    resolve(_clone(town));
+                } catch (error) {
+                    reject(error);
                 }
-
-                if (!name) {
-                    reject(new Error('El nombre de la población es obligatorio.'));
-                    return;
-                }
-
-                town.name = name;
-                resolve(_clone(town));
             }, 200);
         });
     },
@@ -170,25 +223,35 @@ const Api = {
     toggleTown(id) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const town = _findTown(id);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const town = _findTown(id);
 
-                if (!town) {
-                    reject(new Error('La población no existe.'));
-                    return;
+                    if (!town) {
+                        reject(new Error('La población no existe.'));
+                        return;
+                    }
+
+                    town.active = !town.active;
+                    resolve(_clone(town));
+                } catch (error) {
+                    reject(error);
                 }
-
-                town.active = !town.active;
-                resolve(_clone(town));
             }, 200);
         });
     },
 
     getProfessors() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                resolve(_clone(_professors));
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    resolve(_clone(_professors));
+                } catch (error) {
+                    reject(error);
+                }
             }, 200);
         });
     },
@@ -196,30 +259,35 @@ const Api = {
     createProfessor(data) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const name = data?.name?.trim();
-                const email = data?.email?.trim();
-                const active = Boolean(data?.active);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const name = data?.name?.trim();
+                    const email = data?.email?.trim();
+                    const active = Boolean(data?.active);
 
-                if (!name || !email) {
-                    reject(new Error('El nombre y el email son obligatorios.'));
-                    return;
+                    if (!name || !email) {
+                        reject(new Error('El nombre y el email son obligatorios.'));
+                        return;
+                    }
+
+                    if (!_isValidEmail(email)) {
+                        reject(new Error('El email no es válido.'));
+                        return;
+                    }
+
+                    const professor = {
+                        id: _nextId(_professors),
+                        name,
+                        email,
+                        active,
+                    };
+
+                    _professors.push(professor);
+                    resolve(_clone(professor));
+                } catch (error) {
+                    reject(error);
                 }
-
-                if (!_isValidEmail(email)) {
-                    reject(new Error('El email no es válido.'));
-                    return;
-                }
-
-                const professor = {
-                    id: _nextId(_professors),
-                    name,
-                    email,
-                    active,
-                };
-
-                _professors.push(professor);
-                resolve(_clone(professor));
             }, 200);
         });
     },
@@ -227,31 +295,36 @@ const Api = {
     updateProfessor(id, data) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const professor = _findProfessor(id);
-                const name = data?.name?.trim();
-                const email = data?.email?.trim();
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const professor = _findProfessor(id);
+                    const name = data?.name?.trim();
+                    const email = data?.email?.trim();
 
-                if (!professor) {
-                    reject(new Error('El profesor no existe.'));
-                    return;
+                    if (!professor) {
+                        reject(new Error('El profesor no existe.'));
+                        return;
+                    }
+
+                    if (!name || !email) {
+                        reject(new Error('El nombre y el email son obligatorios.'));
+                        return;
+                    }
+
+                    if (!_isValidEmail(email)) {
+                        reject(new Error('El email no es válido.'));
+                        return;
+                    }
+
+                    professor.name = name;
+                    professor.email = email;
+                    professor.active = Boolean(data?.active);
+
+                    resolve(_clone(professor));
+                } catch (error) {
+                    reject(error);
                 }
-
-                if (!name || !email) {
-                    reject(new Error('El nombre y el email son obligatorios.'));
-                    return;
-                }
-
-                if (!_isValidEmail(email)) {
-                    reject(new Error('El email no es válido.'));
-                    return;
-                }
-
-                professor.name = name;
-                professor.email = email;
-                professor.active = Boolean(data?.active);
-
-                resolve(_clone(professor));
             }, 200);
         });
     },
@@ -259,39 +332,49 @@ const Api = {
     toggleProfessor(id) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
-                const professor = _findProfessor(id);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
+                    const professor = _findProfessor(id);
 
-                if (!professor) {
-                    reject(new Error('El profesor no existe.'));
-                    return;
+                    if (!professor) {
+                        reject(new Error('El profesor no existe.'));
+                        return;
+                    }
+
+                    professor.active = !professor.active;
+                    resolve(_clone(professor));
+                } catch (error) {
+                    reject(error);
                 }
-
-                professor.active = !professor.active;
-                resolve(_clone(professor));
             }, 200);
         });
     },
 
     getAvailabilitySlots(townId, date) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
 
-                const slots = [
-                    { id: 1, townId: 1, date: '2026-04-23', time: '09:00', professorName: 'Laura Gómez', vehicle: 'Toyota Yaris' },
-                    { id: 2, townId: 1, date: '2026-04-23', time: '11:30', professorName: 'Carlos Martín', vehicle: 'Seat Ibiza' },
-                    { id: 3, townId: 1, date: '2026-04-24', time: '10:00', professorName: 'Laura Gómez' },
-                    { id: 4, townId: 2, date: '2026-04-23', time: '08:30', professorName: 'Ana Ruiz', vehicle: 'Renault Clio' },
-                    { id: 5, townId: 2, date: '2026-04-23', time: '12:00', professorName: 'Carlos Martín' },
-                    { id: 6, townId: 2, date: '2026-04-24', time: '10:30', professorName: 'Ana Ruiz', vehicle: 'Peugeot 208' },
-                ];
+                    const slots = [
+                        { id: 1, townId: 1, date: '2026-04-23', time: '09:00', professorName: 'Laura Gómez', vehicle: 'Toyota Yaris' },
+                        { id: 2, townId: 1, date: '2026-04-23', time: '11:30', professorName: 'Carlos Martín', vehicle: 'Seat Ibiza' },
+                        { id: 3, townId: 1, date: '2026-04-24', time: '10:00', professorName: 'Laura Gómez' },
+                        { id: 4, townId: 2, date: '2026-04-23', time: '08:30', professorName: 'Ana Ruiz', vehicle: 'Renault Clio' },
+                        { id: 5, townId: 2, date: '2026-04-23', time: '12:00', professorName: 'Carlos Martín' },
+                        { id: 6, townId: 2, date: '2026-04-24', time: '10:30', professorName: 'Ana Ruiz', vehicle: 'Peugeot 208' },
+                    ];
 
-                const filtered = slots
-                    .filter((slot) => slot.townId === Number(townId) && slot.date === date)
-                    .sort((a, b) => a.time.localeCompare(b.time));
+                    const filtered = slots
+                        .filter((slot) => slot.townId === Number(townId) && slot.date === date)
+                        .sort((a, b) => a.time.localeCompare(b.time));
 
-                resolve(_clone(filtered));
+                    resolve(_clone(filtered));
+                } catch (error) {
+                    reject(error);
+                }
             }, 200);
         });
     },
@@ -299,70 +382,85 @@ const Api = {
     createBooking(slotId) {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
 
-                const availableSlotIds = [1, 2, 3, 4, 5, 6];
-                const normalizedSlotId = Number(slotId);
+                    const availableSlotIds = [1, 2, 3, 4, 5, 6];
+                    const normalizedSlotId = Number(slotId);
 
-                if (!availableSlotIds.includes(normalizedSlotId)) {
-                    reject(new Error('El hueco seleccionado no existe.'));
-                    return;
+                    if (!availableSlotIds.includes(normalizedSlotId)) {
+                        reject(new Error('El hueco seleccionado no existe.'));
+                        return;
+                    }
+
+                    // Simula concurrencia en algunos huecos.
+                    if (normalizedSlotId % 2 === 0) {
+                        reject(new Error('Este hueco ya ha sido reservado por otro alumno.'));
+                        return;
+                    }
+
+                    resolve({
+                        bookingId: 'booking-' + normalizedSlotId + '-' + Date.now(),
+                        slotId: normalizedSlotId,
+                    });
+                } catch (error) {
+                    reject(error);
                 }
-
-                // Simula concurrencia en algunos huecos.
-                if (normalizedSlotId % 2 === 0) {
-                    reject(new Error('Este hueco ya ha sido reservado por otro alumno.'));
-                    return;
-                }
-
-                resolve({
-                    bookingId: 'booking-' + normalizedSlotId + '-' + Date.now(),
-                    slotId: normalizedSlotId,
-                });
             }, 400);
         });
     },
 
     getMyBookings() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
 
-                const bookings = [
-                    { id: 1, date: '2026-04-23', time: '09:00', professorName: 'Laura Gómez', vehicle: 'Toyota Yaris', status: 'confirmada' },
-                    { id: 2, date: '2026-04-24', time: '10:00', professorName: 'Carlos Martín', vehicle: 'Seat Ibiza', status: 'confirmada' },
-                    { id: 3, date: '2026-04-25', time: '08:30', professorName: 'Ana Ruiz', vehicle: '', status: 'confirmada' },
-                ];
+                    const bookings = [
+                        { id: 1, date: '2026-04-23', time: '09:00', professorName: 'Laura Gómez', vehicle: 'Toyota Yaris', status: 'confirmada' },
+                        { id: 2, date: '2026-04-24', time: '10:00', professorName: 'Carlos Martín', vehicle: 'Seat Ibiza', status: 'confirmada' },
+                        { id: 3, date: '2026-04-25', time: '08:30', professorName: 'Ana Ruiz', vehicle: '', status: 'confirmada' },
+                    ];
 
-                const sorted = bookings.sort((a, b) => {
-                    const dateCompare = a.date.localeCompare(b.date);
-                    if (dateCompare !== 0) return dateCompare;
-                    return a.time.localeCompare(b.time);
-                });
+                    const sorted = bookings.sort((a, b) => {
+                        const dateCompare = a.date.localeCompare(b.date);
+                        if (dateCompare !== 0) return dateCompare;
+                        return a.time.localeCompare(b.time);
+                    });
 
-                resolve(_clone(sorted));
+                    resolve(_clone(sorted));
+                } catch (error) {
+                    reject(error);
+                }
             }, 200);
         });
     },
 
     getTeacherBookings() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const headers = _headers(true);
+                try {
+                    const headers = _headers(true);
+                    _requireSession(headers);
 
-                const bookings = [
-                    { id: 1, studentName: 'Alumno Demo', townName: 'Madrid', vehicle: 'Toyota Yaris', time: '09:00', status: 'confirmada', date: '2026-04-23' },
-                    { id: 2, studentName: 'Otro Alumno', townName: 'Getafe', vehicle: 'Seat Ibiza', time: '11:30', status: 'confirmada', date: '2026-04-23' },
-                    { id: 3, studentName: 'Alumno Tercero', townName: 'Madrid', vehicle: 'Renault Clio', time: '10:00', status: 'confirmada', date: '2026-04-24' },
-                ];
+                    const bookings = [
+                        { id: 1, studentName: 'Alumno Demo', townName: 'Madrid', vehicle: 'Toyota Yaris', time: '09:00', status: 'confirmada', date: '2026-04-23' },
+                        { id: 2, studentName: 'Otro Alumno', townName: 'Getafe', vehicle: 'Seat Ibiza', time: '11:30', status: 'confirmada', date: '2026-04-23' },
+                        { id: 3, studentName: 'Alumno Tercero', townName: 'Madrid', vehicle: 'Renault Clio', time: '10:00', status: 'confirmada', date: '2026-04-24' },
+                    ];
 
-                const sorted = bookings.sort((a, b) => {
-                    const dateCompare = a.date.localeCompare(b.date);
-                    if (dateCompare !== 0) return dateCompare;
-                    return a.time.localeCompare(b.time);
-                });
+                    const sorted = bookings.sort((a, b) => {
+                        const dateCompare = a.date.localeCompare(b.date);
+                        if (dateCompare !== 0) return dateCompare;
+                        return a.time.localeCompare(b.time);
+                    });
 
-                resolve(_clone(sorted));
+                    resolve(_clone(sorted));
+                } catch (error) {
+                    reject(error);
+                }
             }, 200);
         });
     },

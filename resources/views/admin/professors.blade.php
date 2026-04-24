@@ -1,51 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Profesores - Autoescuela</title>
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-</head>
-<body>
+@extends('layouts.admin')
 
-	<div id="admin-professors-page">
-		<header>
-			<h1>Gestión de profesores</h1>
-			<a href="/dashboard">Volver al dashboard</a>
-		</header>
+@section('title', 'Profesores')
+@section('main-id', 'admin-professors-page')
 
-		<div id="professors-message" class="hidden"></div>
+@section('content')
+			<header>
+				<h1>Gestión de profesores</h1>
+				<a href="/dashboard" class="btn btn-outline btn-sm">Ir al panel</a>
+			</header>
 
-		<section>
-			<h2 id="professor-form-title">Crear profesor</h2>
+			<div id="professors-message" class="hidden"></div>
+
+			<section class="card">
+			<div class="card-header">
+				<h2 id="professor-form-title">Crear profesor</h2>
+			</div>
+			<div class="card-body">
 
 			<form id="professor-form" novalidate>
 				<input type="hidden" id="professor-id" name="id">
 
-				<div>
-					<label for="professor-name">Nombre</label>
+				<div class="input-group">
+					<label class="input-label" for="professor-name">Nombre</label>
 					<input
 						type="text"
 						id="professor-name"
 						name="name"
+						class="input"
 						placeholder="Nombre del profesor"
 						required
 					>
 				</div>
 
-				<div>
-					<label for="professor-email">Email</label>
+				<div class="input-group">
+					<label class="input-label" for="professor-email">Email</label>
 					<input
 						type="email"
 						id="professor-email"
 						name="email"
+						class="input"
 						placeholder="correo@autoescuela.com"
 						required
 					>
 				</div>
 
-				<div>
-					<label for="professor-active">Activo</label>
+				<div class="input-group">
+					<label class="input-label" for="professor-active">Activo</label>
 					<input
 						type="checkbox"
 						id="professor-active"
@@ -53,18 +53,22 @@
 					>
 				</div>
 
-				<button type="submit" id="professor-submit">Guardar</button>
-				<button type="button" id="professor-cancel" class="hidden">Cancelar edición</button>
+				<div class="table-actions">
+					<button type="submit" id="professor-submit" class="btn btn-primary">Guardar</button>
+					<button type="button" id="professor-cancel" class="btn btn-outline hidden">Cancelar edición</button>
+				</div>
 			</form>
-		</section>
-
-		<section>
-			<div>
-				<h2>Listado de profesores</h2>
-				<button type="button" id="professor-create">Crear</button>
 			</div>
+			</section>
 
-			<table id="professors-table" border="1">
+			<section class="card">
+			<div class="card-header">
+				<h2>Listado de profesores</h2>
+				<button type="button" id="professor-create" class="btn btn-secondary btn-sm">Crear</button>
+			</div>
+			<div class="card-body table-wrapper">
+
+			<table id="professors-table" class="table table-striped table-hover">
 				<thead>
 					<tr>
 						<th>ID</th>
@@ -77,13 +81,10 @@
 				<tbody id="professors-table-body">
 				</tbody>
 			</table>
-		</section>
-	</div>
+			</div>
+			</section>
+@endsection
 
-	<script src="{{ asset('js/auth.js') }}" defer></script>
-	<script src="{{ asset('js/router.js') }}" defer></script>
-	<script src="{{ asset('js/api.js') }}" defer></script>
+@section('scripts')
 	<script src="{{ asset('js/pages/admin-professors.js') }}" defer></script>
-
-</body>
-</html>
+@endsection

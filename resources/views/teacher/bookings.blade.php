@@ -1,23 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Mi agenda - Autoescuela</title>
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-</head>
-<body>
+@extends('layouts.teacher')
 
-	<div id="teacher-bookings-page">
-		<header>
-			<h1>Mi agenda</h1>
-			<a href="/dashboard">Volver al dashboard</a>
-		</header>
+@section('title', 'Mi agenda')
+@section('main-id', 'teacher-bookings-page')
 
-		<div id="teacher-bookings-message" class="hidden"></div>
+@section('content')
+			<header>
+				<h1>Mi agenda</h1>
+				<a href="/teacher/home" class="btn btn-outline btn-sm">Volver al panel</a>
+			</header>
 
-		<section>
-			<table id="teacher-bookings-table" border="1">
+			<div id="teacher-bookings-message" class="hidden"></div>
+
+			<section class="card">
+				<div class="card-header">
+					<h2>Agenda de clases</h2>
+				</div>
+				<div class="card-body table-wrapper">
+			<table id="teacher-bookings-table" class="table table-striped table-hover">
 				<thead>
 					<tr>
 						<th>Alumno</th>
@@ -30,10 +29,10 @@
 				<tbody id="teacher-bookings-table-body">
 				</tbody>
 			</table>
-		</section>
-	</div>
+				</div>
+			</section>
+@endsection
 
+@section('scripts')
 	<script src="{{ asset('js/pages/teacher-bookings.js') }}" defer></script>
-
-</body>
-</html>
+@endsection

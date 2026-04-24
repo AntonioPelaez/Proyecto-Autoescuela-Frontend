@@ -1,23 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Mis clases - Autoescuela</title>
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
-</head>
-<body>
+@extends('layouts.student')
 
-	<div id="student-my-classes-page">
-		<header>
-			<h1>Mis clases</h1>
-			<a href="/dashboard">Volver al dashboard</a>
-		</header>
+@section('title', 'Mis clases')
+@section('main-id', 'student-my-classes-page')
 
-		<div id="my-classes-message" class="hidden"></div>
+@section('content')
+			<header>
+				<h1>Mis clases</h1>
+				<a href="/student/home" class="btn btn-outline btn-sm">Volver al panel</a>
+			</header>
 
-		<section>
-			<table id="my-classes-table" border="1">
+			<div id="my-classes-message" class="hidden"></div>
+
+			<section class="card">
+				<div class="card-header">
+					<h2>Historial de clases</h2>
+				</div>
+				<div class="card-body table-wrapper">
+			<table id="my-classes-table" class="table table-striped table-hover">
 				<thead>
 					<tr>
 						<th>Fecha</th>
@@ -30,11 +29,10 @@
 				<tbody id="my-classes-table-body">
 				</tbody>
 			</table>
-		</section>
-	</div>
+				</div>
+			</section>
+@endsection
 
-	<script src="{{ asset('js/ui.js') }}" defer></script>
+@section('scripts')
 	<script src="{{ asset('js/pages/student-my-classes.js') }}" defer></script>
-
-</body>
-</html>
+@endsection

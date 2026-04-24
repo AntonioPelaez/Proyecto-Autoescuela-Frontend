@@ -4,41 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Autoescuela</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
-    <div id="app-layout">
+    <div class="container role-layout">
 
-        {{-- ── Cabecera ── --}}
-        <header id="app-header">
-            <span>Autoescuela</span>
-            <div id="header-user">
-                <span id="user-name"></span>
-                <span id="user-role"></span>
-                <button type="button" id="btn-logout">Cerrar sesión</button>
-            </div>
-        </header>
-
-        <div id="app-body">
-
-            {{-- ── Menú lateral ── --}}
-            <aside id="app-sidebar">
-                <nav>
+        {{-- ── Menú lateral ── --}}
+        <aside class="role-sidebar">
+            <div class="card card-body">
+                <h3>Autoescuela</h3>
+                <nav class="role-menu" aria-label="Menu">
                     <ul id="sidebar-menu">
                         {{-- Generado por dashboard.js según el rol --}}
                     </ul>
                 </nav>
-            </aside>
+                <button type="button" class="btn btn-danger btn-sm btn-full" id="btn-logout">Cerrar sesión</button>
+            </div>
+        </aside>
 
-            {{-- ── Contenido principal ── --}}
-            <main id="app-main">
-                <div id="dashboard-content">
-                    {{-- Generado por dashboard.js según el rol --}}
-                </div>
-            </main>
-
-        </div>
+        {{-- ── Contenido principal ── --}}
+        <main class="role-main" id="dashboard-content">
+            {{-- Generado por dashboard.js según el rol --}}
+        </main>
 
     </div>
 

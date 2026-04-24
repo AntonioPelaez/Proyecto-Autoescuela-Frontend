@@ -4,56 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión – Autoescuela</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
 
-    <div id="login-wrapper" class="min-h-screen flex items-center justify-center bg-gray-50">
-        <div class="card w-full max-w-sm">
-        <div class="card-body">
+    <div id="login-wrapper" class="auth-login">
+        <div class="card auth-login-card">
+            <div class="card-body">
+                <header class="auth-login-header">
+                    <h1>Autoescuela</h1>
+                    <p>Iniciar sesión</p>
+                </header>
 
-        <h1 style="text-align:center; margin-bottom: var(--space-xs);">Autoescuela</h1>
-        <h2 style="text-align:center; margin-bottom: var(--space-l);">Iniciar sesión</h2>
+                <div id="login-error" class="toast toast-error hidden auth-login-error" role="alert" aria-live="assertive"></div>
 
-        {{-- Contenedor de errores --}}
-        <div id="login-error" class="toast toast-error hidden" style="margin-bottom: var(--space-m);"></div>
+                <form id="login-form" novalidate>
+                    <div class="input-group">
+                        <label for="login-email" class="input-label">Email</label>
+                        <input
+                            type="email"
+                            id="login-email"
+                            name="email"
+                            class="input"
+                            placeholder="tucorreo@ejemplo.com"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
 
-        {{-- Formulario de login --}}
-        <form id="login-form" novalidate>
+                    <div class="input-group">
+                        <label for="login-password" class="input-label">Contraseña</label>
+                        <input
+                            type="password"
+                            id="login-password"
+                            name="password"
+                            class="input"
+                            placeholder="********"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
 
-            <div class="input-group">
-                <label for="login-email">Email</label>
-                <input
-                    type="email"
-                    id="login-email"
-                    name="email"
-                    placeholder="tucorreo@ejemplo.com"
-                    autocomplete="email"
-                    required
-                >
+                    <div id="login-spinner" class="loader loader-inline loader-sm hidden" aria-live="polite">Validando credenciales...</div>
+
+                    <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg">Entrar</button>
+                </form>
             </div>
-
-            <div class="input-group">
-                <label for="login-password">Contraseña</label>
-                <input
-                    type="password"
-                    id="login-password"
-                    name="password"
-                    placeholder="••••••••"
-                    autocomplete="current-password"
-                    required
-                >
-            </div>
-
-            {{-- Spinner (oculto por defecto) --}}
-            <div id="login-spinner" class="hidden">Cargando...</div>
-
-            <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg">Entrar</button>
-
-        </form>
-
-        </div>{{-- /card-body --}}
-        </div>{{-- /card --}}
+        </div>
     </div>
 
     {{-- Orden de carga obligatorio: auth → api → login --}}

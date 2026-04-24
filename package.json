@@ -2,7 +2,12 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "serve": "php artisan serve"
+        "serve": "php artisan serve",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed"
     },
-    "devDependencies": {}
+    "devDependencies": {
+        "@playwright/test": "^1.53.1"
+    }
 }

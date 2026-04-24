@@ -34,10 +34,10 @@
     --radius-m:  8px;
     --radius-l:  16px;
 
-    /* Sombras */
-    --shadow-s:  0 1px 3px rgba(0, 0, 0, 0.08);
-    --shadow-m:  0 4px 12px rgba(0, 0, 0, 0.10);
-    --shadow-l:  0 8px 24px rgba(0, 0, 0, 0.12);
+    /* Sombras - mejoradas para mayor profundidad */
+    --shadow-s:  0 2px 4px rgba(0, 0, 0, 0.10);
+    --shadow-m:  0 4px 16px rgba(0, 0, 0, 0.12);
+    --shadow-l:  0 12px 32px rgba(0, 0, 0, 0.14);
 
     /* Tamaños de componente */
     --size-xs:   24px;
@@ -165,10 +165,6 @@ td {
 
 tr:last-child td {
     border-bottom: none;
-}
-
-tr:hover td {
-    background-color: #f8fafc;
 }
 
 /* ─────────────────────────────────────────────

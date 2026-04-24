@@ -7,6 +7,14 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Sprint D Testing
+
+- Smoke backend: `php artisan test`
+- E2E frontend (Playwright): `npm run test:e2e`
+- E2E con UI: `npm run test:e2e:ui`
+
+Checklist funcional y accesibilidad en `docs/SPRINT_D_CHECKLIST_ACCESIBILIDAD.md`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

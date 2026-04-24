@@ -1,35 +1,183 @@
 /* ─────────────────────────────────────────────
-   components.css — Componentes globales
-   Usa variables de ui-base.css
+   components.css — Estilos especificos de pantallas
+   No definir aqui componentes globales.
    ───────────────────────────────────────────── */
 
-/* Toasts */
-.toast {
-    box-shadow: var(--shadow-m);
-    font-weight: 500;
-    border-radius: var(--radius-s);
+/* Login */
+.auth-login {
+   min-height: 100vh;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   padding: var(--space-l);
 }
 
-.toast-success {
-    background-color: #d4edda;
-    color: var(--color-success);
-    border: 1px solid #c3e6cb;
+.auth-login-card {
+   width: 100%;
+   max-width: 420px;
+   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
-.toast-error {
-    background-color: #f8d7da;
-    color: var(--color-error);
-    border: 1px solid #f5c6cb;
+.auth-login-header {
+   margin-bottom: var(--space-l);
+   padding: 0;
+   border: 0;
+   display: block;
+   text-align: center;
 }
 
-.toast-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
+.auth-login-header h1 {
+   margin-bottom: var(--space-xs);
 }
 
-/* Loaders */
-.loader {
-    color: var(--color-text-light);
-    font-weight: 500;
+.auth-login-header p {
+   margin: 0;
+   color: var(--color-text-light);
+}
+
+.auth-login-error {
+   margin-bottom: var(--space-m);
+   max-width: 100%;
+}
+
+@media (max-width: 640px) {
+   .auth-login {
+      padding: var(--space-m);
+   }
+
+   .auth-login .card-body {
+      padding: var(--space-m);
+   }
+}
+
+/* Welcome */
+.welcome-home {
+   min-height: 100vh;
+   padding: var(--space-xl) 0;
+}
+
+.welcome-home-hero {
+   margin-bottom: var(--space-l);
+   background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(100, 116, 139, 0.03) 100%);
+   border-radius: var(--radius-m);
+}
+
+.welcome-home-eyebrow {
+   display: inline-flex;
+   align-items: center;
+   border: 1px solid var(--color-border);
+   border-radius: var(--radius-l);
+   padding: var(--space-xs) var(--space-m);
+   margin-bottom: var(--space-m);
+   color: var(--color-secondary);
+   font-size: 0.8125rem;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+}
+
+.welcome-home-lead {
+   max-width: 62ch;
+   margin-bottom: var(--space-l);
+   color: var(--color-text-light);
+}
+
+.welcome-home-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: var(--space-s);
+}
+
+.welcome-home-grid {
+   display: grid;
+   grid-template-columns: repeat(3, minmax(0, 1fr));
+   gap: var(--space-m);
+}
+
+.welcome-home-grid .card {
+   margin-bottom: 0;
+   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.welcome-home-grid .card:hover {
+   transform: translateY(-4px);
+   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.welcome-home-footer {
+   margin-top: var(--space-l);
+   text-align: center;
+   color: var(--color-text-light);
+   font-size: 0.875rem;
+}
+
+@media (max-width: 900px) {
+   .welcome-home-grid {
+      grid-template-columns: 1fr;
+   }
+}
+
+/* Role layout */
+.role-layout {
+   display: grid;
+   grid-template-columns: 240px 1fr;
+   gap: var(--space-l);
+   align-items: start;
+   padding-top: var(--space-l);
+   padding-bottom: var(--space-xl);
+}
+
+.role-sidebar {
+   position: sticky;
+   top: var(--space-l);
+}
+
+.role-sidebar .card {
+   margin-bottom: 0;
+}
+
+.role-menu {
+   display: flex;
+   flex-direction: column;
+   gap: var(--space-xs);
+}
+
+.role-menu-link {
+   display: block;
+   padding: var(--space-s) var(--space-m);
+   border-radius: var(--radius-s);
+   color: var(--color-text);
+   border: 1px solid transparent;
+}
+
+.role-menu-link:hover {
+   background-color: var(--color-bg);
+   border-color: var(--color-border);
+   text-decoration: none;
+}
+
+.role-menu-link.is-active {
+   background-color: var(--color-primary-light);
+   border-color: var(--color-primary);
+   color: var(--color-primary-dark);
+   font-weight: 600;
+}
+
+.role-main {
+   min-width: 0;
+}
+
+@media (max-width: 960px) {
+   .role-layout {
+      grid-template-columns: 1fr;
+   }
+
+   .role-sidebar {
+      position: static;
+   }
+
+   .role-menu {
+      flex-direction: row;
+      flex-wrap: wrap;
+   }
 }

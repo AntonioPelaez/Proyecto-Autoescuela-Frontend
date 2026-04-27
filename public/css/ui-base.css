@@ -9,18 +9,23 @@
    ───────────────────────────────────────────── */
 :root {
     /* Paleta de colores */
-    --color-primary:       #2563eb;
-    --color-primary-light: #93c5fd;
-    --color-primary-dark:  #1e40af;
-    --color-secondary:     #64748b;
-    --color-bg:            #f1f5f9;
-    --color-surface:       #ffffff;
-    --color-border:        #e2e8f0;
-    --color-text:          #1e293b;
-    --color-text-light:    #64748b;
-    --color-success:       #16a34a;
-    --color-warning:       #d97706;
-    --color-error:         #dc2626;
+    --color-primary:         #0f5bd8;
+    --color-primary-light:   #bfdbfe;
+    --color-primary-soft:    #eaf2ff;
+    --color-primary-dark:    #0b3f9c;
+    --color-secondary:       #475569;
+    --color-accent:          #f59e0b;
+    --color-bg:              #eef4fb;
+    --color-bg-strong:       #dbe7f4;
+    --color-surface:         #ffffff;
+    --color-surface-muted:   #f8fbff;
+    --color-border:          #d9e4f0;
+    --color-border-strong:   #bfd1e4;
+    --color-text:            #132238;
+    --color-text-light:      #5f7288;
+    --color-success:         #15803d;
+    --color-warning:         #b7791f;
+    --color-error:           #c62828;
 
     /* Espaciados */
     --space-xs:  4px;
@@ -30,14 +35,18 @@
     --space-xl:  40px;
 
     /* Radios */
-    --radius-s:  4px;
-    --radius-m:  8px;
-    --radius-l:  16px;
+    --radius-s:  8px;
+    --radius-m:  14px;
+    --radius-l:  24px;
 
     /* Sombras - mejoradas para mayor profundidad */
-    --shadow-s:  0 2px 4px rgba(0, 0, 0, 0.10);
-    --shadow-m:  0 4px 16px rgba(0, 0, 0, 0.12);
-    --shadow-l:  0 12px 32px rgba(0, 0, 0, 0.14);
+    --shadow-s:  0 10px 24px rgba(15, 35, 58, 0.08);
+    --shadow-m:  0 20px 48px rgba(15, 35, 58, 0.12);
+    --shadow-l:  0 32px 72px rgba(15, 35, 58, 0.18);
+
+    /* Transiciones */
+    --transition-fast: 180ms ease;
+    --transition-medium: 260ms ease;
 
     /* Tamaños de componente */
     --size-xs:   24px;
@@ -66,7 +75,10 @@ body {
     font-size: 1rem;
     line-height: 1.6;
     color: var(--color-text);
-    background-color: var(--color-bg);
+    background:
+        radial-gradient(circle at top left, rgba(15, 91, 216, 0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(245, 158, 11, 0.10), transparent 24%),
+        linear-gradient(180deg, #f7fbff 0%, var(--color-bg) 42%, #edf3fa 100%);
     margin: 0;
     padding: 0;
 }
@@ -75,22 +87,22 @@ body {
    Tipografía global
    ───────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    line-height: 1.3;
+    font-weight: 700;
+    line-height: 1.2;
     color: var(--color-text);
     margin-top: 0;
     margin-bottom: var(--space-m);
 }
 
-h1 { font-size: 1.75rem; }
-h2 { font-size: 1.375rem; }
-h3 { font-size: 1.125rem; }
+h1 { font-size: clamp(2rem, 3vw, 2.8rem); letter-spacing: -0.03em; }
+h2 { font-size: clamp(1.4rem, 2vw, 1.9rem); letter-spacing: -0.02em; }
+h3 { font-size: 1.15rem; }
 h4 { font-size: 1rem; }
 
 p {
     margin-top: 0;
     margin-bottom: var(--space-m);
-    color: var(--color-text);
+    color: var(--color-text-light);
 }
 
 a {
@@ -108,7 +120,7 @@ a:hover {
    ───────────────────────────────────────────── */
 .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1320px;
     margin: 0 auto;
     padding: 0 var(--space-l);
 }
@@ -141,10 +153,11 @@ table {
     border-radius: var(--radius-m);
     overflow: hidden;
     box-shadow: var(--shadow-s);
+    border: 1px solid rgba(191, 209, 228, 0.7);
 }
 
 th {
-    background-color: var(--color-bg);
+    background: linear-gradient(180deg, #f9fbfe 0%, #edf4fb 100%);
     color: var(--color-text);
     font-weight: 600;
     font-size: 0.875rem;
@@ -157,7 +170,7 @@ th {
 
 td {
     padding: var(--space-m);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid rgba(217, 228, 240, 0.9);
     color: var(--color-text);
     font-size: 0.9375rem;
     vertical-align: middle;
@@ -206,9 +219,9 @@ textarea {
     border-radius: var(--radius-s);
     padding: var(--space-s) var(--space-m);
     color: var(--color-text);
-    background-color: var(--color-surface);
+    background-color: rgba(255, 255, 255, 0.92);
     width: 100%;
-    transition: border-color 0.15s ease;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 input:focus,
@@ -216,13 +229,14 @@ select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
+    box-shadow: 0 0 0 4px rgba(15, 91, 216, 0.14);
+    background-color: var(--color-surface);
 }
 
 label {
     display: block;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 700;
     color: var(--color-text);
     margin-bottom: var(--space-xs);
 }

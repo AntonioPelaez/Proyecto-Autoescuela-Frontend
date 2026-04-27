@@ -1,223 +1,280 @@
-document.addEventListener('DOMContentLoaded', () => {
-	Router.init();
+// ─────────────────────────────────────────────
+// student-availability.js — Reservar clases con horarios
+// ─────────────────────────────────────────────
 
-	const SLOTS_CONTAINER_ID = 'availability-selection-status';
-	const form = document.getElementById('availability-form');
-	const townSelect = document.getElementById('availability-town');
-	const dateInput = document.getElementById('availability-date');
-	const messageBox = document.getElementById('availability-message');
-	const statusBox = document.getElementById(SLOTS_CONTAINER_ID);
-	const currentUser = typeof Auth !== 'undefined' && typeof Auth.getUser === 'function'
-		? Auth.getUser()
-		: null;
-	const selectedTownStorageKey = currentUser && currentUser.id
-		? 'selectedTownId:' + String(currentUser.id)
-		: 'selectedTownId';
-	const savedTownId = localStorage.getItem(selectedTownStorageKey);
-	const slotsContainer = statusBox;
+document.addEventListener('DOMContentLoaded', async () => {
+    Router.init();
 
-	if (!form || !townSelect || !dateInput || !messageBox || !slotsContainer) {
-		return;
-	}
+    const selectionForm = document.getElementById('selection-form');
+    const townSelect = document.getElementById('town-select');
+    const dateSelect = document.getElementById('date-select');
+    const timeSlotsSection = document.getElementById('time-slots-section');
+    const timeSlotsGrid = document.getElementById('time-slots-grid');
+    const professorsSection = document.getElementById('professors-section');
+    const professorsContainer = document.getElementById('professors-container');
+    const bookingSummary = document.getElementById('booking-summary');
+    const summaryDetails = document.getElementById('summary-details');
+    const confirmForm = document.getElementById('confirm-form');
+    const cancelBooking = document.getElementById('cancel-booking');
+    const bookingsContainer = document.getElementById('bookings-container');
+    const messageBox = document.getElementById('message-state');
 
-	loadTowns();
+    let selectedTown = null;
+    let selectedDate = null;
+    let selectedTime = null;
+    let selectedProfessor = null;
+    let timeSlots = [];
 
-	if (savedTownId) {
-		townSelect.value = savedTownId;
-	}
+    // Cargar datos iniciales
+    await loadTowns();
+    await loadMyBookings();
+    await loadTimeSlots();
 
-	slotsContainer.addEventListener('click', async (event) => {
-		const reserveButton = event.target.closest('button[data-action="reserve"]');
-		if (!reserveButton) {
-			return;
-		}
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateSelect.min = today;
 
-		const slotId = reserveButton.dataset.slotId;
-		if (!slotId) {
-			return;
-		}
+    // Form submit para buscar horarios
+    selectionForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const townId = townSelect.value;
+        const date = dateSelect.value;
 
-		const originalLabel = reserveButton.textContent;
+        if (!townId || !date) {
+            showMessage('error', 'Debes seleccionar población y fecha.');
+            return;
+        }
 
-		try {
-			showState('', '');
-			setBookingLoading(reserveButton, true);
+        selectedTown = { id: townId, name: townSelect.options[townSelect.selectedIndex].text };
+        selectedDate = date;
+        selectedTime = null;
+        selectedProfessor = null;
 
-			await Api.createBooking(slotId);
-			showState('success', 'Reserva confirmada correctamente.');
-			showBookingSuccess();
-		} catch (error) {
-			const message = error.message || 'No se pudo completar la reserva.';
-			showState('error', message);
-		} finally {
-			setBookingLoading(reserveButton, false, originalLabel);
-		}
-	});
+        // Mostrar horarios disponibles
+        renderTimeSlots();
+        timeSlotsSection.style.display = 'block';
+        professorsSection.style.display = 'none';
+        bookingSummary.style.display = 'none';
+        timeSlotsSection.scrollIntoView({ behavior: 'smooth' });
+    });
 
-	form.addEventListener('submit', async (event) => {
-		event.preventDefault();
+    // Confirm final booking
+    confirmForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-		const townId = townSelect.value;
-		const date = dateInput.value;
+        if (!selectedProfessor || !selectedTime) {
+            showMessage('error', 'Por favor completa todos los pasos.');
+            return;
+        }
 
-		if (!townId || !date) {
-			showState('error', 'Debes seleccionar una población y una fecha.');
-			return;
-		}
+        UI.setLoading(true);
+        try {
+            await Api.createBookingByTimeSlot(selectedTown.id, selectedDate, selectedTime, selectedProfessor.id);
+            showMessage('success', '¡Clase reservada correctamente!');
+            bookingSummary.style.display = 'none';
+            selectionForm.reset();
+            timeSlotsSection.style.display = 'none';
+            professorsSection.style.display = 'none';
+            await loadMyBookings();
+        } catch (error) {
+            showMessage('error', error.message || 'Error al reservar.');
+        } finally {
+            UI.setLoading(false);
+        }
+    });
 
-		let loadingStarted = false;
-		try {
-			showState('', '');
+    cancelBooking.addEventListener('click', () => {
+        bookingSummary.style.display = 'none';
+        selectedTime = null;
+        selectedProfessor = null;
+    });
 
-			UI.setLoading(SLOTS_CONTAINER_ID, true);
-			loadingStarted = true;
+    // ─────────────────────────────────────────────
+    // Funciones internas
+    // ─────────────────────────────────────────────
 
-			const towns = await Api.getTowns();
-			const selectedTown = towns.find((town) => town.id === Number(townId));
+    async function loadTowns() {
+        try {
+            const towns = await Api.getTowns();
+            townSelect.innerHTML = '<option value="">Selecciona población</option>';
+            towns.forEach(town => {
+                const option = document.createElement('option');
+                option.value = town.id;
+                option.textContent = town.name;
+                townSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading towns:', error);
+        }
+    }
 
-			if (!selectedTown) {
-				showState('error', 'La población seleccionada no existe.');
-				return;
-			}
+    async function loadTimeSlots() {
+        try {
+            timeSlots = await Api.getTimeSlots();
+        } catch (error) {
+            console.error('Error loading time slots:', error);
+        }
+    }
 
-			localStorage.setItem(selectedTownStorageKey, String(selectedTown.id));
+    async function renderTimeSlots() {
+        timeSlotsGrid.innerHTML = '';
 
-			const slots = await Api.getAvailabilitySlots(townId, date);
-			renderSlots(slots, selectedTown.name, date);
+        if (!timeSlots.length) {
+            timeSlotsGrid.innerHTML = '<p style="grid-column: 1/-1; color: #999;">No hay horarios disponibles.</p>';
+            return;
+        }
 
-			showState('success', 'Selección guardada correctamente.');
-		} catch (error) {
-			renderSlots([]);
-			showState('error', error.message || 'No se pudo preparar la búsqueda.', true);
-		} finally {
-			if (loadingStarted) {
-				UI.setLoading(SLOTS_CONTAINER_ID, false);
-			}
-		}
-	});
+        for (const slot of timeSlots) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'time-slot-btn';
+            btn.textContent = slot.display;
+            btn.dataset.time = slot.time;
 
-	async function loadTowns() {
-		if (!townSelect) {
-			return;
-		}
-		try {
-			const towns = await Api.getTowns();
-			renderTownOptions(towns);
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                selectedTime = slot.time;
+                await loadProfessorsForSlot();
+                renderTimeSlotButtons();
+            });
 
-			if (savedTownId) {
-				townSelect.value = savedTownId;
-			}
-		} catch (error) {
-			showState('error', error.message || 'No se pudieron cargar las poblaciones.');
-		}
-	}
+            timeSlotsGrid.appendChild(btn);
+        }
+    }
 
-	function renderTownOptions(towns) {
-		if (!townSelect) {
-			return;
-		}
-		const activeTowns = towns.filter((town) => town.active);
+    function renderTimeSlotButtons() {
+        const buttons = timeSlotsGrid.querySelectorAll('.time-slot-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('selected');
+            if (btn.dataset.time === selectedTime) {
+                btn.classList.add('selected');
+            }
+        });
+    }
 
-		townSelect.replaceChildren();
+    async function loadProfessorsForSlot() {
+        UI.setLoading(true);
+        try {
+            const professors = await Api.getAvailableProfessorsByTimeSlot(selectedTown.id, selectedDate, selectedTime);
+            renderProfessors(professors);
+            professorsSection.style.display = 'block';
+            professorsSection.scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            showMessage('error', error.message || 'Error al cargar profesores.');
+        } finally {
+            UI.setLoading(false);
+        }
+    }
 
-		const defaultOption = document.createElement('option');
-		defaultOption.value = '';
-		defaultOption.textContent = 'Selecciona una población';
-		townSelect.appendChild(defaultOption);
+    function renderProfessors(professors) {
+        const list = professorsContainer.querySelector('.professors-list');
+        list.innerHTML = '';
 
-		activeTowns.forEach((town) => {
-			const option = document.createElement('option');
-			option.value = String(town.id);
-			option.textContent = town.name;
-			townSelect.appendChild(option);
-		});
-	}
+        if (!professors.length) {
+            list.innerHTML = '<p style="color: #999;">No hay profesores disponibles a esa hora.</p>';
+            return;
+        }
 
-	function showState(type, message, skipToast) {
-		if (!messageBox) {
-			return;
-		}
-		if (!message) {
-			messageBox.textContent = '';
-			messageBox.className = 'hidden';
-			return;
-		}
+        professors.forEach(prof => {
+            const card = document.createElement('div');
+            card.className = 'professor-card';
+            card.innerHTML = `
+                <div class="professor-info">
+                    <h4>${prof.name}</h4>
+                    <p>📧 ${prof.email}</p>
+                    <p>🚗 ${prof.vehicle || 'Vehículo 1'}</p>
+                </div>
+                <button type="button" class="btn btn-select-professor" data-professor-id="${prof.id}" data-professor-name="${prof.name}">Seleccionar</button>
+            `;
 
-		messageBox.textContent = message;
-		messageBox.className = type === 'error' ? 'card card-body input-error' : 'card card-body';
-		if (!skipToast && typeof UI !== 'undefined' && UI.showToast) {
-			UI.showToast(message, type === 'error' ? 'error' : 'success');
-		}
-	}
+            const selectBtn = card.querySelector('.btn-select-professor');
+            selectBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                selectedProfessor = {
+                    id: prof.id,
+                    name: prof.name,
+                    vehicle: prof.vehicle
+                };
+                renderProfessorCards();
+                showBookingSummary();
+            });
 
-	function renderSlots(slots, selectedTownName = '', selectedDate = '') {
-		if (!slotsContainer) {
-			return;
-		}
+            list.appendChild(card);
+        });
+    }
 
-		slotsContainer.replaceChildren();
+    function renderProfessorCards() {
+        const cards = professorsContainer.querySelectorAll('.professor-card');
+        cards.forEach(card => {
+            const btn = card.querySelector('.btn-select-professor');
+            if (selectedProfessor && btn.dataset.professorId == selectedProfessor.id) {
+                btn.textContent = '✓ Seleccionado';
+                btn.disabled = true;
+                card.classList.add('selected');
+            } else {
+                btn.textContent = 'Seleccionar';
+                btn.disabled = false;
+                card.classList.remove('selected');
+            }
+        });
+    }
 
-		const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
-		const summary = document.createElement('p');
-		summary.textContent = selectedTownName && selectedDate
-			? 'Selección guardada: ' + selectedTownName + ' para el día ' + selectedDate + '.'
-			: 'Resultados de disponibilidad.';
-		slotsContainer.appendChild(summary);
+    function showBookingSummary() {
+        if (!selectedProfessor || !selectedTime || !selectedTown || !selectedDate) return;
 
-		if (!sortedSlots.length) {
-			const empty = document.createElement('p');
-			empty.className = 'table-empty';
-			empty.textContent = 'No hay disponibilidad para esta fecha.';
-			slotsContainer.appendChild(empty);
-			return;
-		}
+        summaryDetails.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-m);">
+                <div><strong>Población:</strong> ${selectedTown.name}</div>
+                <div><strong>Fecha:</strong> ${selectedDate}</div>
+                <div><strong>Hora:</strong> ${selectedTime}</div>
+                <div><strong>Profesor:</strong> ${selectedProfessor.name}</div>
+                <div><strong>Vehículo:</strong> ${selectedProfessor.vehicle || 'Por asignar'}</div>
+            </div>
+        `;
 
-		sortedSlots.forEach((slot) => {
-			const vehicle = slot.vehicle ? slot.vehicle : 'Sin vehículo asignado';
-			const slotCard = document.createElement('div');
-			slotCard.className = 'card card-body';
+        document.getElementById('selected-professor-id').value = selectedProfessor.id;
+        bookingSummary.style.display = 'block';
+        bookingSummary.scrollIntoView({ behavior: 'smooth' });
+    }
 
-			const time = document.createElement('p');
-			time.textContent = 'Hora: ' + slot.time;
+    async function loadMyBookings() {
+        try {
+            const bookings = await Api.getMyBookings();
 
-			const professor = document.createElement('p');
-			professor.textContent = 'Profesor: ' + slot.professorName;
+            if (bookings.length === 0) {
+                bookingsContainer.innerHTML = '<p style="color: #999;">Aún no tienes clases reservadas.</p>';
+                return;
+            }
 
-			const vehicleLabel = document.createElement('p');
-			vehicleLabel.textContent = 'Vehículo: ' + vehicle;
+            bookingsContainer.innerHTML = bookings.map(b => `
+                <div class="booking-card">
+                    <div class="booking-info">
+                        <div><strong>📅 Fecha:</strong> ${b.date}</div>
+                        <div><strong>⏰ Hora:</strong> ${b.time}</div>
+                        <div><strong>👨‍🏫 Profesor:</strong> ${b.professorName}</div>
+                        <div><strong>🚗 Vehículo:</strong> ${b.vehicle || 'Por asignar'}</div>
+                    </div>
+                    <div class="booking-actions">
+                        <span class="badge-inline badge-green">Confirmada</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading bookings:', error);
+            bookingsContainer.innerHTML = '<p style="color: #d32f2f;">Error al cargar reservas.</p>';
+        }
+    }
 
-			const reserveButton = document.createElement('button');
-			reserveButton.type = 'button';
-			reserveButton.className = 'btn btn-primary btn-sm';
-			reserveButton.dataset.action = 'reserve';
-			reserveButton.dataset.slotId = String(slot.id);
-			reserveButton.textContent = 'Reservar';
+    function showMessage(type, message) {
+        messageBox.className = `message-state ${type}`;
+        messageBox.textContent = message;
+        messageBox.style.display = message ? 'block' : 'none';
 
-			slotCard.append(time, professor, vehicleLabel, reserveButton);
-			slotsContainer.appendChild(slotCard);
-		});
-	}
-
-	function setBookingLoading(button, isLoading, originalLabel = 'Reservar') {
-		button.disabled = isLoading;
-		button.textContent = isLoading ? 'Procesando...' : originalLabel;
-	}
-
-	function showBookingSuccess() {
-		const existingAction = document.getElementById('view-my-classes-button');
-		if (existingAction) {
-			existingAction.disabled = false;
-			return;
-		}
-
-		const actionButton = document.createElement('button');
-		actionButton.type = 'button';
-		actionButton.className = 'btn btn-secondary btn-sm';
-		actionButton.id = 'view-my-classes-button';
-		actionButton.textContent = 'Ver mis clases';
-		actionButton.addEventListener('click', () => {
-			window.location.href = '/student/my-classes';
-		});
-		slotsContainer.appendChild(actionButton);
-	}
+        if (message) {
+            UI.showToast(message, type === 'success' ? 'info' : 'error');
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 5000);
+        }
+    }
 });

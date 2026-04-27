@@ -1,128 +1,216 @@
-(function () {
-	'use strict';
+// ─────────────────────────────────────────────
+// teacher-classes.js — Mis clases asignadas
+// ─────────────────────────────────────────────
 
-	const ROOT_ID = 'teacher-classes-page';
-	const STATE_ID = 'classes-state';
-	const TABLE_BODY_ID = 'classes-table-body';
+document.addEventListener('DOMContentLoaded', async () => {
+    Router.init();
 
-	function getStateEl() {
-		return document.getElementById(STATE_ID);
-	}
+    const filterForm = document.getElementById('classes-filter-form');
+    const filterDateFrom = document.getElementById('filter-date-from');
+    const filterDateTo = document.getElementById('filter-date-to');
+    const filterClassStatus = document.getElementById('filter-class-status');
+    const upcomingTbody = document.getElementById('upcoming-classes-tbody');
+    const pastTbody = document.getElementById('past-classes-tbody');
+    const messageBox = document.getElementById('message-state');
+    const statusFormContainer = document.getElementById('class-status-form-container');
+    const statusForm = document.getElementById('class-status-form');
+    const statusCancel = document.getElementById('class-status-cancel');
 
-	function showState(type, message) {
-		const stateEl = getStateEl();
-		if (!stateEl) {
-			return;
-		}
+    // Set default dates (last 30 days to next 60 days)
+    const today = new Date();
+    const lastMonth = new Date(today);
+    lastMonth.setDate(lastMonth.getDate() - 30);
+    const nextTwoMonths = new Date(today);
+    nextTwoMonths.setDate(nextTwoMonths.getDate() + 60);
 
-		if (!message) {
-			stateEl.className = 'hidden';
-			stateEl.textContent = '';
-			return;
-		}
+    filterDateFrom.value = lastMonth.toISOString().split('T')[0];
+    filterDateTo.value = nextTwoMonths.toISOString().split('T')[0];
 
-		const classes = {
-			success: 'card card-body',
-			error: 'card card-body input-error',
-			empty: 'card card-body table-empty',
-		};
+    // Cargar clases inicial
+    await loadClasses({
+        dateFrom: filterDateFrom.value,
+        dateTo: filterDateTo.value,
+        status: ''
+    });
 
-		stateEl.className = classes[type] || 'card card-body';
-		stateEl.textContent = message;
-	}
+    // Form submit para filtrar
+    filterForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const filters = {
+            dateFrom: filterDateFrom.value,
+            dateTo: filterDateTo.value,
+            status: filterClassStatus.value
+        };
+        await loadClasses(filters);
+    });
 
-	function formatDate(value) {
-		if (!value) {
-			return '-';
-		}
+    // Status form submit
+    statusForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bookingId = document.getElementById('class-status-booking-id').value;
+        const newStatus = document.getElementById('class-status-select').value;
 
-		const date = new Date(value);
-		if (Number.isNaN(date.getTime())) {
-			return value;
-		}
+        if (!newStatus) {
+            showMessage('error', 'Debes seleccionar un estado.');
+            return;
+        }
 
-		return date.toLocaleDateString('es-ES');
-	}
+        UI.setLoading(true);
+        try {
+            await Api.updateBookingStatus(bookingId, newStatus);
+            showMessage('success', 'Estado de clase actualizado correctamente.');
+            statusFormContainer.style.display = 'none';
+            await loadClasses({
+                dateFrom: filterDateFrom.value,
+                dateTo: filterDateTo.value,
+                status: filterClassStatus.value
+            });
+        } catch (error) {
+            showMessage('error', error.message || 'Error al actualizar estado.');
+        } finally {
+            UI.setLoading(false);
+        }
+    });
 
-	function mapBookingToRow(booking) {
-		return {
-			date: formatDate(booking.date || booking.classDate),
-			time: booking.time || booking.classTime || '-',
-			student: booking.studentName || booking.student || '-',
-			vehicle: booking.vehicleName || booking.vehicle || '-',
-			town: booking.townName || booking.town || '-',
-		};
-	}
+    statusCancel.addEventListener('click', () => {
+        statusFormContainer.style.display = 'none';
+    });
 
-	function renderRows(classes) {
-		const tbody = document.getElementById(TABLE_BODY_ID);
-		if (!tbody) {
-			return;
-		}
+    // ─────────────────────────────────────────────
+    // Funciones internas
+    // ─────────────────────────────────────────────
 
-		tbody.replaceChildren();
+    async function loadClasses(filters) {
+        UI.setLoading(true);
+        upcomingTbody.innerHTML = '';
+        pastTbody.innerHTML = '';
 
-		if (!classes.length) {
-			showState('empty', 'No tienes clases asignadas por el momento.');
-			return;
-		}
+        try {
+            // Para este caso, usaremos getTeacherBookings con los filtros
+            const bookings = await Api.getTeacherBookings(filters);
+            const today = new Date().toISOString().split('T')[0];
 
-		showState('success', 'Clases cargadas correctamente.');
+            // Separar próximas y pasadas
+            const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
+            const past = bookings.filter(b => b.date < today || b.status === 'cancelada');
 
-		classes.forEach(function (item) {
-			const row = document.createElement('tr');
-			row.append(
-				createCell(item.date),
-				createCell(item.time),
-				createCell(item.student),
-				createCell(item.vehicle),
-				createCell(item.town)
-			);
-			tbody.appendChild(row);
-		});
-	}
+            renderUpcomingClasses(upcoming);
+            renderPastClasses(past);
 
-	function createCell(text) {
-		const cell = document.createElement('td');
-		cell.textContent = String(text || '-');
-		return cell;
-	}
+            if (bookings.length === 0) {
+                showMessage('info', 'No hay clases en el rango de fechas seleccionado.');
+            }
+        } catch (error) {
+            showMessage('error', error.message || 'Error al cargar clases.');
+            upcomingTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
+            pastTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
+        } finally {
+            UI.setLoading(false);
+        }
+    }
 
-	async function loadClasses() {
-		UI.setLoading(TABLE_BODY_ID, true);
+    function renderUpcomingClasses(bookings) {
+        upcomingTbody.innerHTML = '';
 
-		try {
-			const bookings = await Api.getTeacherBookings();
-			const rows = Array.isArray(bookings) ? bookings.map(mapBookingToRow) : [];
-			renderRows(rows);
-		} catch (error) {
-			const message = error && error.message ? error.message : 'Error al cargar las clases.';
-			showState('error', message);
-			UI.showToast('No se pudieron cargar las clases.', 'error');
-		} finally {
-			UI.setLoading(TABLE_BODY_ID, false);
-		}
-	}
+        if (bookings.length === 0) {
+            upcomingTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No tienes clases próximas.</td></tr>';
+            return;
+        }
 
-	function bindEvents() {
-		const refresh = document.getElementById('classes-refresh');
-		if (refresh) {
-			refresh.addEventListener('click', function () {
-				loadClasses();
-			});
-		}
-	}
+        bookings.forEach(booking => {
+            const row = document.createElement('tr');
+            const statusColor = _getStatusColor(booking.status);
 
-	function init() {
-		const root = document.getElementById(ROOT_ID);
-		if (!root) {
-			return;
-		}
+            row.innerHTML = `
+                <td>${booking.date}</td>
+                <td>${booking.time}</td>
+                <td><strong>${booking.studentName}</strong></td>
+                <td>Nivel A</td>
+                <td>${booking.vehicle || 'Sin especificar'}</td>
+                <td>${booking.townName || 'N/A'}</td>
+                <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-status" data-booking-id="${booking.id}" data-date="${booking.date}" data-time="${booking.time}" data-student="${booking.studentName}">
+                        Cambiar Estado
+                    </button>
+                </td>
+            `;
 
-		Router.init();
-		bindEvents();
-		loadClasses();
-	}
+            // Event handler para cambiar estado
+            const statusBtn = row.querySelector('.btn-status');
+            statusBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const bookingId = statusBtn.dataset.bookingId;
+                const date = statusBtn.dataset.date;
+                const time = statusBtn.dataset.time;
+                const student = statusBtn.dataset.student;
 
-	document.addEventListener('DOMContentLoaded', init);
-})();
+                document.getElementById('class-status-booking-id').value = bookingId;
+                document.getElementById('class-status-info').textContent = `Clase de ${student} el ${date} a las ${time}`;
+                statusFormContainer.style.display = 'block';
+                statusFormContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            upcomingTbody.appendChild(row);
+        });
+    }
+
+    function renderPastClasses(bookings) {
+        pastTbody.innerHTML = '';
+
+        if (bookings.length === 0) {
+            pastTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Sin historial.</td></tr>';
+            return;
+        }
+
+        bookings.forEach(booking => {
+            const row = document.createElement('tr');
+            const statusColor = _getStatusColor(booking.status);
+
+            row.innerHTML = `
+                <td>${booking.date}</td>
+                <td>${booking.time}</td>
+                <td><strong>${booking.studentName}</strong></td>
+                <td>Nivel A</td>
+                <td>${booking.vehicle || 'Sin especificar'}</td>
+                <td>${booking.townName || 'N/A'}</td>
+                <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
+            `;
+
+            pastTbody.appendChild(row);
+        });
+    }
+
+    function showMessage(type, message) {
+        messageBox.className = `message-state ${type}`;
+        messageBox.textContent = message;
+        messageBox.style.display = message ? 'block' : 'none';
+
+        if (message) {
+            UI.showToast(message, type === 'success' ? 'info' : 'error');
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    function _formatStatus(status) {
+        const statusMap = {
+            'confirmada': 'Confirmada',
+            'en_curso': 'En curso',
+            'completada': 'Completada',
+            'cancelada': 'Cancelada',
+        };
+        return statusMap[status] || status;
+    }
+
+    function _getStatusColor(status) {
+        const colorMap = {
+            'confirmada': 'badge-yellow',
+            'en_curso': 'badge-blue',
+            'completada': 'badge-green',
+            'cancelada': 'badge-red',
+        };
+        return colorMap[status] || 'badge-gray';
+    }
+});

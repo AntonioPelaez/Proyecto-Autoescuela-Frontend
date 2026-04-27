@@ -4,11 +4,12 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>@yield('title') - Autoescuela</title>
+	<meta name="robots" content="noindex,nofollow">
 	<link rel="preconnect" href="https://fonts.bunny.net">
 	<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
-<body>
+<body class="page-role page-role-admin">
 
 	<div class="container role-layout">
 		<aside class="role-sidebar">
@@ -19,13 +20,19 @@
 					<a href="/admin/towns" class="role-menu-link {{ request()->is('admin/towns') ? 'is-active' : '' }}">Poblaciones</a>
 					<a href="/admin/professors" class="role-menu-link {{ request()->is('admin/professors') ? 'is-active' : '' }}">Profesores</a>
 					<a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>
+					<a href="/admin/slots" class="role-menu-link {{ request()->is('admin/slots') ? 'is-active' : '' }}">Huecos ofertados</a>
+					<a href="/admin/bookings" class="role-menu-link {{ request()->is('admin/bookings') ? 'is-active' : '' }}">Clases reservadas</a>
+					<a href="/admin/incidents" class="role-menu-link {{ request()->is('admin/incidents') ? 'is-active' : '' }}">Incidencias</a>
+					<a href="/admin/help" class="role-menu-link {{ request()->is('admin/help') ? 'is-active' : '' }}">Ayuda</a>
 				</nav>
 				<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
 			</div>
 		</aside>
 
 		<main class="role-main" id="@yield('main-id')">
+			<div class="role-main-inner">
 			@yield('content')
+			</div>
 		</main>
 	</div>
 

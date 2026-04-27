@@ -4,50 +4,71 @@
 @section('main-id', 'student-availability-page')
 
 @section('content')
-			<header>
-				<h1>Buscar disponibilidad</h1>
-				<a href="/student/home" class="btn btn-outline btn-sm">Volver al panel</a>
-			</header>
+<div class="student-panel">
+    <h2>Reservar Clase</h2>
 
-			<div id="availability-message" class="hidden"></div>
+    <!-- Message State -->
+    <div id="message-state" class="message-state" style="display: none;"></div>
 
-			<section class="card">
-				<div class="card-header">
-					<h2>Buscar huecos</h2>
-				</div>
-				<div class="card-body">
-			<form id="availability-form" novalidate>
-				<div class="input-group">
-					<label class="input-label" for="availability-town">Población</label>
-					<select id="availability-town" name="town" class="input" required>
-						<option value="">Selecciona una población</option>
-					</select>
-				</div>
+    <!-- Step 1: Select Town & Date -->
+    <div class="filter-section">
+        <h3>📍 Paso 1: Elige Población y Fecha</h3>
+        <form id="selection-form" class="filter-form">
+            <div class="form-group">
+                <label for="town-select">Población *</label>
+                <select id="town-select" name="town" class="form-control" required>
+                    <option value="">Selecciona población</option>
+                </select>
+            </div>
 
-				<div class="input-group">
-					<label class="input-label" for="availability-date">Fecha</label>
-					<input
-						type="date"
-						id="availability-date"
-						name="date"
-						class="input"
-						required
-					>
-				</div>
+            <div class="form-group">
+                <label for="date-select">Fecha *</label>
+                <input type="date" id="date-select" name="date" class="form-control" required>
+            </div>
 
-				<button type="submit" id="availability-submit" class="btn btn-primary">Buscar</button>
-			</form>
-				</div>
-			</section>
+            <div class="table-actions">
+                <button type="submit" class="btn btn-primary">Buscar Horarios</button>
+            </div>
+        </form>
+    </div>
 
-			<section class="card">
-				<div class="card-header">
-					<h2>Resultados</h2>
-				</div>
-				<div class="card-body">
-			<div id="availability-selection-status"></div>
-				</div>
-			</section>
+    <!-- Step 2: Select Time Slot -->
+    <div class="table-section" id="time-slots-section" style="display: none;">
+        <h3>⏰ Paso 2: Elige Hora</h3>
+        <div id="time-slots-grid" class="time-slots-grid">
+            <!-- Se pobla con JavaScript -->
+        </div>
+    </div>
+
+    <!-- Step 3: Select Professor -->
+    <div class="table-section" id="professors-section" style="display: none;">
+        <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
+        <div id="professors-container">
+            <div class="professors-list">
+                <!-- Se pobla con JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation -->
+    <div id="booking-summary" class="booking-summary" style="display: none; margin-top: 20px; padding: 20px; background: #f0f4ff; border-radius: 4px; border-left: 4px solid var(--color-primary);">
+        <h4>📋 Resumen de tu Reserva</h4>
+        <div id="summary-details" style="margin: var(--space-m) 0;"></div>
+        <form id="confirm-form" class="table-actions">
+            <button type="submit" class="btn btn-success">Confirmar Reserva</button>
+            <button type="button" class="btn btn-secondary" id="cancel-booking">Cancelar</button>
+        </form>
+        <input type="hidden" id="selected-professor-id" name="professorId">
+    </div>
+
+    <!-- Current Bookings -->
+    <div class="form-section">
+        <h3>✅ Mis Reservas Confirmadas</h3>
+        <div id="bookings-container">
+            <p style="color: #999;">Cargando...</p>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')

@@ -4,6 +4,7 @@
 @section('main-id', 'teacher-home-page')
 
 @section('content')
+			<div class="page-shell page-shell-teacher">
 			<header>
 				<h1>Panel del profesor</h1>
 				<div class="table-actions">
@@ -11,6 +12,10 @@
 					<a href="/teacher/bookings" class="btn btn-outline">Abrir agenda completa</a>
 				</div>
 			</header>
+
+			<div class="page-shell-intro">
+				<p>Organiza tu día, revisa las próximas sesiones y controla la carga semanal con una visión más clara.</p>
+			</div>
 
 			<div id="teacher-home-state" class="hidden"></div>
 
@@ -77,6 +82,7 @@
 				</table>
 			</div>
 			</section>
+			</div>
 @endsection
 
 @section('scripts')

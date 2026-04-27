@@ -7,7 +7,7 @@ const Router = {
 
     // Rutas permitidas por rol
     _routes: {
-        admin:   ['/dashboard', '/admin/towns', '/admin/professors', '/admin/vehicles'],
+        admin:   ['/dashboard', '/admin/towns', '/admin/professors', '/admin/vehicles', '/admin/slots', '/admin/bookings', '/admin/incidents', '/admin/help'],
         student: ['/dashboard', '/student/home', '/student/availability', '/student/my-classes'],
         teacher: ['/dashboard', '/teacher/home', '/teacher/classes', '/teacher/bookings'],
     },

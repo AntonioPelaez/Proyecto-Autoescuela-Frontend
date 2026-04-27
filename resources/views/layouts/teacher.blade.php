@@ -4,11 +4,12 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>@yield('title') - Autoescuela</title>
+	<meta name="robots" content="noindex,nofollow">
 	<link rel="preconnect" href="https://fonts.bunny.net">
 	<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
-<body>
+<body class="page-role page-role-teacher">
 
 	<div class="container role-layout">
 		<aside class="role-sidebar">
@@ -18,13 +19,16 @@
 					<a href="/teacher/home" class="role-menu-link {{ request()->is('teacher/home') ? 'is-active' : '' }}">Panel</a>
 					<a href="/teacher/bookings" class="role-menu-link {{ request()->is('teacher/bookings') ? 'is-active' : '' }}">Agenda</a>
 					<a href="/teacher/classes" class="role-menu-link {{ request()->is('teacher/classes') ? 'is-active' : '' }}">Clases</a>
+					<a href="/teacher/profile" class="role-menu-link {{ request()->is('teacher/profile') ? 'is-active' : '' }}">Mi perfil</a>
 				</nav>
 				<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
 			</div>
 		</aside>
 
 		<main class="role-main" id="@yield('main-id')">
+			<div class="role-main-inner">
 			@yield('content')
+			</div>
 		</main>
 	</div>
 

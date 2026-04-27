@@ -4,6 +4,7 @@
 @section('main-id', 'student-home-page')
 
 @section('content')
+			<div class="page-shell page-shell-student">
 			<header>
 				<h1>Panel del alumno</h1>
 				<div class="table-actions">
@@ -11,6 +12,10 @@
 					<a href="/student/my-classes" class="btn btn-outline">Ver mis clases</a>
 				</div>
 			</header>
+
+			<div class="page-shell-intro">
+				<p>Consulta tu próxima clase, revisa el historial y reserva nuevas sesiones con menos pasos.</p>
+			</div>
 
 			<div id="student-home-state" class="hidden"></div>
 
@@ -75,6 +80,7 @@
 				</div>
 			</div>
 			</section>
+			</div>
 @endsection
 
 @section('scripts')

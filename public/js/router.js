@@ -14,7 +14,7 @@ const Router = {
 
     // Home canónico por rol
     _roleHome: {
-        admin: '/admin/towns',
+        admin: '/admin',
         student: '/student/home',
         teacher: '/teacher/home',
     },

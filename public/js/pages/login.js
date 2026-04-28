@@ -51,12 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Auth.setToken(token);
 
             // 3. Obtener datos del usuario
-            const user = await Api.getMe();
+            let user = await Api.getMe();
 
-            // 4. Guardar usuario en sesión
+            // 4. Mapear role_id a role si es necesario
+            if (!user.role && user.role_id) {
+                const roleMap = { 1: 'admin', 2: 'teacher', 3: 'student' };
+                user.role = roleMap[user.role_id] || 'student';
+            }
+
+            // 5. Guardar usuario en sesión
             Auth.setUser(user);
 
-            // 5. Redirigir según rol
+            // 6. Redirigir según rol
             _redirectByRole(user);
 
         } catch (err) {

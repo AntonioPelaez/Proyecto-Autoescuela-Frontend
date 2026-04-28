@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ...existing code...
     const form        = document.getElementById('login-form');
     const errorBox    = document.getElementById('login-error');
     const spinner     = document.getElementById('login-spinner');

@@ -151,20 +151,10 @@
             setLoading(true);
 
             try {
-                // Simulación de llamada API (300 ms de delay)
-                await new Promise(r => setTimeout(r, 300));
+                // Llamada real a la API de registro (ajusta el método según tu backend)
+                // Por ejemplo: await Api.register(data);
+                await Api.register(data);
 
-                // Mock: comprobar si el email ya existe en Api._users
-                const existing = (typeof Api !== 'undefined' && Api._users)
-                    ? Api._users.find(u => u.email === data.email)
-                    : null;
-
-                if (existing) {
-                    showGlobalError('Ya existe una cuenta con ese email. Prueba a iniciar sesión.');
-                    return;
-                }
-
-                // Éxito mock
                 showGlobalSuccess('¡Cuenta creada correctamente! En breve recibirás un email de confirmación.');
                 form.reset();
                 document.getElementById('password-strength').innerHTML = '';
@@ -173,7 +163,11 @@
                 setTimeout(() => { window.location.href = '/login'; }, 2000);
 
             } catch (err) {
-                showGlobalError('Error inesperado. Inténtalo de nuevo.');
+                if (err.message && err.message.toLowerCase().includes('email')) {
+                    showGlobalError('Ya existe una cuenta con ese email. Prueba a iniciar sesión.');
+                } else {
+                    showGlobalError('Error inesperado. Inténtalo de nuevo.');
+                }
             } finally {
                 setLoading(false);
             }

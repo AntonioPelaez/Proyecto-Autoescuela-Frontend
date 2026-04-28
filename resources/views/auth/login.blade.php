@@ -51,12 +51,9 @@
 
                     <div id="login-spinner" class="loader loader-inline loader-sm hidden" aria-live="polite">Validando credenciales...</div>
 
+
                     <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg">Entrar</button>
                 </form>
-
-                <div class="auth-login-help">
-                    <p>Perfiles demo disponibles para admin, alumnado y profesorado.</p>
-                </div>
 
                 <div class="auth-login-help" style="margin-top: var(--space-s)">
                     <p><a href="/forgot-password" class="link">¿Olvidaste tu contraseña?</a></p>

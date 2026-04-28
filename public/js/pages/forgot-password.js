@@ -25,9 +25,9 @@
     // Submit handler
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const email = emailInput.value.trim();
-        
+
         // Validate
         emailError.textContent = '';
         emailInput.classList.remove('input-invalid');
@@ -44,20 +44,14 @@
             return;
         }
 
-        // Check if email exists in mock API
-        const userExists = Api._users.some(u => u.email === email);
-        if (!userExists) {
-            // For security, we don't reveal if email exists or not
-            // Just redirect to "email sent" page
-            showLoading();
-            await new Promise(r => setTimeout(r, 300));
-            window.location.href = '/password-reset-sent';
-            return;
-        }
-
-        // If email exists, proceed with same flow
         showLoading();
-        await new Promise(r => setTimeout(r, 300));
+        try {
+            // Llamada real a la API de recuperación (ajusta el método según tu backend)
+            // Por ejemplo: await Api.forgotPassword({ email });
+            await Api.forgotPassword({ email });
+        } catch (err) {
+            // Por seguridad, siempre redirigimos igual aunque haya error
+        }
         window.location.href = '/password-reset-sent';
     });
 

@@ -2,7 +2,7 @@
 // API real: integración con backend Laravel
 // ─────────────────────────────────────────────
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api'; // Cambia esto si tu backend está en otro host
+const API_BASE_URL = 'http://localhost:8000/api'; // Cambia esto si tu backend está en otro host
 
 function getAuthHeaders() {
     const headers = { 'Content-Type': 'application/json' };
@@ -26,7 +26,7 @@ const Api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     register(data) {
@@ -34,14 +34,14 @@ const Api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     logout() {
         return fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     forgotPassword(email) {
@@ -49,7 +49,7 @@ const Api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     resetPassword(data) {
@@ -57,7 +57,7 @@ const Api = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
 
@@ -65,7 +65,7 @@ const Api = {
     getMe() {
         return fetch(`${API_BASE_URL}/me`, {
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
 
@@ -109,7 +109,7 @@ const Api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     updateUser(id, data) {
@@ -117,14 +117,14 @@ const Api = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     deleteUser(id) {
         return fetch(`${API_BASE_URL}/users/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
 
@@ -140,7 +140,7 @@ const Api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     updateTeacher(id, data) {
@@ -148,14 +148,14 @@ const Api = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     deleteTeacher(id) {
         return fetch(`${API_BASE_URL}/teachers/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     getTeacherNotes(id) {
@@ -166,7 +166,7 @@ const Api = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(notes),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     getTeacherVehicles(id) {
@@ -177,14 +177,14 @@ const Api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     removeTeacherVehicle(id, vehicleId) {
         return fetch(`${API_BASE_URL}/teachers/${id}/vehicles/${vehicleId}/remove`, {
             method: 'DELETE',
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     getTeacherReservas() {
@@ -203,7 +203,7 @@ const Api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     updateVehicle(id, data) {
@@ -211,14 +211,14 @@ const Api = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     deleteVehicle(id) {
         return fetch(`${API_BASE_URL}/vehicles/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders(),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
 
@@ -234,7 +234,7 @@ const Api = {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     updateStudent(id, data) {
@@ -242,7 +242,7 @@ const Api = {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+
         }).then(handleResponse);
     },
     deleteStudent(id) {

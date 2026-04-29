@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UI.setLoading(true);
         try {
             const incidents = await Api.getTeacherAvailabilityExceptions(filters);
-            renderIncidents(incidents);
+            renderIncidents(incidents.exceptions);
         } catch (error) {
             showState('error', error.message || 'Error al filtrar incidencias.');
         } finally {
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UI.setLoading(true);
         try {
             const incidents = await Api.getTeacherAvailabilityExceptions();
-            renderIncidents(incidents);
+            renderIncidents(incidents.exceptions);
         } catch (error) {
             showState('error', error.message || 'Error al cargar incidencias.');
         } finally {

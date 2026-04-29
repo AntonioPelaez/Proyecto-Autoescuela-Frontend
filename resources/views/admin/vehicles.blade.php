@@ -43,6 +43,35 @@
 						>
 					</div>
 
+					<div class="input-group">
+						<label for="vehicle-model" class="input-label">Modelo</label>
+						<input
+							type="text"
+							id="vehicle-model"
+							name="model"
+							class="input"
+							placeholder="Ej. Ibiza 1.4 TDI"
+						>
+					</div>
+
+					<div class="input-group">
+						<label for="vehicle-professor" class="input-label">Asignar a profesor</label>
+						<select id="vehicle-professor" name="professor_id" class="input">
+							<option value="">-- Selecciona profesor --</option>
+							{{-- Aquí se llenará dinámicamente con JS --}}
+						</select>
+					</div>
+
+					<div class="input-group">
+						<label for="vehicle-notes" class="input-label">Notas</label>
+						<textarea
+							id="vehicle-notes"
+							name="notes"
+							class="input"
+							placeholder="Notas adicionales sobre el vehículo"
+						></textarea>
+					</div>
+
 					<div class="card-footer">
 						<button type="submit" id="vehicle-submit" class="btn btn-primary">Guardar</button>
 						<button type="button" id="vehicle-cancel" class="btn btn-outline hidden">Cancelar edición</button>

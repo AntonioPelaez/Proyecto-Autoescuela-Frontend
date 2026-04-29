@@ -1,248 +1,296 @@
-document.addEventListener('DOMContentLoaded', () => {
-	Router.init();
+document.addEventListener("DOMContentLoaded", () => {
+    Router.init();
 
-	const TABLE_BODY_ID = 'slots-table-body';
-	const form = document.getElementById('slot-form');
-	const slotIdInput = document.getElementById('slot-id');
-	const slotTownInput = document.getElementById('slot-town');
-	const slotDateInput = document.getElementById('slot-date');
-	const slotTimeInput = document.getElementById('slot-time');
-	const slotProfessorInput = document.getElementById('slot-professor');
-	const slotVehicleInput = document.getElementById('slot-vehicle');
-	const formTitle = document.getElementById('slot-form-title');
-	const cancelButton = document.getElementById('slot-cancel');
-	const createButton = document.getElementById('slot-create');
-	const tableBody = document.getElementById(TABLE_BODY_ID);
-	const messageBox = document.getElementById('slots-message');
+    const TABLE_BODY_ID = "slots-table-body";
+    const form = document.getElementById("slot-form");
+    const slotIdInput = document.getElementById("slot-id");
+    const slotTownInput = document.getElementById("slot-town");
+    const slotDateInput = document.getElementById("slot-date");
+    const slotTimeInput = document.getElementById("slot-time");
+    const slotProfessorInput = document.getElementById("slot-professor");
+    const slotVehicleInput = document.getElementById("slot-vehicle");
+    const formTitle = document.getElementById("slot-form-title");
+    const cancelButton = document.getElementById("slot-cancel");
+    const createButton = document.getElementById("slot-create");
+    const tableBody = document.getElementById(TABLE_BODY_ID);
+    const messageBox = document.getElementById("slots-message");
 
-	if (!form || !tableBody) {
-		return;
-	}
+    if (!form || !tableBody) {
+        return;
+    }
 
-	void bootstrap();
+    void bootstrap();
 
-	async function bootstrap() {
-		await Promise.all([loadSelectors(), loadSlots()]);
-	}
+    async function bootstrap() {
+        await Promise.all([loadSelectors(), loadSlots()]);
+    }
 
-	form.addEventListener('submit', async (event) => {
-		event.preventDefault();
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-		const id = slotIdInput.value;
-		const payload = {
-			townId: Number(slotTownInput.value),
-			date: slotDateInput.value,
-			time: slotTimeInput.value,
-			professorId: Number(slotProfessorInput.value),
-			vehicle: slotVehicleInput.value.trim(),
-		};
+        const id = slotIdInput.value;
+        const payload = {
+            townId: Number(slotTownInput.value),
+            date: slotDateInput.value,
+            time: slotTimeInput.value,
+            professorId: Number(slotProfessorInput.value),
+            vehicle: slotVehicleInput.value.trim(),
+        };
 
-		if (!payload.townId || !payload.date || !payload.time || !payload.professorId || !payload.vehicle) {
-			showState('error', 'Todos los campos son obligatorios.');
-			return;
-		}
+        if (
+            !payload.townId ||
+            !payload.date ||
+            !payload.time ||
+            !payload.professorId ||
+            !payload.vehicle
+        ) {
+            showState("error", "Todos los campos son obligatorios.");
+            return;
+        }
 
-		try {
-			showState('', '');
+        try {
+            showState("", "");
 
-			if (id) {
-				await Api.updateAvailabilitySlot(id, payload);
-				showState('success', 'Hueco actualizado correctamente.');
-			} else {
-				await Api.createAvailabilitySlot(payload);
-				showState('success', 'Hueco creado correctamente.');
-			}
+            if (id) {
+                await Api.updateAvailabilitySlot(id, payload);
+                showState("success", "Hueco actualizado correctamente.");
+            } else {
+                await Api.createAvailabilitySlot(payload);
+                showState("success", "Hueco creado correctamente.");
+            }
 
-			resetForm();
-			await loadSlots();
-		} catch (error) {
-			showState('error', error.message || 'No se pudo guardar el hueco.');
-		}
-	});
+            resetForm();
+            await loadSlots();
+        } catch (error) {
+            showState("error", error.message || "No se pudo guardar el hueco.");
+        }
+    });
 
-	cancelButton.addEventListener('click', () => {
-		resetForm();
-		showState('', '');
-	});
+    cancelButton.addEventListener("click", () => {
+        resetForm();
+        showState("", "");
+    });
 
-	createButton.addEventListener('click', () => {
-		resetForm();
-		slotTownInput.focus();
-	});
+    createButton.addEventListener("click", () => {
+        resetForm();
+        slotTownInput.focus();
+    });
 
-	tableBody.addEventListener('click', async (event) => {
-		const button = event.target.closest('button[data-action]');
-		if (!button) {
-			return;
-		}
+    tableBody.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) {
+            return;
+        }
 
-		const { action, id } = button.dataset;
+        const { action, id } = button.dataset;
 
-		try {
-			showState('', '');
+        try {
+            showState("", "");
 
-			if (action === 'edit') {
-				const slots = await Api.getAvailabilitySlots();
-				const slot = slots.find((item) => item.id === Number(id));
+            if (action === "edit") {
+                const slots = await Api.getAvailabilitySlots({
+                    town_id: slotTownInput.value,
+                    date: slotDateInput.value,
+                });
 
-				if (!slot) {
-					showState('error', 'El hueco no existe.');
-					return;
-				}
+                const slot = slots.find((item) => item.id === Number(id));
 
-				slotIdInput.value = String(slot.id);
-				slotTownInput.value = String(slot.townId);
-				slotDateInput.value = slot.date;
-				slotTimeInput.value = slot.time;
-				slotProfessorInput.value = String(slot.professorId);
-				slotVehicleInput.value = slot.vehicle;
-				formTitle.textContent = 'Editar hueco';
-				cancelButton.classList.remove('hidden');
-				slotTownInput.focus();
-				return;
-			}
+                if (!slot) {
+                    showState("error", "El hueco no existe.");
+                    return;
+                }
 
-			if (action === 'toggle') {
-				await Api.toggleOfferedSlot(id);
-				showState('success', 'Estado del hueco actualizado.');
-				await loadSlots();
-			}
-		} catch (error) {
-			showState('error', error.message || 'No se pudo completar la acción.');
-		}
-	});
+                slotIdInput.value = String(slot.id);
+                slotTownInput.value = String(slot.townId);
+                slotDateInput.value = slot.date;
+                slotTimeInput.value = slot.time;
+                slotProfessorInput.value = String(slot.professorId);
+                slotVehicleInput.value = slot.vehicle;
+                formTitle.textContent = "Editar hueco";
+                cancelButton.classList.remove("hidden");
+                slotTownInput.focus();
+                return;
+            }
 
-	async function loadSelectors() {
-		try {
-			const [towns, professors] = await Promise.all([
-				Api.getTowns(),
-				Api.getTeachers(),
-			]);
+            if (action === "toggle") {
+                await Api.toggleOfferedSlot(id);
+                showState("success", "Estado del hueco actualizado.");
+                await loadSlots();
+            }
+        } catch (error) {
+            showState(
+                "error",
+                error.message || "No se pudo completar la acción.",
+            );
+        }
+    });
 
-			renderTownOptions(towns);
-			renderProfessorOptions(professors);
-		} catch (error) {
-			showState('error', error.message || 'No se pudieron cargar los selectores.');
-		}
-	}
+    async function loadSelectors() {
+        try {
+            const [towns, professors] = await Promise.all([
+                Api.getTowns(),
+                Api.getTeachers(),
+            ]);
 
-	function renderTownOptions(towns) {
-		slotTownInput.replaceChildren();
+            renderTownOptions(towns);
+            renderProfessorOptions(professors);
+        } catch (error) {
+            showState(
+                "error",
+                error.message || "No se pudieron cargar los selectores.",
+            );
+        }
+    }
 
-		const defaultOption = document.createElement('option');
-		defaultOption.value = '';
-		defaultOption.textContent = 'Selecciona una población';
-		slotTownInput.appendChild(defaultOption);
+    function renderTownOptions(towns) {
+        slotTownInput.replaceChildren();
 
-		towns.forEach((town) => {
-			const option = document.createElement('option');
-			option.value = String(town.id);
-			option.textContent = town.name;
-			slotTownInput.appendChild(option);
-		});
-	}
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Selecciona una población";
+        slotTownInput.appendChild(defaultOption);
 
-	function renderProfessorOptions(professors) {
-		slotProfessorInput.replaceChildren();
+        towns.forEach((town) => {
+            const option = document.createElement("option");
+            option.value = String(town.id);
+            option.textContent = town.name;
+            slotTownInput.appendChild(option);
+        });
+    }
 
-		const defaultOption = document.createElement('option');
-		defaultOption.value = '';
-		defaultOption.textContent = 'Selecciona un profesor';
-		slotProfessorInput.appendChild(defaultOption);
+    function renderProfessorOptions(professors) {
+        slotProfessorInput.replaceChildren();
 
-		professors.forEach((professor) => {
-			const option = document.createElement('option');
-			option.value = String(professor.id);
-			option.textContent = professor.name;
-			slotProfessorInput.appendChild(option);
-		});
-	}
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Selecciona un profesor";
+        slotProfessorInput.appendChild(defaultOption);
 
-	async function loadSlots() {
-		UI.setLoading(TABLE_BODY_ID, true);
-		try {
-			const slots = await Api.getAvailabilitySlots();
-			renderSlots(slots);
-		} catch (error) {
-			showState('error', error.message || 'No se pudo cargar el listado.');
-		} finally {
-			UI.setLoading(TABLE_BODY_ID, false);
-		}
-	}
+        professors.forEach((professor) => {
+            const option = document.createElement("option");
+            option.value = String(professor.id);
+            option.textContent = professor.full_name;
+            slotProfessorInput.appendChild(option);
+        });
+    }
 
-	function renderSlots(slots) {
-		tableBody.replaceChildren();
+    async function loadSlots() {
+        UI.setLoading(TABLE_BODY_ID, true);
 
-		if (!slots.length) {
-			const row = document.createElement('tr');
-			row.className = 'table-empty';
-			const cell = document.createElement('td');
-			cell.colSpan = 8;
-			cell.textContent = 'No hay huecos ofertados.';
-			row.appendChild(cell);
-			tableBody.appendChild(row);
-			return;
-		}
+        const townId = slotTownInput.value;
+        const date = slotDateInput.value;
 
-		slots.forEach((slot) => {
-			const row = document.createElement('tr');
-			const status = slot.active ? 'Activo' : 'Inactivo';
-			const toggleLabel = slot.active ? 'Desactivar' : 'Activar';
+        if (!townId || !date) {
+            renderSlots([]); // tabla vacía
+            UI.setLoading(TABLE_BODY_ID, false);
+            return;
+        }
 
-			const idCell = createCell(String(slot.id));
-			const townCell = createCell(slot.townName);
-			const dateCell = createCell(slot.date);
-			const timeCell = createCell(slot.time);
-			const professorCell = createCell(slot.professorName);
-			const vehicleCell = createCell(slot.vehicle || 'Sin vehículo asignado');
-			const statusCell = createCell(status);
+        try {
+            const slots = await Api.getAvailabilitySlots({
+                town_id: townId,
+                date: date,
+            });
+            renderSlots(slots);
+        } catch (error) {
+            showState(
+                "error",
+                error.message || "No se pudo cargar el listado.",
+            );
+        } finally {
+            UI.setLoading(TABLE_BODY_ID, false);
+        }
+    }
 
-			const actionsCell = document.createElement('td');
+    function renderSlots(slots) {
+        tableBody.replaceChildren();
 
-			const editButton = document.createElement('button');
-			editButton.type = 'button';
-			editButton.className = 'btn btn-outline btn-sm';
-			editButton.dataset.action = 'edit';
-			editButton.dataset.id = String(slot.id);
-			editButton.textContent = 'Editar';
+        if (!slots.length) {
+            const row = document.createElement("tr");
+            row.className = "table-empty";
+            const cell = document.createElement("td");
+            cell.colSpan = 8;
+            cell.textContent = "No hay huecos ofertados.";
+            row.appendChild(cell);
+            tableBody.appendChild(row);
+            return;
+        }
 
-			const toggleButton = document.createElement('button');
-			toggleButton.type = 'button';
-			toggleButton.className = 'btn btn-secondary btn-sm';
-			toggleButton.dataset.action = 'toggle';
-			toggleButton.dataset.id = String(slot.id);
-			toggleButton.textContent = toggleLabel;
+        slots.forEach((slot) => {
+            const row = document.createElement("tr");
+            const status = slot.active ? "Activo" : "Inactivo";
+            const toggleLabel = slot.active ? "Desactivar" : "Activar";
 
-			actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
-			row.append(idCell, townCell, dateCell, timeCell, professorCell, vehicleCell, statusCell, actionsCell);
-			tableBody.appendChild(row);
-		});
-	}
+            const idCell = createCell(String(slot.id));
+            const townCell = createCell(slot.townName);
+            const dateCell = createCell(slot.date);
+            const timeCell = createCell(slot.time);
+            const professorCell = createCell(slot.professorName);
+            const vehicleCell = createCell(
+                slot.vehicle || "Sin vehículo asignado",
+            );
+            const statusCell = createCell(status);
 
-	function createCell(text) {
-		const cell = document.createElement('td');
-		cell.textContent = text;
-		return cell;
-	}
+            const actionsCell = document.createElement("td");
 
-	function resetForm() {
-		form.reset();
-		slotIdInput.value = '';
-		formTitle.textContent = 'Crear hueco';
-		cancelButton.classList.add('hidden');
-	}
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "btn btn-outline btn-sm";
+            editButton.dataset.action = "edit";
+            editButton.dataset.id = String(slot.id);
+            editButton.textContent = "Editar";
 
-	function showState(type, message) {
-		if (!message) {
-			messageBox.textContent = '';
-			messageBox.className = 'hidden';
-			return;
-		}
+            const toggleButton = document.createElement("button");
+            toggleButton.type = "button";
+            toggleButton.className = "btn btn-secondary btn-sm";
+            toggleButton.dataset.action = "toggle";
+            toggleButton.dataset.id = String(slot.id);
+            toggleButton.textContent = toggleLabel;
 
-		messageBox.textContent = message;
-		messageBox.className = type === 'error' ? 'card card-body input-error' : 'card card-body';
-		if (typeof UI !== 'undefined' && UI.showToast) {
-			UI.showToast(message, type === 'error' ? 'error' : 'success');
-		}
-	}
+            actionsCell.append(
+                editButton,
+                document.createTextNode(" "),
+                toggleButton,
+            );
+            row.append(
+                idCell,
+                townCell,
+                dateCell,
+                timeCell,
+                professorCell,
+                vehicleCell,
+                statusCell,
+                actionsCell,
+            );
+            tableBody.appendChild(row);
+        });
+    }
+
+    function createCell(text) {
+        const cell = document.createElement("td");
+        cell.textContent = text;
+        return cell;
+    }
+
+    function resetForm() {
+        form.reset();
+        slotIdInput.value = "";
+        formTitle.textContent = "Crear hueco";
+        cancelButton.classList.add("hidden");
+    }
+
+    function showState(type, message) {
+        if (!message) {
+            messageBox.textContent = "";
+            messageBox.className = "hidden";
+            return;
+        }
+
+        messageBox.textContent = message;
+        messageBox.className =
+            type === "error" ? "card card-body input-error" : "card card-body";
+        if (typeof UI !== "undefined" && UI.showToast) {
+            UI.showToast(message, type === "error" ? "error" : "success");
+        }
+    }
 });

@@ -278,9 +278,19 @@ const Api = {
     getAvailabilityHours() {
         return fetch(`${API_BASE_URL}/availability-hours`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },
-    getAvailabilitySlots() {
-        return fetch(`${API_BASE_URL}/availability-slots`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
-    },
+    getAvailabilitySlots(params = {}) {
+    const { town_id, date } = params;
+
+    const url = new URL(`${API_BASE_URL}/availability-slots`);
+    url.searchParams.append('town_id', town_id);
+    url.searchParams.append('date', date);
+
+    return fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders()
+    }).then(handleResponse);
+},
+
     createClassSession(data) {
         return fetch(`${API_BASE_URL}/class-sessions`, {
             method: 'POST',

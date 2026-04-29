@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadTimeSlots() {
         try {
-            timeSlots = await Api.getTimeSlots();
+            timeSlots = await Api.getAvailabilityHours();
         } catch (error) {
             console.error('Error loading time slots:', error);
         }

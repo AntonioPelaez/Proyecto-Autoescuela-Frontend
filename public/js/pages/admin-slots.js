@@ -46,10 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			showState('', '');
 
 			if (id) {
-				await Api.updateOfferedSlot(id, payload);
+				await Api.updateAvailabilitySlot(id, payload);
 				showState('success', 'Hueco actualizado correctamente.');
 			} else {
-				await Api.createOfferedSlot(payload);
+				await Api.createAvailabilitySlot(payload);
 				showState('success', 'Hueco creado correctamente.');
 			}
 
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			showState('', '');
 
 			if (action === 'edit') {
-				const slots = await Api.getOfferedSlots();
+				const slots = await Api.getAvailabilitySlots();
 				const slot = slots.find((item) => item.id === Number(id));
 
 				if (!slot) {
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		try {
 			const [towns, professors] = await Promise.all([
 				Api.getTowns(),
-				Api.getProfessors(),
+				Api.getTeachers(),
 			]);
 
 			renderTownOptions(towns);
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	async function loadSlots() {
 		UI.setLoading(TABLE_BODY_ID, true);
 		try {
-			const slots = await Api.getOfferedSlots();
+			const slots = await Api.getAvailabilitySlots();
 			renderSlots(slots);
 		} catch (error) {
 			showState('error', error.message || 'No se pudo cargar el listado.');

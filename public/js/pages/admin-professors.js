@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			showState('', '');
 
 			if (action === 'edit') {
-				const professors = await Api.getProfessors();
+				const professors = await Api.getTeachers();
 				const professor = professors.find((item) => item.id === Number(id));
 
 				if (!professor) {
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 
 				professorIdInput.value = professor.id;
-				professorNameInput.value = professor.name;
+				professorNameInput.value = professor.full_name;
 				professorEmailInput.value = professor.email;
 				professorActiveInput.checked = professor.active;
 				formTitle.textContent = 'Editar profesor';
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	async function loadProfessors() {
 		UI.setLoading(TABLE_BODY_ID, true);
 		try {
-			const professors = await Api.getProfessors();
+			const professors = await Api.getTeachers();
 			renderProfessors(professors);
 		} catch (error) {
 			showState('error', error.message || 'No se pudo cargar el listado.');
@@ -114,57 +114,58 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function renderProfessors(professors) {
-		tableBody.replaceChildren();
+    tableBody.replaceChildren();
 
-		if (!professors.length) {
-			const row = document.createElement('tr');
-			row.className = 'table-empty';
-			const cell = document.createElement('td');
-			cell.colSpan = 5;
-			cell.textContent = 'No hay profesores registrados.';
-			row.appendChild(cell);
-			tableBody.appendChild(row);
-			return;
-		}
+    if (!professors.length) {
+        const row = document.createElement('tr');
+        row.className = 'table-empty';
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.textContent = 'No hay profesores registrados.';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+        return;
+    }
 
-		professors.forEach((professor) => {
-			const row = document.createElement('tr');
-			const status = professor.active ? 'Activo' : 'Inactivo';
-			const toggleLabel = professor.active ? 'Desactivar' : 'Activar';
+    professors.forEach((professor) => {
+        const row = document.createElement('tr');
+        const status = professor.is_active_for_booking ? 'Activo' : 'Inactivo';
+        const toggleLabel = professor.is_active_for_booking ? 'Desactivar' : 'Activar';
 
-			const idCell = document.createElement('td');
-			idCell.textContent = String(professor.id);
+        const idCell = document.createElement('td');
+        idCell.textContent = String(professor.id);
 
-			const nameCell = document.createElement('td');
-			nameCell.textContent = professor.name;
+        const nameCell = document.createElement('td');
+        nameCell.textContent = professor.full_name;
 
-			const emailCell = document.createElement('td');
-			emailCell.textContent = professor.email;
+        const emailCell = document.createElement('td');
+        emailCell.textContent = professor.email;
 
-			const statusCell = document.createElement('td');
-			statusCell.textContent = status;
+        const statusCell = document.createElement('td');
+        statusCell.textContent = status;
 
-			const actionsCell = document.createElement('td');
+        const actionsCell = document.createElement('td');
 
-			const editButton = document.createElement('button');
-			editButton.type = 'button';
-			editButton.className = 'btn btn-outline btn-sm';
-			editButton.dataset.action = 'edit';
-			editButton.dataset.id = String(professor.id);
-			editButton.textContent = 'Editar';
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'btn btn-outline btn-sm';
+        editButton.dataset.action = 'edit';
+        editButton.dataset.id = String(professor.id);
+        editButton.textContent = 'Editar';
 
-			const toggleButton = document.createElement('button');
-			toggleButton.type = 'button';
-			toggleButton.className = 'btn btn-secondary btn-sm';
-			toggleButton.dataset.action = 'toggle';
-			toggleButton.dataset.id = String(professor.id);
-			toggleButton.textContent = toggleLabel;
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.className = 'btn btn-secondary btn-sm';
+        toggleButton.dataset.action = 'toggle';
+        toggleButton.dataset.id = String(professor.id);
+        toggleButton.textContent = toggleLabel;
 
-			actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
-			row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
-			tableBody.appendChild(row);
-		});
-	}
+        actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
+        row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
+        tableBody.appendChild(row);
+    });
+}
+
 
 	function resetForm() {
 		form.reset();

@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		try {
 			const [towns, professors] = await Promise.all([
 				Api.getTowns(),
-				Api.getProfessors(),
+				Api.getTeachers(),
 			]);
 
 			renderTownOptions(towns);
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	async function loadBookings() {
 		UI.setLoading(TABLE_BODY_ID, true);
 		try {
-			const bookings = await Api.getAdminBookings(getFilters());
+			const bookings = await Api.getAdminClasses(getFilters());
 			renderBookings(bookings);
 		} catch (error) {
 			showState('error', error.message || 'No se pudieron cargar las reservas.');

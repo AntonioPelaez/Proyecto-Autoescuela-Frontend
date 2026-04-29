@@ -76,6 +76,7 @@
 						<th>ID</th>
 						<th>Nombre</th>
 						<th>Email</th>
+						<th>Vehículos</th>
 						<th>Estado</th>
 						<th>Acciones</th>
 					</tr>

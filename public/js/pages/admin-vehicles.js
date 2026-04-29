@@ -5,12 +5,8 @@
 	const STATE_ID = 'vehicles-state';
 	const TABLE_BODY_ID = 'vehicles-table-body';
 
-	let vehicles = [
-		{ id: 1, name: 'Seat Ibiza', plate: '1234ABC', active: true },
-		{ id: 2, name: 'Renault Clio', plate: '5678DEF', active: true },
-		{ id: 3, name: 'Toyota Yaris', plate: '9012GHI', active: false },
-	];
-
+	let vehicles = [];
+	let professors = [];
 	let editingId = null;
 
 	function getStateEl() {
@@ -96,63 +92,90 @@
 
 	function renderRows() {
 		const tbody = document.getElementById(TABLE_BODY_ID);
-		if (!tbody) {
-			return;
-		}
-
+		if (!tbody) return;
 		tbody.replaceChildren();
-
 		if (!vehicles.length) {
 			showState('empty', 'No hay vehículos disponibles todavía.');
 			return;
 		}
-
 		showState('', '');
-
 		vehicles.forEach(function (vehicle) {
 			const row = document.createElement('tr');
-
 			const idCell = document.createElement('td');
 			idCell.textContent = String(vehicle.id);
-
 			const nameCell = document.createElement('td');
 			nameCell.textContent = vehicle.name;
-
 			const plateCell = document.createElement('td');
 			plateCell.textContent = vehicle.plate;
-
+			const modelCell = document.createElement('td');
+			modelCell.textContent = vehicle.model || '';
+			const professorCell = document.createElement('td');
+			let prof = professors.find(p => p.id === vehicle.professor_id);
+			professorCell.textContent = prof ? prof.full_name : '';
 			const stateCell = document.createElement('td');
 			stateCell.textContent = vehicle.active ? 'Activo' : 'Inactivo';
-
 			const actionsCell = document.createElement('td');
-
 			const editButton = document.createElement('button');
 			editButton.type = 'button';
 			editButton.className = 'btn btn-outline btn-sm';
 			editButton.dataset.action = 'edit';
 			editButton.dataset.id = String(vehicle.id);
 			editButton.textContent = 'Editar';
-
 			const toggleButton = document.createElement('button');
 			toggleButton.type = 'button';
 			toggleButton.className = 'btn btn-secondary btn-sm';
 			toggleButton.dataset.action = 'toggle';
 			toggleButton.dataset.id = String(vehicle.id);
 			toggleButton.textContent = vehicle.active ? 'Desactivar' : 'Activar';
-
-			actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
-			row.append(idCell, nameCell, plateCell, stateCell, actionsCell);
+			const deleteButton = document.createElement('button');
+			deleteButton.type = 'button';
+			deleteButton.className = 'btn btn-danger btn-sm';
+			deleteButton.dataset.action = 'delete';
+			deleteButton.dataset.id = String(vehicle.id);
+			deleteButton.textContent = 'Eliminar';
+			actionsCell.append(editButton, document.createTextNode(' '), toggleButton, document.createTextNode(' '), deleteButton);
+			row.append(idCell, nameCell, plateCell, modelCell, professorCell, stateCell, actionsCell);
 			tbody.appendChild(row);
+			if (action === 'delete') {
+				if (confirm('¿Seguro que quieres eliminar este vehículo?')) {
+					await Api.deleteVehicle(vehicle.id);
+					await loadVehicles();
+					showState('success', 'Vehículo eliminado.');
+					UI.showToast('Vehículo eliminado.', 'success');
+				}
+				return;
+			}
 		});
 	}
 
-	function loadVehicles() {
+	async function loadVehicles() {
 		UI.setLoading(TABLE_BODY_ID, true);
-
-		setTimeout(function () {
-			UI.setLoading(TABLE_BODY_ID, false);
+		try {
+			[vehicles, professors] = await Promise.all([
+				Api.getVehicles(),
+				Api.getTeachers()
+			]);
 			renderRows();
-		}, 150);
+			fillProfessorSelect();
+		} catch (error) {
+			showState('error', error.message || 'No se pudo cargar el listado.');
+		} finally {
+			UI.setLoading(TABLE_BODY_ID, false);
+		}
+	}
+
+	function fillProfessorSelect() {
+		const select = document.getElementById('vehicle-professor');
+		if (!select) return;
+		const current = select.value;
+		select.innerHTML = '<option value="">-- Selecciona profesor --</option>';
+		professors.filter(p => p.active).forEach(prof => {
+			const opt = document.createElement('option');
+			opt.value = prof.id;
+			opt.textContent = prof.full_name;
+			select.appendChild(opt);
+		});
+		select.value = current;
 	}
 
 	function handleSubmit(event) {
@@ -224,6 +247,23 @@
 			renderRows();
 			showState('success', 'Estado del vehículo actualizado.');
 			UI.showToast('Estado actualizado.', 'success');
+			return;
+		}
+
+		if (action === 'delete') {
+			if (confirm('¿Seguro que quieres eliminar este vehículo?')) {
+				Api.deleteVehicle(vehicle.id)
+					.then(() => {
+						showState('success', 'Vehículo eliminado.');
+						UI.showToast('Vehículo eliminado.', 'success');
+						loadVehicles();
+					})
+					.catch(error => {
+						showState('error', error.message || 'No se pudo eliminar el vehículo.');
+						UI.showToast('Error al eliminar.', 'error');
+					});
+			}
+			return;
 		}
 	}
 

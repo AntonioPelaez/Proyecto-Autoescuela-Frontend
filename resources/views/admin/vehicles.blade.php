@@ -16,7 +16,7 @@
 				<h2 id="vehicle-form-title">Añadir vehículo</h2>
 			</div>
 			<div class="card-body">
-				<form id="vehicle-form" novalidate>
+				<form id="vehicle-form" novalidate style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
 					<input type="hidden" id="vehicle-id" name="id">
 
 					<div class="input-group">
@@ -54,12 +54,12 @@
 						>
 					</div>
 
-					<div class="input-group">
-						<label for="vehicle-professor" class="input-label">Asignar a profesor</label>
-						<select id="vehicle-professor" name="professor_id" class="input">
+					<div class="input-group floating-label">
+						<select id="vehicle-professor" name="professor_id" class="input" style="width:100%">
 							<option value="">-- Selecciona profesor --</option>
-							{{-- Aquí se llenará dinámicamente con JS --}}
+							{{-- Opciones dinámicas por JS --}}
 						</select>
+						<label for="vehicle-professor"><i class="fa fa-user"></i> Profesor asignado</label>
 					</div>
 
 					<div class="input-group">
@@ -92,6 +92,8 @@
 							<th>ID</th>
 							<th>Vehículo</th>
 							<th>Matrícula</th>
+							<th>Modelo</th>
+							<th>Profesor</th>
 							<th>Estado</th>
 							<th>Acciones</th>
 						</tr>

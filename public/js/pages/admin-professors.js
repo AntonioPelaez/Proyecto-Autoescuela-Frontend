@@ -107,6 +107,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     showState("error", "El profesor no existe.");
                     return;
                 }
+			if (action === 'edit') {
+				const professors = await Api.getTeachers();
+				UI.setLoading(TABLE_BODY_ID, true);
+
+						const [professors, vehicles] = await Promise.all([
+							Api.getTeachers(),
+							Api.getVehicles()
+						]);
+						renderProfessors(professors, vehicles);
+					return;
+				}
 
                 professorIdInput.value = professor.id;
                 professorNameInput.value = professor.full_name;
@@ -121,6 +132,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 professorNameInput.focus();
                 return;
             }
+				professorIdInput.value = professor.id;
+				professorNameInput.value = professor.full_name;
+				professorEmailInput.value = professor.email;
+				professorActiveInput.checked = professor.active;
+				function renderProfessors(professors, vehicles) {
+				cancelButton.classList.remove('hidden');
+				professorNameInput.focus();
+				return;
+			}
 
             if (action === "toggle") {
                 await Api.toggleProfessor(id);
@@ -134,6 +154,25 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     });
+			if (action === 'toggle') {
+				await Api.toggleProfessor(id);
+				showState('success', 'Estado del profesor actualizado.');
+				await loadProfessors();
+				return;
+			}
+
+			if (action === 'delete') {
+				if (confirm('¿Seguro que quieres eliminar este profesor?')) {
+					await Api.deleteTeacher(id);
+					showState('success', 'Profesor eliminado.');
+					await loadProfessors();
+				}
+				return;
+			}
+		} catch (error) {
+			showState('error', error.message || 'No se pudo completar la acción.');
+		}
+	});
 
     async function loadProfessors() {
         UI.setLoading(TABLE_BODY_ID, true);
@@ -152,6 +191,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderProfessors(professors) {
         tableBody.replaceChildren();
+	function renderProfessors(professors, vehicles) {
+    tableBody.replaceChildren();
 
         if (!professors.length) {
             const row = document.createElement("tr");
@@ -201,15 +242,12 @@ document.addEventListener("DOMContentLoaded", () => {
             toggleButton.dataset.id = String(professor.id);
             toggleButton.textContent = toggleLabel;
 
-            actionsCell.append(
-                editButton,
-                document.createTextNode(" "),
-                toggleButton,
-            );
-            row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
-            tableBody.appendChild(row);
-        });
-    }
+        actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
+        row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
+        tableBody.appendChild(row);
+    });
+}
+
 
     function resetForm() {
         form.reset();

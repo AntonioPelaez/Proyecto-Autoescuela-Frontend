@@ -57,6 +57,7 @@
 					</tr>
 				</thead>
 				<tbody id="towns-table-body">
+				<!-- Las filas se rellenan por JS, se añade el botón de eliminar en el JS -->
 				</tbody>
 			</table>
 			</div>

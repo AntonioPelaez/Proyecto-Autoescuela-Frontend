@@ -84,6 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
 				await Api.toggleTown(id);
 				showState('success', 'Estado de la población actualizado.');
 				await loadTowns();
+				return;
+			}
+
+			if (action === 'delete') {
+				if (confirm('¿Seguro que quieres eliminar esta población?')) {
+					await Api.deleteTown(id);
+					showState('success', 'Población eliminada.');
+					await loadTowns();
+				}
+				return;
 			}
 		} catch (error) {
 			showState('error', error.message || 'No se pudo completar la acción.');
@@ -146,9 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
 			toggleButton.dataset.id = String(town.id);
 			toggleButton.textContent = toggleLabel;
 
-			actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
+			const deleteButton = document.createElement('button');
+			deleteButton.type = 'button';
+			deleteButton.className = 'btn btn-danger btn-sm';
+			deleteButton.dataset.action = 'delete';
+			deleteButton.dataset.id = String(town.id);
+			deleteButton.textContent = 'Eliminar';
+
+			actionsCell.append(editButton, document.createTextNode(' '), toggleButton, document.createTextNode(' '), deleteButton);
 			row.append(idCell, nameCell, statusCell, actionsCell);
 			tableBody.appendChild(row);
+
+			
 		});
 	}
 

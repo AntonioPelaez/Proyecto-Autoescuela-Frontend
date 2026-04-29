@@ -158,6 +158,13 @@ const Api = {
 
         }).then(handleResponse);
     },
+    toggleProfessor(id) {
+        return fetch(`${API_BASE_URL}/teachers/${id}/toggle`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+
+        }).then(handleResponse);
+    },
     getTeacherNotes(id) {
         return fetch(`${API_BASE_URL}/teachers/${id}/notes`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },

@@ -7,9 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const professorNameInput = document.getElementById("professor-name");
     const professorEmailInput = document.getElementById("professor-email");
     const dniInput = document.getElementById("professor-dni");
-    const licenseNumberInput = document.getElementById(
-        "professor-license",
-    );
+    const licenseNumberInput = document.getElementById("professor-license");
     const notesInput = document.getElementById("professor-notes");
     const professorActiveInput = document.getElementById("professor-active");
     const formTitle = document.getElementById("professor-form-title");
@@ -20,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadProfessors();
 
+    // ─────────────────────────────────────────────
+    // SUBMIT FORM
+    // ─────────────────────────────────────────────
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -69,13 +70,13 @@ document.addEventListener("DOMContentLoaded", () => {
             resetForm();
             await loadProfessors();
         } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudo guardar el profesor.",
-            );
+            showState("error", error.message || "No se pudo guardar el profesor.");
         }
     });
 
+    // ─────────────────────────────────────────────
+    // BOTONES DEL FORMULARIO
+    // ─────────────────────────────────────────────
     cancelButton.addEventListener("click", () => {
         resetForm();
         showState("", "");
@@ -86,38 +87,27 @@ document.addEventListener("DOMContentLoaded", () => {
         professorNameInput.focus();
     });
 
+    // ─────────────────────────────────────────────
+    // ACCIONES DE LA TABLA
+    // ─────────────────────────────────────────────
     tableBody.addEventListener("click", async (event) => {
         const button = event.target.closest("button[data-action]");
-        if (!button) {
-            return;
-        }
+        if (!button) return;
 
         const { action, id } = button.dataset;
 
         try {
             showState("", "");
 
+            // EDITAR
             if (action === "edit") {
                 const professors = await Api.getTeachers();
-                const professor = professors.find(
-                    (item) => item.id === Number(id),
-                );
+                const professor = professors.find((item) => item.id === Number(id));
 
                 if (!professor) {
                     showState("error", "El profesor no existe.");
                     return;
                 }
-			if (action === 'edit') {
-				const professors = await Api.getTeachers();
-				UI.setLoading(TABLE_BODY_ID, true);
-
-						const [professors, vehicles] = await Promise.all([
-							Api.getTeachers(),
-							Api.getVehicles()
-						]);
-						renderProfessors(professors, vehicles);
-					return;
-				}
 
                 professorIdInput.value = professor.id;
                 professorNameInput.value = professor.full_name;
@@ -132,67 +122,50 @@ document.addEventListener("DOMContentLoaded", () => {
                 professorNameInput.focus();
                 return;
             }
-				professorIdInput.value = professor.id;
-				professorNameInput.value = professor.full_name;
-				professorEmailInput.value = professor.email;
-				professorActiveInput.checked = professor.active;
-				function renderProfessors(professors, vehicles) {
-				cancelButton.classList.remove('hidden');
-				professorNameInput.focus();
-				return;
-			}
 
-            if (action === "toggle") {
-                await Api.toggleProfessor(id);
-                showState("success", "Estado del profesor actualizado.");
-                await loadProfessors();
-            }
-        } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudo completar la acción.",
-            );
-        }
-    });
-			if (action === 'toggle') {
+            // ACTIVAR / DESACTIVAR
+            if (action === 'toggle') {
 				await Api.toggleProfessor(id);
 				showState('success', 'Estado del profesor actualizado.');
 				await loadProfessors();
 				return;
 			}
 
-			if (action === 'delete') {
-				if (confirm('¿Seguro que quieres eliminar este profesor?')) {
-					await Api.deleteTeacher(id);
-					showState('success', 'Profesor eliminado.');
-					await loadProfessors();
-				}
-				return;
-			}
-		} catch (error) {
-			showState('error', error.message || 'No se pudo completar la acción.');
-		}
-	});
+            // ELIMINAR
+            if (action === "delete") {
+                if (confirm("¿Seguro que quieres eliminar este profesor?")) {
+                    await Api.deleteTeacher(id);
+                    showState("success", "Profesor eliminado.");
+                    await loadProfessors();
+                }
+                return;
+            }
 
+        } catch (error) {
+            showState("error", error.message || "No se pudo completar la acción.");
+        }
+    });
+
+    // ─────────────────────────────────────────────
+    // CARGAR LISTADO
+    // ─────────────────────────────────────────────
     async function loadProfessors() {
         UI.setLoading(TABLE_BODY_ID, true);
         try {
             const professors = await Api.getTeachers();
             renderProfessors(professors);
         } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudo cargar el listado.",
-            );
+            showState("error", error.message || "No se pudo cargar el listado.");
         } finally {
             UI.setLoading(TABLE_BODY_ID, false);
         }
     }
 
+    // ─────────────────────────────────────────────
+    // RENDER TABLA
+    // ─────────────────────────────────────────────
     function renderProfessors(professors) {
         tableBody.replaceChildren();
-	function renderProfessors(professors, vehicles) {
-    tableBody.replaceChildren();
 
         if (!professors.length) {
             const row = document.createElement("tr");
@@ -207,48 +180,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         professors.forEach((professor) => {
             const row = document.createElement("tr");
-            const status = professor.is_active_for_booking
-                ? "Activo"
-                : "Inactivo";
-            const toggleLabel = professor.is_active_for_booking
-                ? "Desactivar"
-                : "Activar";
 
-            const idCell = document.createElement("td");
-            idCell.textContent = String(professor.id);
+            const status = professor.is_active_for_booking ? "Activo" : "Inactivo";
+            const toggleLabel = professor.is_active_for_booking ? "Desactivar" : "Activar";
 
-            const nameCell = document.createElement("td");
-            nameCell.textContent = professor.full_name;
+            const vehicles = professor.vehicles?.length
+    ? professor.vehicles.map(v => `${v.brand} ${v.model}`).join(', ')
+    : '—';
 
-            const emailCell = document.createElement("td");
-            emailCell.textContent = professor.email;
-
-            const statusCell = document.createElement("td");
-            statusCell.textContent = status;
-
-            const actionsCell = document.createElement("td");
-
-            const editButton = document.createElement("button");
-            editButton.type = "button";
-            editButton.className = "btn btn-outline btn-sm";
-            editButton.dataset.action = "edit";
-            editButton.dataset.id = String(professor.id);
-            editButton.textContent = "Editar";
-
-            const toggleButton = document.createElement("button");
-            toggleButton.type = "button";
-            toggleButton.className = "btn btn-secondary btn-sm";
-            toggleButton.dataset.action = "toggle";
-            toggleButton.dataset.id = String(professor.id);
-            toggleButton.textContent = toggleLabel;
-
-        actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
-        row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
-        tableBody.appendChild(row);
-    });
-}
+row.innerHTML = `
+    <td>${professor.id}</td>
+    <td>${professor.full_name}</td>
+    <td>${professor.email}</td>
+    <td>${vehicles}</td>
+    <td>${status}</td>
+    <td>
+        <button class="btn btn-outline btn-sm" data-action="edit" data-id="${professor.id}">Editar</button>
+        <button class="btn btn-secondary btn-sm" data-action="toggle" data-id="${professor.id}">${toggleLabel}</button>
+        <button class="btn btn-danger btn-sm" data-action="delete" data-id="${professor.id}">Eliminar</button>
+    </td>
+`;
 
 
+            tableBody.appendChild(row);
+        });
+    }
+
+    // ─────────────────────────────────────────────
+    // UTILIDADES
+    // ─────────────────────────────────────────────
     function resetForm() {
         form.reset();
         professorIdInput.value = "";
@@ -267,6 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageBox.textContent = message;
         messageBox.className =
             type === "error" ? "card card-body input-error" : "card card-body";
+
         if (typeof UI !== "undefined" && UI.showToast) {
             UI.showToast(message, type === "error" ? "error" : "success");
         }

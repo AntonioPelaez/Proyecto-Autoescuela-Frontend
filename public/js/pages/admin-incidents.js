@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UI.setLoading(true);
         try {
             const incidents = await Api.getTeacherAvailabilityExceptions(filters);
-            renderIncidents(incidents.exceptions);
+            renderIncidents(incidents.exception);
         } catch (error) {
             showState('error', error.message || 'Error al filtrar incidencias.');
         } finally {

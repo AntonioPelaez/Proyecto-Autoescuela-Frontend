@@ -74,10 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (action === 'edit') {
 				const professors = await Api.getTeachers();
-				const professor = professors.find((item) => item.id === Number(id));
+				UI.setLoading(TABLE_BODY_ID, true);
 
-				if (!professor) {
-					showState('error', 'El profesor no existe.');
+						const [professors, vehicles] = await Promise.all([
+							Api.getTeachers(),
+							Api.getVehicles()
+						]);
+						renderProfessors(professors, vehicles);
 					return;
 				}
 
@@ -85,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				professorNameInput.value = professor.full_name;
 				professorEmailInput.value = professor.email;
 				professorActiveInput.checked = professor.active;
-				formTitle.textContent = 'Editar profesor';
+				function renderProfessors(professors, vehicles) {
 				cancelButton.classList.remove('hidden');
 				professorNameInput.focus();
 				return;
@@ -95,6 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
 				await Api.toggleProfessor(id);
 				showState('success', 'Estado del profesor actualizado.');
 				await loadProfessors();
+				return;
+			}
+
+			if (action === 'delete') {
+				if (confirm('¿Seguro que quieres eliminar este profesor?')) {
+					await Api.deleteTeacher(id);
+					showState('success', 'Profesor eliminado.');
+					await loadProfessors();
+				}
+				return;
 			}
 		} catch (error) {
 			showState('error', error.message || 'No se pudo completar la acción.');
@@ -113,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function renderProfessors(professors) {
+	function renderProfessors(professors, vehicles) {
     tableBody.replaceChildren();
 
     if (!professors.length) {
@@ -160,7 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleButton.dataset.id = String(professor.id);
         toggleButton.textContent = toggleLabel;
 
-        actionsCell.append(editButton, document.createTextNode(' '), toggleButton);
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'btn btn-danger btn-sm';
+        deleteButton.dataset.action = 'delete';
+        deleteButton.dataset.id = String(professor.id);
+        deleteButton.textContent = 'Eliminar';
+
+        actionsCell.append(editButton, document.createTextNode(' '), toggleButton, document.createTextNode(' '), deleteButton);
         row.append(idCell, nameCell, emailCell, statusCell, actionsCell);
         tableBody.appendChild(row);
     });

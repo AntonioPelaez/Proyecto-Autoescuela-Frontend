@@ -83,6 +83,7 @@
         document.getElementById("vehicle-model").value = vehicle.model || "";
         document.getElementById("vehicle-professor").value =
             vehicle.professor_id || "";
+        document.getElementById("vehicle-notes").value = vehicle.notes || "";
 
         document.getElementById("vehicle-form-title").textContent =
             "Editar vehículo";
@@ -235,54 +236,40 @@
     }
 
     async function handleSubmit(event) {
-        event.preventDefault();
+    event.preventDefault();
 
-        const form = event.currentTarget;
-        const name = form.name.value.trim();
-        const plate = normalizePlate(form.plate.value);
-        const model = form.model?.value?.trim?.() || "";
-        const professorIdRaw = form.professor_id?.value;
-        const professor_id =
-            professorIdRaw === "" || typeof professorIdRaw === "undefined"
-                ? null
-                : Number(professorIdRaw);
+    const form = event.currentTarget;
 
-        if (!name || !plate) {
-            showState("error", "Debes completar nombre y matrícula.");
-            UI.showToast("Completa los campos obligatorios.", "error");
-            return;
+    const data = {
+    brand: document.getElementById("vehicle-name").value.trim(),
+    plate_number: normalizePlate(document.getElementById("vehicle-plate").value),
+    model: document.getElementById("vehicle-model").value.trim() || "",
+    notes: document.getElementById("vehicle-notes").value.trim() || "",
+    teacher_profile_id: document.getElementById("vehicle-professor").value || null,
+    is_active: true,
+};
+
+    try {
+        if (editingId === null) {
+            await Api.createVehicle(data);
+
+            showState("success", "Vehículo creado correctamente.");
+            UI.showToast("Vehículo añadido.", "success");
+        } else {
+            await Api.updateVehicle(editingId, data);
+
+            showState("success", "Vehículo actualizado correctamente.");
+            UI.showToast("Vehículo actualizado.", "success");
         }
 
-        try {
-            if (editingId === null) {
-                // Crear vehículo vía API
-                await Api.createVehicle({
-                    name,
-                    plate,
-                    model,
-                    professor_id,
-                    active: true,
-                });
-                showState("success", "Vehículo creado correctamente.");
-                UI.showToast("Vehículo añadido.", "success");
-            } else {
-                // Editar vehículo vía API
-                await Api.updateVehicle(editingId, {
-                    name,
-                    plate,
-                    model,
-                    professor_id,
-                });
-                showState("success", "Vehículo actualizado correctamente.");
-                UI.showToast("Vehículo actualizado.", "success");
-            }
-            resetForm();
-            await loadVehicles();
-        } catch (error) {
-            showState("error", error.message || "No se pudo guardar el vehículo.");
-            UI.showToast("Error al guardar el vehículo.", "error");
-        }
+        resetForm();
+        loadVehicles(); // 🔥 recarga desde backend
+
+    } catch (error) {
+        showState("error", error.message || "Error al guardar.");
+        UI.showToast("Error al guardar.", "error");
     }
+}
 
     async function handleTableClick(event) {
         const target = event.target;

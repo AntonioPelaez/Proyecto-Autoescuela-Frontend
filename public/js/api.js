@@ -296,6 +296,15 @@ const Api = {
         }).then(handleResponse);
     },
 
+    changeStudentPassword(id, data) {
+    return fetch(`${API_BASE_URL}/students/${id}/password`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    }).then(handleResponse);
+},
+
+
     // ─────────── CLASES Y RESERVAS ───────────
     getMyClasses() {
         return fetch(`${API_BASE_URL}/my-classes`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);

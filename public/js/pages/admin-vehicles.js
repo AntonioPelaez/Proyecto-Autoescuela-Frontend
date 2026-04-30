@@ -14,6 +14,7 @@
         return document.getElementById(STATE_ID);
     }
 
+    function showState(type, message) {
         const stateEl = getStateEl();
         if (!stateEl) return;
 

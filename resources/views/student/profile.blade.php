@@ -46,14 +46,6 @@
                            autocomplete="tel" placeholder="6XX XXX XXX">
                 </div>
 
-                <div class="input-group">
-                    <label for="profile-town" class="input-label">Sede / Población preferida</label>
-                    <select id="profile-town" name="town_id" class="input">
-                        <option value="1">Carmona</option>
-                        <option value="2">Sevilla</option>
-                        <option value="3">Écija</option>
-                    </select>
-                </div>
 
                 <div class="profile-form-footer">
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>

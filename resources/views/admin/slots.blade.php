@@ -31,16 +31,17 @@
 							<input type="date" id="slot-date" name="date" class="input" required>
 						</div>
 
-						<div class="input-group">
-							<label class="input-label" for="slot-time">Hora</label>
-							<input type="time" id="slot-time" name="time" class="input" required>
-						</div>
+
 
 						<div class="input-group">
 							<label class="input-label" for="slot-professor">Profesor</label>
 							<select id="slot-professor" name="professorId" class="input" required>
 								<option value="">Selecciona un profesor</option>
 							</select>
+						</div>
+						<div class="input-group" id="slot-time-grid-wrapper">
+							<div id="slot-time-grid" style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem;"></div>
+							<input type="hidden" id="slot-time" name="time" required>
 						</div>
 
 						<div class="input-group">

@@ -1,3 +1,20 @@
+    // --- Handler para cambio de profesor ---
+    function onProfessorChange() {
+        autocompleteVehicle();
+        // Si hay fecha seleccionada, renderiza cuadrícula y bloquea horas ocupadas
+        if (slotDateInput.value) {
+            renderHourGrid();
+            updateHourGridWithBookings();
+        } else {
+            // Si no hay fecha, solo muestra la cuadrícula vacía
+            renderHourGrid();
+        }
+    }
+
+    slotDateInput.addEventListener('change', () => {
+        renderHourGrid();
+        updateHourGridWithBookings();
+    });
 document.addEventListener("DOMContentLoaded", () => {
     Router.init();
 
@@ -125,23 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    async function loadSelectors() {
-        try {
-            const [towns, professors] = await Promise.all([
-                Api.getTowns(),
-                Api.getTeachers(),
-            ]);
 
-            renderTownOptions(towns);
-            renderProfessorOptions(professors);
-        } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudieron cargar los selectores.",
-            );
-        }
-    }
-
+    // --- Declaraciones necesarias arriba ---
+    let professorsList = [];
     function renderTownOptions(towns) {
         slotTownInput.replaceChildren();
 
@@ -158,118 +161,90 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function renderProfessorOptions(professors) {
-        slotProfessorInput.replaceChildren();
+    async function loadSelectors() {
+        try {
+            const [towns, professors] = await Promise.all([
+                Api.getTowns(),
+                Api.getTeachers(),
+            ]);
+            renderTownOptions(towns);
+            renderProfessorOptions(professors);
+        } catch (error) {
+            showState(
+                "error",
+                error.message || "No se pudieron cargar los selectores.",
+            );
+        }
+    }
 
+    function renderProfessorOptions(professors) {
+        professorsList = professors;
+        slotProfessorInput.replaceChildren();
         const defaultOption = document.createElement("option");
         defaultOption.value = "";
         defaultOption.textContent = "Selecciona un profesor";
         slotProfessorInput.appendChild(defaultOption);
-
         professors.forEach((professor) => {
             const option = document.createElement("option");
             option.value = String(professor.id);
             option.textContent = professor.name;
             slotProfessorInput.appendChild(option);
         });
+        slotProfessorInput.removeEventListener('change', onProfessorChange);
+        slotProfessorInput.addEventListener('change', onProfessorChange);
+        // Inicializa cuadrícula y vehículo si ya hay valor (edición)
+        setTimeout(() => {
+            renderHourGrid();
+            autocompleteVehicle();
+        }, 0);
     }
 
-    async function loadSlots() {
-        UI.setLoading(TABLE_BODY_ID, true);
+    // --- FIN FUNCIONES GLOBALES ---
 
-        const townId = slotTownInput.value;
-        const date = slotDateInput.value;
-
-        if (!townId || !date) {
-            renderSlots([]); // tabla vacía
-            UI.setLoading(TABLE_BODY_ID, false);
+    // --- CUADRÍCULA DE HORAS ---
+    function renderHourGrid() {
+        const grid = document.getElementById('slot-time-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        // Solo mostrar si hay profesor seleccionado
+        if (!slotProfessorInput.value) {
+            grid.style.display = 'none';
             return;
         }
-
-        try {
-            const slots = await Api.getAvailabilitySlots({
-                town_id: townId,
-                date: date,
-            });
-            renderSlots(slots);
-        } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudo cargar el listado.",
-            );
-        } finally {
-            UI.setLoading(TABLE_BODY_ID, false);
+        grid.style.display = 'flex';
+        // Generar intervalos de 15 minutos de 8:00 a 21:45
+        const startHour = 8, endHour = 21, interval = 15;
+        for (let h = startHour; h <= endHour; h++) {
+            for (let m = 0; m < 60; m += interval) {
+                const hour = String(h).padStart(2, '0');
+                const min = String(m).padStart(2, '0');
+                const value = `${hour}:${min}`;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-light btn-sm hour-btn';
+                btn.textContent = value;
+                btn.tabIndex = 0;
+                btn.style.minWidth = '54px';
+                btn.style.marginBottom = '2px';
+                btn.onclick = () => {
+                    slotTimeInput.value = value;
+                    // Resalta el botón seleccionado
+                    grid.querySelectorAll('.hour-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                };
+                grid.appendChild(btn);
+            }
         }
     }
+    // --- FIN CUADRÍCULA DE HORAS ---
 
-    function renderSlots(slots) {
-        tableBody.replaceChildren();
-
-        if (!slots.length) {
-            const row = document.createElement("tr");
-            row.className = "table-empty";
-            const cell = document.createElement("td");
-            cell.colSpan = 8;
-            cell.textContent = "No hay huecos ofertados.";
-            row.appendChild(cell);
-            tableBody.appendChild(row);
-            return;
+    function autocompleteVehicle() {
+        const profId = Number(slotProfessorInput.value);
+        const prof = professorsList.find(p => Number(p.id) === profId);
+        if (prof && prof.vehicles && prof.vehicles.length > 0) {
+            // Selecciona el primer vehículo asignado
+            slotVehicleInput.value = prof.vehicles[0].brand + ' ' + prof.vehicles[0].model;
         }
-
-        slots.forEach((slot) => {
-            const row = document.createElement("tr");
-            const status = slot.active ? "Activo" : "Inactivo";
-            const toggleLabel = slot.active ? "Desactivar" : "Activar";
-
-            const idCell = createCell(String(slot.id));
-            const townCell = createCell(slot.townName);
-            const dateCell = createCell(slot.date);
-            const timeCell = createCell(slot.time);
-            const professorCell = createCell(slot.professorName);
-            const vehicleCell = createCell(
-                slot.vehicle || "Sin vehículo asignado",
-            );
-            const statusCell = createCell(status);
-
-            const actionsCell = document.createElement("td");
-
-            const editButton = document.createElement("button");
-            editButton.type = "button";
-            editButton.className = "btn btn-outline btn-sm";
-            editButton.dataset.action = "edit";
-            editButton.dataset.id = String(slot.id);
-            editButton.textContent = "Editar";
-
-            const toggleButton = document.createElement("button");
-            toggleButton.type = "button";
-            toggleButton.className = "btn btn-secondary btn-sm";
-            toggleButton.dataset.action = "toggle";
-            toggleButton.dataset.id = String(slot.id);
-            toggleButton.textContent = toggleLabel;
-
-            actionsCell.append(
-                editButton,
-                document.createTextNode(" "),
-                toggleButton,
-            );
-            row.append(
-                idCell,
-                townCell,
-                dateCell,
-                timeCell,
-                professorCell,
-                vehicleCell,
-                statusCell,
-                actionsCell,
-            );
-            tableBody.appendChild(row);
-        });
-    }
-
-    function createCell(text) {
-        const cell = document.createElement("td");
-        cell.textContent = text;
-        return cell;
     }
 
     function resetForm() {

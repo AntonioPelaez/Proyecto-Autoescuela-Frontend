@@ -10,7 +10,7 @@
             <p>Ingresa tu email y te enviaremos instrucciones para resetear tu contraseña.</p>
         </div>
 
-        <form id="forgot-password-form" class="auth-form">
+        <form id="forgot-password-form" class="auth-form" role="form" aria-label="Formulario de recuperación de contraseña">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input 
@@ -24,7 +24,7 @@
                 <span class="input-error" id="email-error"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">
+            <button type="submit" class="btn btn-primary btn-block" aria-label="Enviar instrucciones de recuperación">
                 <span class="btn-text">Enviar instrucciones</span>
                 <span class="btn-loader" style="display: none;">
                     <div class="loader-spinner"></div>

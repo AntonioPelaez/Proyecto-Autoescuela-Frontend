@@ -11,12 +11,31 @@ function getAuthHeaders() {
     return headers;
 }
 
+/**
+ * Manejo centralizado de respuestas y errores HTTP para toda la app.
+ * Devuelve siempre un objeto consistente para errores y datos.
+ */
 async function handleResponse(response) {
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || 'Error en la petición API');
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        data = {};
     }
-    return response.json();
+
+    if (!response.ok) {
+        // Extrae mensaje de error y detalles si existen
+        const error = {
+            status: response.status,
+            statusText: response.statusText,
+            message: data?.message || 'Error en la petición API',
+            errors: data?.errors || null,
+            raw: data
+        };
+        // Permite capturar el error como objeto
+        throw error;
+    }
+    return data;
 }
 
 const Api = {

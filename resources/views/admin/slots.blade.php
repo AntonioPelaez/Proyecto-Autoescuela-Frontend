@@ -9,14 +9,14 @@
 				<a href="/dashboard" class="btn btn-outline btn-sm">Ir al panel</a>
 			</header>
 
-			<div id="slots-message" class="hidden"></div>
+			<div id="slots-message" class="hidden" tabindex="-1"></div>
 
 			<section class="card">
 				<div class="card-header">
 					<h2 id="slot-form-title">Crear hueco</h2>
 				</div>
 				<div class="card-body">
-					<form id="slot-form" novalidate>
+					<form id="slot-form" novalidate role="form" aria-label="Formulario de gestión de huecos de clase">
 						<input type="hidden" id="slot-id" name="id">
 
 						<div class="input-group">
@@ -56,8 +56,8 @@
 						</div>
 
 						<div class="table-actions">
-							<button type="submit" id="slot-submit" class="btn btn-primary">Guardar</button>
-							<button type="button" id="slot-cancel" class="btn btn-outline hidden">Cancelar edición</button>
+							<button type="submit" id="slot-submit" class="btn btn-primary" aria-label="Guardar hueco">Guardar</button>
+							<button type="button" id="slot-cancel" class="btn btn-outline hidden" aria-label="Cancelar edición">Cancelar edición</button>
 						</div>
 					</form>
 				</div>
@@ -66,18 +66,18 @@
 			<section class="card">
 				<div class="card-header">
 					<h2>Listado de huecos</h2>
-					<button type="button" id="slot-create" class="btn btn-secondary btn-sm">Crear</button>
+					<button type="button" id="slot-create" class="btn btn-secondary btn-sm" aria-label="Crear nuevo hueco">Crear</button>
 				</div>
 				<div class="card-body table-wrapper">
-					<table id="slots-table" class="table table-striped table-hover">
+					<table id="slots-table" class="table table-striped table-hover" role="table" aria-label="Listado de huecos ofertados">
 						<thead>
 							<tr>
-								<th>ID</th>
-								<th>Población</th>
-								<th>Fecha</th>
-								<th>Hora</th>
-								<th>Profesor</th>
-								<th>Vehículo</th>
+								<th scope="col">ID</th>
+								<th scope="col">Población</th>
+								<th scope="col">Fecha</th>
+								<th scope="col">Hora</th>
+								<th scope="col">Profesor</th>
+								<th scope="col">Vehículo</th>
 								<th>Estado</th>
 								<th>Acciones</th>
 							</tr>
@@ -90,4 +90,24 @@
 
 @section('scripts')
 	<script src="{{ asset('js/pages/admin-slots.js') }}" defer></script>
+	<style>
+	.state-message {
+	  margin: 1.2rem 0 0.7rem 0;
+	  font-size: 1.08rem;
+	  font-weight: 500;
+	  border-radius: 8px;
+	  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	  outline: none;
+	}
+	.state-success {
+	  background: #eafbe7;
+	  color: #1a4d1a;
+	  border: 1.5px solid #b6e2c6;
+	}
+	.state-error {
+	  background: #fff0f0;
+	  color: #a30000;
+	  border: 1.5px solid #f5bcbc;
+	}
+	</style>
 @endsection

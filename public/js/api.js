@@ -96,6 +96,12 @@ const Api = {
             headers: getAuthHeaders()
         }).then(handleResponse);
     },
+    toggleTown(id) {
+        return fetch(`${API_BASE_URL}/towns/${id}/toggle`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        }).then(handleResponse);
+    },
 
     // ─────────── CRUD USUARIOS ───────────
     getUsers() {

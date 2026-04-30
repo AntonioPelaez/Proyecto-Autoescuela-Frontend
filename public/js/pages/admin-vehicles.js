@@ -60,6 +60,7 @@
         document.getElementById("vehicle-model").value = vehicle.model || "";
         document.getElementById("vehicle-professor").value =
             vehicle.professor_id || "";
+        document.getElementById("vehicle-notes").value = vehicle.notes || "";
 
         document.getElementById("vehicle-form-title").textContent =
             "Editar vehículo";
@@ -211,63 +212,41 @@
         select.value = current;
     }
 
-    function handleSubmit(event) {
-        event.preventDefault();
+    async function handleSubmit(event) {
+    event.preventDefault();
 
-        const form = event.currentTarget;
-        const name = form.name.value.trim();
-        const plate = normalizePlate(form.plate.value);
-        const model = form.model?.value?.trim?.() || "";
-        const professorIdRaw = form.professor_id?.value;
-        const professor_id =
-            professorIdRaw === "" || typeof professorIdRaw === "undefined"
-                ? null
-                : Number(professorIdRaw);
+    const form = event.currentTarget;
 
-        if (!name || !plate) {
-            showState("error", "Debes completar nombre y matrícula.");
-            UI.showToast("Completa los campos obligatorios.", "error");
-            return;
-        }
+    const data = {
+    brand: document.getElementById("vehicle-name").value.trim(),
+    plate_number: normalizePlate(document.getElementById("vehicle-plate").value),
+    model: document.getElementById("vehicle-model").value.trim() || "",
+    notes: document.getElementById("vehicle-notes").value.trim() || "",
+    teacher_profile_id: document.getElementById("vehicle-professor").value || null,
+    is_active: true,
+};
 
+    try {
         if (editingId === null) {
-            const nextId = vehicles.length
-                ? Math.max(...vehicles.map((v) => v.id)) + 1
-                : 1;
-            vehicles.push({
-                id: nextId,
-                name,
-                plate,
-                model,
-                professor_id,
-                active: true,
-            });
+            await Api.createVehicle(data);
 
             showState("success", "Vehículo creado correctamente.");
             UI.showToast("Vehículo añadido.", "success");
         } else {
-            const index = vehicles.findIndex((v) => v.id === editingId);
-            if (index === -1) {
-                showState(
-                    "error",
-                    "No se ha encontrado el vehículo para editar.",
-                );
-                UI.showToast("Error al editar el vehículo.", "error");
-                return;
-            }
-
-            vehicles[index].name = name;
-            vehicles[index].plate = plate;
-            vehicles[index].model = model;
-            vehicles[index].professor_id = professor_id;
+            await Api.updateVehicle(editingId, data);
 
             showState("success", "Vehículo actualizado correctamente.");
             UI.showToast("Vehículo actualizado.", "success");
         }
 
         resetForm();
-        renderRows();
+        loadVehicles(); // 🔥 recarga desde backend
+
+    } catch (error) {
+        showState("error", error.message || "Error al guardar.");
+        UI.showToast("Error al guardar.", "error");
     }
+}
 
     function handleTableClick(event) {
         const target = event.target;

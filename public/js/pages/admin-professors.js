@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 professorIdInput.value = professor.id;
-                professorNameInput.value = professor.full_name;
+                professorNameInput.value = professor.name;
                 professorEmailInput.value = professor.email;
                 dniInput.value = professor.dni ?? "";
                 licenseNumberInput.value = professor.license_number ?? "";
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 row.innerHTML = `
     <td>${professor.id}</td>
-    <td>${professor.full_name}</td>
+    <td>${professor.name}</td>
     <td>${professor.email}</td>
     <td>${vehicles}</td>
     <td>${status}</td>

@@ -33,7 +33,7 @@
                 <div id="register-error"   class="toast toast-error   hidden" role="alert" aria-live="assertive"></div>
                 <div id="register-success" class="toast toast-success hidden" role="status"  aria-live="polite"></div>
 
-                <form id="register-form" novalidate autocomplete="off">
+                <form id="register-form" novalidate autocomplete="off" role="form" aria-label="Formulario de registro de alumno">
 
                     {{-- Fila 1: nombre + apellidos --}}
                     <div class="register-row">
@@ -121,7 +121,7 @@
                     </div>
 
                     {{-- Submit --}}
-                    <button type="submit" id="register-submit" class="btn btn-primary btn-full btn-lg">
+                    <button type="submit" id="register-submit" class="btn btn-primary btn-full btn-lg" aria-label="Crear cuenta">
                         Crear cuenta
                     </button>
 

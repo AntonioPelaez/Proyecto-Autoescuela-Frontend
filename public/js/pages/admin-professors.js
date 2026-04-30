@@ -1,3 +1,4 @@
+import { showState as showStateFeedback } from "../ui-feedback.js";
 document.addEventListener("DOMContentLoaded", () => {
     Router.init();
 
@@ -218,19 +219,7 @@ row.innerHTML = `
     }
 
     function showState(type, message) {
-        if (!message) {
-            messageBox.textContent = "";
-            messageBox.className = "hidden";
-            return;
-        }
-
-        messageBox.textContent = message;
-        messageBox.className =
-            type === "error" ? "card card-body input-error" : "card card-body";
-
-        if (typeof UI !== "undefined" && UI.showToast) {
-            UI.showToast(message, type === "error" ? "error" : "success");
-        }
+        showStateFeedback(messageBox, type, message);
     }
 
     function isValidEmail(email) {

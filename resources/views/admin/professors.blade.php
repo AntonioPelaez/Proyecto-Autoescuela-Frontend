@@ -9,7 +9,7 @@
 				<a href="/dashboard" class="btn btn-outline btn-sm">Ir al panel</a>
 			</header>
 
-			<div id="professors-message" class="hidden"></div>
+			<div id="professors-message" class="hidden" tabindex="-1"></div>
 
 			<section class="card">
 			<div class="card-header">
@@ -17,7 +17,7 @@
 			</div>
 			<div class="card-body">
 
-						<form id="professor-form" novalidate style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
+						<form id="professor-form" novalidate role="form" aria-label="Formulario de gestión de profesores" style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
 							<input type="hidden" id="professor-id" name="id">
 
 							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
@@ -56,8 +56,8 @@
 							</div>
 
 				<div class="table-actions">
-					<button type="submit" id="professor-submit" class="btn btn-primary">Guardar</button>
-					<button type="button" id="professor-cancel" class="btn btn-outline hidden">Cancelar edición</button>
+							<button type="submit" id="professor-submit" class="btn btn-primary" aria-label="Guardar profesor">Guardar</button>
+							<button type="button" id="professor-cancel" class="btn btn-outline hidden" aria-label="Cancelar edición">Cancelar edición</button>
 				</div>
 			</form>
 			</div>
@@ -66,18 +66,18 @@
 			<section class="card">
 			<div class="card-header">
 				<h2>Listado de profesores</h2>
-				<button type="button" id="professor-create" class="btn btn-secondary btn-sm">Crear</button>
+						<button type="button" id="professor-create" class="btn btn-secondary btn-sm" aria-label="Crear nuevo profesor">Crear</button>
 			</div>
 			<div class="card-body table-wrapper">
 
-			<table id="professors-table" class="table table-striped table-hover">
+			<table id="professors-table" class="table table-striped table-hover" role="table" aria-label="Listado de profesores">
 				<thead>
 					<tr>
-						<th>ID</th>
-						<th>Nombre</th>
-						<th>Email</th>
-						<th>Vehículos</th>
-						<th>Estado</th>
+						<th scope="col">ID</th>
+						<th scope="col">Nombre</th>
+						<th scope="col">Email</th>
+						<th scope="col">Vehículos</th>
+						<th scope="col">Estado</th>
 						<th>Acciones</th>
 					</tr>
 				</thead>
@@ -89,5 +89,25 @@
 @endsection
 
 @section('scripts')
-	<script src="{{ asset('js/pages/admin-professors.js') }}" defer></script>
+		<script src="{{ asset('js/pages/admin-professors.js') }}" defer></script>
+		<style>
+		.state-message {
+			margin: 1.2rem 0 0.7rem 0;
+			font-size: 1.08rem;
+			font-weight: 500;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+			outline: none;
+		}
+		.state-success {
+			background: #eafbe7;
+			color: #1a4d1a;
+			border: 1.5px solid #b6e2c6;
+		}
+		.state-error {
+			background: #fff0f0;
+			color: #a30000;
+			border: 1.5px solid #f5bcbc;
+		}
+		</style>
 @endsection

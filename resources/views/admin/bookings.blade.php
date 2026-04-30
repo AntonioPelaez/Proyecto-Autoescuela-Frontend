@@ -9,14 +9,14 @@
 				<a href="/dashboard" class="btn btn-outline btn-sm">Ir al panel</a>
 			</header>
 
-			<div id="bookings-message" class="hidden"></div>
+			<div id="bookings-message" class="hidden" tabindex="-1"></div>
 
 			<section class="card">
 				<div class="card-header">
 					<h2>Filtros</h2>
 				</div>
 				<div class="card-body">
-					<form id="bookings-filters-form" novalidate>
+					<form id="bookings-filters-form" novalidate role="form" aria-label="Formulario de filtros de clases reservadas">
 						<div class="input-group">
 							<label class="input-label" for="booking-filter-date">Fecha</label>
 							<input type="date" id="booking-filter-date" name="date" class="input">
@@ -46,8 +46,8 @@
 						</div>
 
 						<div class="table-actions">
-							<button type="submit" class="btn btn-primary">Aplicar filtros</button>
-							<button type="button" id="booking-clear-filters" class="btn btn-outline">Limpiar</button>
+							<button type="submit" class="btn btn-primary" aria-label="Aplicar filtros">Aplicar filtros</button>
+							<button type="button" id="booking-clear-filters" class="btn btn-outline" aria-label="Limpiar filtros">Limpiar</button>
 						</div>
 					</form>
 				</div>
@@ -58,7 +58,7 @@
 					<h2 id="booking-reassign-title">Reasignación rápida</h2>
 				</div>
 				<div class="card-body">
-					<form id="booking-reassign-form" novalidate>
+					<form id="booking-reassign-form" novalidate role="form" aria-label="Formulario de reasignación de clase">
 						<input type="hidden" id="booking-id" name="bookingId">
 
 						<div class="input-group">
@@ -74,8 +74,8 @@
 						</div>
 
 						<div class="table-actions">
-							<button type="submit" id="booking-reassign-submit" class="btn btn-primary" disabled>Guardar reasignación</button>
-							<button type="button" id="booking-reassign-cancel" class="btn btn-outline" disabled>Cancelar</button>
+							<button type="submit" id="booking-reassign-submit" class="btn btn-primary" aria-label="Guardar reasignación" disabled>Guardar reasignación</button>
+							<button type="button" id="booking-reassign-cancel" class="btn btn-outline" aria-label="Cancelar reasignación" disabled>Cancelar</button>
 						</div>
 					</form>
 				</div>
@@ -86,17 +86,17 @@
 					<h2>Listado de clases</h2>
 				</div>
 				<div class="card-body table-wrapper">
-					<table id="bookings-table" class="table table-striped table-hover">
+					<table id="bookings-table" class="table table-striped table-hover" role="table" aria-label="Listado de clases reservadas">
 						<thead>
 							<tr>
-								<th>ID</th>
-								<th>Fecha</th>
-								<th>Hora</th>
-								<th>Alumno</th>
-								<th>Población</th>
-								<th>Profesor</th>
-								<th>Vehículo</th>
-								<th>Estado</th>
+								<th scope="col">ID</th>
+								<th scope="col">Fecha</th>
+								<th scope="col">Hora</th>
+								<th scope="col">Alumno</th>
+								<th scope="col">Población</th>
+								<th scope="col">Profesor</th>
+								<th scope="col">Vehículo</th>
+								<th scope="col">Estado</th>
 								<th>Acciones</th>
 							</tr>
 						</thead>
@@ -108,4 +108,24 @@
 
 @section('scripts')
 	<script src="{{ asset('js/pages/admin-bookings.js') }}" defer></script>
+	<style>
+	.state-message {
+	  margin: 1.2rem 0 0.7rem 0;
+	  font-size: 1.08rem;
+	  font-weight: 500;
+	  border-radius: 8px;
+	  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	  outline: none;
+	}
+	.state-success {
+	  background: #eafbe7;
+	  color: #1a4d1a;
+	  border: 1.5px solid #b6e2c6;
+	}
+	.state-error {
+	  background: #fff0f0;
+	  color: #a30000;
+	  border: 1.5px solid #f5bcbc;
+	}
+	</style>
 @endsection

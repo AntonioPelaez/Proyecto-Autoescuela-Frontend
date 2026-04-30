@@ -10,7 +10,7 @@
             <p>Ingresa una contraseña fuerte y segura.</p>
         </div>
 
-        <form id="reset-password-form" class="auth-form">
+        <form id="reset-password-form" class="auth-form" role="form" aria-label="Formulario para crear nueva contraseña">
             <div class="form-group">
                 <label for="password">
                     Nueva contraseña
@@ -74,7 +74,7 @@
                 <span class="input-error" id="password-confirm-error"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">
+            <button type="submit" class="btn btn-primary btn-block" aria-label="Actualizar contraseña">
                 <span class="btn-text">Actualizar contraseña</span>
                 <span class="btn-loader" style="display: none;">
                     <div class="loader-spinner"></div>

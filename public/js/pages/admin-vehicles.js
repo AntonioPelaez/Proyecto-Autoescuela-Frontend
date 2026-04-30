@@ -14,24 +14,47 @@
         return document.getElementById(STATE_ID);
     }
 
-    function showState(type, message) {
         const stateEl = getStateEl();
         if (!stateEl) return;
 
         if (!message) {
             stateEl.className = "hidden";
             stateEl.textContent = "";
+            stateEl.removeAttribute('role');
             return;
         }
 
-        const classes = {
-            success: "card card-body",
-            error: "card card-body input-error",
-            empty: "card card-body table-empty",
-        };
-
-        stateEl.className = classes[type] || "card card-body";
         stateEl.textContent = message;
+        if (type === 'error') {
+            stateEl.className = "card card-body input-error state-message state-error";
+            stateEl.setAttribute('role', 'alert');
+        } else if (type === 'empty') {
+            stateEl.className = "card card-body table-empty state-message";
+            stateEl.setAttribute('role', 'status');
+        } else {
+            stateEl.className = "card card-body state-message state-success";
+            stateEl.setAttribute('role', 'status');
+        }
+        stateEl.setAttribute('aria-live', 'assertive');
+
+        // Animación de aparición
+        stateEl.style.opacity = 0;
+        stateEl.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+            stateEl.style.opacity = 1;
+        }, 10);
+
+        // Auto-ocultar después de 3.5s si es éxito
+        if (type === 'success') {
+            setTimeout(() => {
+                stateEl.style.opacity = 0;
+                setTimeout(() => {
+                    stateEl.textContent = "";
+                    stateEl.className = "hidden";
+                    stateEl.removeAttribute('role');
+                }, 350);
+            }, 3500);
+        }
     }
 
     function normalizePlate(value) {
@@ -248,7 +271,7 @@
     }
 }
 
-    function handleTableClick(event) {
+    async function handleTableClick(event) {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
 
@@ -257,41 +280,39 @@
 
         if (!action || Number.isNaN(id)) return;
 
+        // Buscar el vehículo actual para editar
         const vehicle = vehicles.find((v) => v.id === id);
-        if (!vehicle) {
-            showState("error", "No se ha encontrado el vehículo seleccionado.");
-            UI.showToast("No se encontró el vehículo.", "error");
-            return;
-        }
 
         if (action === "edit") {
-            setEditMode(vehicle);
+            if (vehicle) setEditMode(vehicle);
             return;
         }
 
         if (action === "toggle") {
-            vehicle.active = !vehicle.active;
-            renderRows();
-            showState("success", "Estado del vehículo actualizado.");
-            UI.showToast("Estado actualizado.", "success");
+            try {
+                // Cambiar estado activo vía API
+                await Api.updateVehicle(id, { active: !vehicle.active });
+                showState("success", "Estado del vehículo actualizado.");
+                UI.showToast("Estado actualizado.", "success");
+                await loadVehicles();
+            } catch (error) {
+                showState("error", error.message || "No se pudo actualizar el estado.");
+                UI.showToast("Error al actualizar estado.", "error");
+            }
             return;
         }
 
         if (action === "delete") {
             if (confirm("¿Seguro que quieres eliminar este vehículo?")) {
-                Api.deleteVehicle(vehicle.id)
-                    .then(() => {
-                        showState("success", "Vehículo eliminado.");
-                        UI.showToast("Vehículo eliminado.", "success");
-                        loadVehicles();
-                    })
-                    .catch((error) => {
-                        showState(
-                            "error",
-                            error.message || "No se pudo eliminar el vehículo.",
-                        );
-                        UI.showToast("Error al eliminar.", "error");
-                    });
+                try {
+                    await Api.deleteVehicle(id);
+                    showState("success", "Vehículo eliminado.");
+                    UI.showToast("Vehículo eliminado.", "success");
+                    await loadVehicles();
+                } catch (error) {
+                    showState("error", error.message || "No se pudo eliminar el vehículo.");
+                    UI.showToast("Error al eliminar.", "error");
+                }
             }
             return;
         }

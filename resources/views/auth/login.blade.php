@@ -22,7 +22,7 @@
 
                 <div id="login-error" class="toast toast-error hidden auth-login-error" role="alert" aria-live="assertive"></div>
 
-                <form id="login-form" novalidate>
+                <form id="login-form" novalidate role="form" aria-label="Formulario de inicio de sesión">
                     <div class="input-group">
                         <label for="login-email" class="input-label">Email</label>
                         <input
@@ -52,7 +52,7 @@
                     <div id="login-spinner" class="loader loader-inline loader-sm hidden" aria-live="polite">Validando credenciales...</div>
 
 
-                    <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg">Entrar</button>
+                    <button type="submit" id="login-submit" class="btn btn-primary btn-full btn-lg" aria-label="Entrar en la plataforma">Entrar</button>
                 </form>
 
                 <div class="auth-login-help" style="margin-top: var(--space-s)">

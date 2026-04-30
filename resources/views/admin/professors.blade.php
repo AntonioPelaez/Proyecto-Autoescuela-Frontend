@@ -89,7 +89,7 @@
 @endsection
 
 @section('scripts')
-		<script type = "module" src="{{ asset('js/pages/admin-professors.js') }}" defer></script>
+		<script type="module" src="{{ asset('js/pages/admin-professors.js') }}" defer></script>
 		<style>
 		.state-message {
 			margin: 1.2rem 0 0.7rem 0;

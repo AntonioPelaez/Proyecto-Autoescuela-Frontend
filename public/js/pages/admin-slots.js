@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
         professors.forEach((professor) => {
             const option = document.createElement("option");
             option.value = String(professor.id);
-            option.textContent = professor.full_name;
+            option.textContent = professor.name;
             slotProfessorInput.appendChild(option);
         });
         slotProfessorInput.removeEventListener('change', onProfessorChange);

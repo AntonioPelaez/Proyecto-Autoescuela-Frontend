@@ -1,20 +1,5 @@
-    // --- Handler para cambio de profesor ---
-    function onProfessorChange() {
-        autocompleteVehicle();
-        // Si hay fecha seleccionada, renderiza cuadrícula y bloquea horas ocupadas
-        if (slotDateInput.value) {
-            renderHourGrid();
-            updateHourGridWithBookings();
-        } else {
-            // Si no hay fecha, solo muestra la cuadrícula vacía
-            renderHourGrid();
-        }
-    }
 
-    slotDateInput.addEventListener('change', () => {
-        renderHourGrid();
-        updateHourGridWithBookings();
-    });
+console.log("admin-slots.js cargado");
 document.addEventListener("DOMContentLoaded", () => {
     Router.init();
 
@@ -36,10 +21,66 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
+    // --- Handler para cambio de profesor ---
+    function onProfessorChange() {
+        autocompleteVehicle();
+        // Si hay fecha seleccionada, renderiza cuadrícula y bloquea horas ocupadas
+        if (slotDateInput.value) {
+            renderHourGrid();
+            updateHourGridWithBookings();
+        } else {
+            // Si no hay fecha, solo muestra la cuadrícula vacía
+            renderHourGrid();
+        }
+    }
+
+    // --- Marcar horas ocupadas en la cuadrícula ---
+    async function updateHourGridWithBookings() {
+        const grid = document.getElementById('slot-time-grid');
+        if (!grid || !slotProfessorInput.value || !slotDateInput.value) return;
+        // Obtener huecos del profesor y fecha seleccionados
+        try {
+            const slots = await Api.getAvailabilitySlots({
+                professor_id: slotProfessorInput.value,
+                date: slotDateInput.value,
+            });
+            // Marcar los botones de hora ocupados
+            grid.querySelectorAll('.hour-btn').forEach(btn => {
+                const value = btn.textContent;
+                const ocupado = slots.some(slot => slot.time === value && String(slot.professorId) === String(slotProfessorInput.value));
+                if (ocupado) {
+                    btn.disabled = true;
+                    btn.classList.add('hour-booked');
+                    btn.style.backgroundColor = '#e74c3c'; // rojo
+                    btn.style.color = '#fff';
+                    btn.title = 'Hora ocupada por este profesor';
+                } else {
+                    btn.disabled = false;
+                    btn.classList.remove('hour-booked');
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.title = '';
+                }
+            });
+        } catch (error) {
+            // No bloquear nada si hay error
+        }
+    }
+
+    if (slotDateInput) {
+        slotDateInput.addEventListener('change', () => {
+            renderHourGrid();
+            updateHourGridWithBookings();
+        });
+    }
+
+    // Cargar selects al iniciar
+    loadSelectors();
+
     void bootstrap();
 
     async function bootstrap() {
-        await Promise.all([loadSelectors(), loadSlots()]);
+        // ...
     }
 
     form.addEventListener("submit", async (event) => {

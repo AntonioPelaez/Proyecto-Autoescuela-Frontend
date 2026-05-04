@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("town-form");
     const townIdInput = document.getElementById("town-id");
     const townNameInput = document.getElementById("town-name");
+    const townPostalCodeInput = document.getElementById("town-postal-code");
     const formTitle = document.getElementById("town-form-title");
     const cancelButton = document.getElementById("town-cancel");
     const createButton = document.getElementById("town-create");
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const id = townIdInput.value;
         const name = townNameInput.value.trim();
+        const postalCode = townPostalCodeInput.value.trim();
 
         if (!name) {
             showState("error", "El nombre de la población es obligatorio.");
@@ -27,11 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             showState("", "");
 
+            const payload = {
+                name,
+                postal_code: postalCode || null,
+            };
+
             if (id) {
-                await Api.updateTown(id, { name });
+                await Api.updateTown(id, payload);
                 showState("success", "Población actualizada correctamente.");
             } else {
-                await Api.createTown({ name });
+                await Api.createTown(payload);
                 showState("success", "Población creada correctamente.");
             }
 
@@ -77,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 townIdInput.value = town.id;
                 townNameInput.value = town.name;
+                townPostalCodeInput.value = town.postal_code ?? "";
                 formTitle.textContent = "Editar población";
                 cancelButton.classList.remove("hidden");
                 townNameInput.focus();
@@ -128,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const row = document.createElement("tr");
             row.className = "table-empty";
             const cell = document.createElement("td");
-            cell.colSpan = 4;
+            cell.colSpan = 5;
             cell.textContent = "No hay poblaciones registradas.";
             row.appendChild(cell);
             tableBody.appendChild(row);
@@ -147,6 +155,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const nameCell = document.createElement("td");
             nameCell.textContent = town.name;
+
+            const postalCodeCell = document.createElement("td");
+            postalCodeCell.textContent = town.postal_code || "—";
 
             const statusCell = document.createElement("td");
             statusCell.textContent = status;
@@ -181,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.createTextNode(" "),
                 deleteButton,
             );
-            row.append(idCell, nameCell, statusCell, actionsCell);
+            row.append(idCell, nameCell, postalCodeCell, statusCell, actionsCell);
             tableBody.appendChild(row);
         });
     }

@@ -32,6 +32,18 @@
 					>
 				</div>
 
+				<div class="input-group">
+					<label class="input-label" for="town-postal-code">Código postal</label>
+					<input
+						type="text"
+						id="town-postal-code"
+						name="postal_code"
+						class="input"
+						placeholder="Ej. 41001"
+						maxlength="12"
+					>
+				</div>
+
 				<div class="table-actions">
 					<button type="submit" id="town-submit" class="btn btn-primary">Guardar</button>
 					<button type="button" id="town-cancel" class="btn btn-outline hidden">Cancelar edición</button>
@@ -52,6 +64,7 @@
 					<tr>
 						<th>ID</th>
 						<th>Nombre</th>
+						<th>Código postal</th>
 						<th>Estado</th>
 						<th>Acciones</th>
 					</tr>

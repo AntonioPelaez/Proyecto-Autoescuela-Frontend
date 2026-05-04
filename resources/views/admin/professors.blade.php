@@ -5,7 +5,7 @@
 
 @section('content')
 			<header>
-				<h1>Gestión de profesores</h1>
+				<h1>Gestión de profesores y usuario</h1>
 				<a href="/dashboard" class="btn btn-outline btn-sm">Ir al panel</a>
 			</header>
 
@@ -13,11 +13,24 @@
 
 			<section class="card">
 			<div class="card-header">
-				<h2 id="professor-form-title">Crear profesor</h2>
+				<h2 id="professor-form-title">Crear profesor y usuario</h2>
+				<div class="professor-mode-toolbar" aria-label="Selector de profesor existente">
+					<div class="professor-mode-copy">
+						<span class="professor-mode-eyebrow">Consulta rapida</span>
+						<label for="professor-picker">Profesor existente</label>
+						<p id="professor-picker-help" class="professor-mode-help">Selecciona un profesor ya creado para consultar sus datos en el mismo formulario.</p>
+					</div>
+					<div class="professor-mode-controls">
+						<select id="professor-picker" class="input">
+							<option value="">Seleccionar para consultar...</option>
+						</select>
+						<button type="button" id="professor-picker-reset" class="btn btn-outline btn-sm">Nuevo</button>
+					</div>
+					<span id="professor-mode-badge" class="professor-mode-badge hidden">Modo consulta</span>
+				</div>
 			</div>
 			<div class="card-body">
-
-						<form id="professor-form" novalidate role="form" aria-label="Formulario de gestión de profesores" style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
+						<form id="professor-form" class="professor-form-shell" novalidate role="form" aria-label="Formulario de gestión de profesores" style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
 							<input type="hidden" id="professor-id" name="id">
 
 							<div class="professor-identity-group">
@@ -121,6 +134,74 @@
 			color: #a30000;
 			border: 1.5px solid #f5bcbc;
 		}
+		.professor-mode-toolbar {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			flex-wrap: wrap;
+			margin-left: auto;
+			padding: 0.85rem 1rem;
+			border: 1px solid #dbe6f3;
+			border-radius: 14px;
+			background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+			box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+			min-width: min(100%, 620px);
+		}
+		.professor-mode-copy {
+			display: flex;
+			flex-direction: column;
+			gap: 0.2rem;
+			min-width: 190px;
+			flex: 1;
+		}
+		.professor-mode-eyebrow {
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: #4b6b93;
+		}
+		.professor-mode-toolbar label {
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: #324860;
+		}
+		.professor-mode-help {
+			margin: 0;
+			font-size: 0.82rem;
+			color: #5f738b;
+			line-height: 1.35;
+		}
+		.professor-mode-controls {
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+			flex-wrap: wrap;
+			flex: 1 1 260px;
+		}
+		.professor-mode-toolbar .input {
+			min-width: 260px;
+			max-width: 420px;
+			flex: 1;
+			background: #ffffff;
+		}
+		.professor-mode-badge {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0.38rem 0.7rem;
+			border-radius: 999px;
+			background: #dbeafe;
+			color: #1d4ed8;
+			font-size: 0.78rem;
+			font-weight: 700;
+			letter-spacing: 0.01em;
+		}
+		.professor-form-shell.is-readonly {
+			background: linear-gradient(180deg, #f8fbff 0%, #fefefe 100%);
+			border: 1px solid #d9e5f4;
+			box-shadow: 0 8px 24px rgba(15, 57, 115, 0.08);
+		}
 		.professor-identity-group {
 			margin-bottom: 1.2rem;
 			padding: 1rem;
@@ -151,6 +232,22 @@
 			}
 		}
 		@media (max-width: 640px) {
+			.professor-mode-toolbar {
+				width: 100%;
+				margin-left: 0;
+				padding: 0.8rem;
+			}
+			.professor-mode-copy,
+			.professor-mode-controls {
+				width: 100%;
+			}
+			.professor-mode-toolbar .input {
+				min-width: 100%;
+				max-width: 100%;
+			}
+			.professor-mode-badge {
+				align-self: flex-start;
+			}
 			.professor-identity-grid {
 				grid-template-columns: 1fr;
 			}

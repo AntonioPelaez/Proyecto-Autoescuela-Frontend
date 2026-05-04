@@ -25,7 +25,9 @@
 					<a href="/admin/incidents" class="role-menu-link {{ request()->is('admin/incidents') ? 'is-active' : '' }}">Incidencias</a>
 					<a href="/admin/help" class="role-menu-link {{ request()->is('admin/help') ? 'is-active' : '' }}">Ayuda</a>
 				</nav>
-				<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
+				<div class="role-sidebar-logout">
+					<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
+				</div>
 			</div>
 		</aside>
 

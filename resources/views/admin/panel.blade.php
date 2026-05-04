@@ -8,7 +8,7 @@
         <h1>Panel de administración</h1>
         <p style="margin: 0.4rem 0 0; color: #5b6672;">Acceso rápido a las secciones principales del sistema.</p>
     </header>
-xº
+
     <section class="card">
         <div class="card-body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
             <a href="/admin/towns" class="btn btn-outline">Poblaciones</a>

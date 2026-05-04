@@ -191,6 +191,7 @@
    display: flex;
    flex-direction: column;
    gap: var(--space-xs);
+   margin-bottom: 2rem;
 }
 
 .role-menu-link {
@@ -216,6 +217,18 @@
    color: #ffffff;
    font-weight: 600;
    box-shadow: 0 10px 20px rgba(15, 91, 216, 0.28);
+}
+
+.role-sidebar-logout {
+   margin-top: 2rem;
+   padding-top: 1.25rem;
+   border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.role-sidebar-logout .btn,
+.role-sidebar-logout #btn-logout,
+.role-sidebar-logout [data-action="logout"] {
+   margin-top: 0;
 }
 
 .role-main {

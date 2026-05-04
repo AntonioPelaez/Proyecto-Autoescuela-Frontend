@@ -1,9 +1,12 @@
 // ─────────────────────────────────────────────
 // admin-incidents.js — Gestión de incidencias para admin
+// Persistencia local mientras no exista backend real de incidencias
 // ─────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
     Router.init();
+
+    const STORAGE_KEY = 'admin-incidents-store';
 
     const form = document.getElementById("incident-form");
     const filterForm = document.getElementById("filter-form");
@@ -39,6 +42,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         UI.setLoading(true);
         try {
+            const incidents = readIncidents();
+
             if (id) {
                 await Api.updateIncident(id, {
                     type,
@@ -56,6 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
                 showState("success", "Incidencia creada correctamente.");
             }
+
             resetForm();
             await loadIncidents();
         } catch (error) {
@@ -177,7 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Funciones internas
     // ─────────────────────────────────────────────
 
-    async function loadIncidents() {
+    async function loadIncidents(filters = {}) {
         UI.setLoading(true);
         try {
             const incidents = await Api.getIncidents();
@@ -190,12 +196,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderIncidents(incidents) {
-        const tbody = document.getElementById("incidents-tbody");
-        tbody.innerHTML = "";
+        const tbody = document.getElementById('incidents-tbody');
+        tbody.innerHTML = '';
 
         if (!incidents || incidents.length === 0) {
-            tbody.innerHTML =
-                '<tr><td colspan="9">No hay incidencias.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9">No hay incidencias.</td></tr>';
             return;
         }
 
@@ -289,7 +294,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         messageBox.textContent = message;
         messageBox.style.display = "block";
 
-        UI.showToast(message, type === "success" ? "info" : "error");
+        UI.showToast(message, type === 'success' ? 'info' : 'error');
 
         setTimeout(() => {
             messageBox.style.display = "none";

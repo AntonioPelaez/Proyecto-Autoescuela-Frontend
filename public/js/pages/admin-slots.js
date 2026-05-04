@@ -343,9 +343,15 @@ document.addEventListener("DOMContentLoaded", () => {
             groupedSlots.forEach((slot) => {
                 const status = slot?.reserved ? 'booked' : 'pending';
                 const start = slot?.start;
+                const displayId =
+                    slot?.id ??
+                    slot?.slot_id ??
+                    slot?.availability_slot_id ??
+                    null;
 
                 result.push({
-                    id: `${teacherId || 'na'}-${vehicleId || 'na'}-${start || Math.random().toString(16).slice(2)}`,
+                    id: displayId,
+                    rowKey: `${teacherId || 'na'}-${vehicleId || 'na'}-${start || Math.random().toString(16).slice(2)}`,
                     townId: Number(townId),
                     townName,
                     date: effectiveDate,
@@ -424,7 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderEmptyRow(message) {
         tableBody.replaceChildren();
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="8" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>`;
+        emptyRow.innerHTML = `<td colspan="7" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>`;
         tableBody.appendChild(emptyRow);
     }
 
@@ -440,9 +446,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const row = document.createElement('tr');
             const statusLabel = slot.statusLabel || slot.status || '—';
             const actionButtons = resolveSlotActionButtons(slot);
+            const rowKey = slot.rowKey || slot.id || Math.random().toString(16).slice(2);
+            row.dataset.rowKey = String(rowKey);
 
             row.innerHTML = `
-                <td>${slot.id}</td>
                 <td>${escapeHtml(slot.townName || '—')}</td>
                 <td>${escapeHtml(slot.date || '—')}</td>
                 <td>${escapeHtml(slot.time || '—')}</td>

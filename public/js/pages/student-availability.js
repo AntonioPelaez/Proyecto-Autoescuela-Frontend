@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadMyBookings() {
         try {
-            const bookings = await Api.getMyBookings();
+            const bookings = await Api.getMyClasses();
 
             if (bookings.length === 0) {
                 bookingsContainer.innerHTML = '<p style="color: #999;">Aún no tienes clases reservadas.</p>';

@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadMyClasses() {
         try {
-            const bookings = await Api.getMyBookings();
+            const bookings = await Api.getMyClasses();
             const today = new Date().toISOString().split('T')[0];
 
             // Separar próximas y pasadas

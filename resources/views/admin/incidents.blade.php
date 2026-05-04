@@ -128,6 +128,16 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label for="incident-responsable">Responsable *</label>
+                <select id="incident-responsable" name="responsable" class="form-control" required>
+                    <option value="">Selecciona responsable</option>
+                    <option value="alumno">Alumno</option>
+                    <option value="profesor">Profesor</option>
+                    <option value="externo">Factor externo</option>
+                </select>
+            </div>
+
             <div class="table-actions">
                 <button type="submit" class="btn btn-success" id="incident-submit">Crear Incidencia</button>
                 <button type="button" class="btn btn-secondary" id="incident-cancel" style="display: none;">Cancelar</button>

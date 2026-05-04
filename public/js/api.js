@@ -423,7 +423,17 @@ const Api = {
             credentials: 'include'
         }).then(handleResponse);
     },
+
+
     // ─────────── CRUD INCIDENTS ───────────
+getIncidentTypes() {
+    return fetch(`${API_BASE_URL}/incidents/tipos/list`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 getIncidents(params = {}) {
     const query = new URLSearchParams(params).toString();
     return fetch(`${API_BASE_URL}/incidents${query ? '?' + query : ''}`, {

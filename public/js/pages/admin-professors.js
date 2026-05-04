@@ -17,8 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const formTitle = document.getElementById("professor-form-title");
     const cancelButton = document.getElementById("professor-cancel");
     const createButton = document.getElementById("professor-create");
+    const submitButton = document.getElementById("professor-submit");
+    const professorPicker = document.getElementById("professor-picker");
+    const professorPickerResetButton = document.getElementById("professor-picker-reset");
+    const professorPickerHelp = document.getElementById("professor-picker-help");
+    const professorModeBadge = document.getElementById("professor-mode-badge");
     const tableBody = document.getElementById(TABLE_BODY_ID);
     const messageBox = document.getElementById("professors-message");
+    let professorsCache = [];
+    const pickerKeyToProfessor = new Map();
 
     if (!form || !tableBody) {
         return;
@@ -105,6 +112,33 @@ document.addEventListener("DOMContentLoaded", () => {
         professorNameInput.focus();
     });
 
+    if (professorPicker) {
+        professorPicker.addEventListener("change", () => {
+            if (!professorPicker.value) {
+                resetForm();
+                showState("", "");
+                return;
+            }
+
+            const selected = pickerKeyToProfessor.get(String(professorPicker.value)) || null;
+            if (!selected) {
+                showState("error", "No se encontró el profesor seleccionado.");
+                return;
+            }
+
+            populateFormFromProfessor(selected, { mode: "select" });
+            showState("success", "Profesor seleccionado para consulta.");
+        });
+    }
+
+    if (professorPickerResetButton) {
+        professorPickerResetButton.addEventListener("click", () => {
+            resetForm();
+            showState("", "");
+            professorNameInput.focus();
+        });
+    }
+
     // ─────────────────────────────────────────────
     // ACCIONES DE LA TABLA
     // ─────────────────────────────────────────────
@@ -119,39 +153,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // EDITAR
             if (action === "edit") {
-                const professors = await Api.getTeachers();
-                const professor = professors.find((item) => item.id === Number(id));
+                let professor = findProfessorByAnyId(String(id));
+
+                if (!professor) {
+                    const professors = await Api.getTeachers();
+                    professorsCache = professors;
+                    updateProfessorPicker(professorsCache);
+                    professor = findProfessorByAnyId(String(id));
+                }
 
                 if (!professor) {
                     showState("error", "El profesor no existe.");
                     return;
                 }
-
-
-                professorIdInput.value = professor.id;
-                const resolvedName = professor.name ?? "";
-                const resolvedSurname1 = professor.surname1 ?? "";
-                const resolvedSurname2 = professor.surname2 ?? "";
-                const resolvedSurname = professor.surname ?? [resolvedSurname1, resolvedSurname2].filter(Boolean).join(" ").trim();
-
-                professorNameInput.value = resolvedName;
-                if (professorSurnameInput) {
-                    professorSurnameInput.value = resolvedSurname;
-                }
-                if (professorSurname1Input) {
-                    professorSurname1Input.value = resolvedSurname1 || resolvedSurname.split(" ")[0] || "";
-                }
-                if (professorSurname2Input) {
-                    professorSurname2Input.value = resolvedSurname2 || resolvedSurname.split(" ").slice(1).join(" ") || "";
-                }
-                professorEmailInput.value = professor.email ?? "";
-                dniInput.value = professor.dni ?? "";
-                licenseNumberInput.value = professor.license_number ?? "";
-                notesInput.value = professor.notes ?? "";
-                professorActiveInput.checked = Boolean(professor.active);
-
-                formTitle.textContent = "Editar profesor";
-                cancelButton.classList.remove("hidden");
+                populateFormFromProfessor(professor);
                 professorNameInput.focus();
                 return;
             }
@@ -186,12 +201,54 @@ document.addEventListener("DOMContentLoaded", () => {
         UI.setLoading(TABLE_BODY_ID, true);
         try {
             const professors = await Api.getTeachers();
+            professorsCache = professors;
+            updateProfessorPicker(professors);
             renderProfessors(professors);
         } catch (error) {
             showState("error", error.message || "No se pudo cargar el listado.");
         } finally {
             UI.setLoading(TABLE_BODY_ID, false);
         }
+    }
+
+    function updateProfessorPicker(professors) {
+        if (!professorPicker) {
+            return;
+        }
+
+        const currentValue = String(professorPicker.value || "");
+        const currentProfessor = pickerKeyToProfessor.get(currentValue) || null;
+        const currentProfessorId = currentProfessor ? String(getProfessorId(currentProfessor) ?? "") : "";
+
+        pickerKeyToProfessor.clear();
+        professorPicker.replaceChildren();
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "Seleccionar para consultar...";
+        professorPicker.appendChild(emptyOption);
+
+        professors.forEach((professor, index) => {
+            const professorId = getProfessorId(professor);
+            if (!professorId) {
+                return;
+            }
+
+            const option = document.createElement("option");
+            const pickerKey = `p-${index}-${professorId}`;
+            option.value = pickerKey;
+            const fullName = [professor.name, professor.surname1, professor.surname2]
+                .filter(Boolean)
+                .join(" ")
+                .trim() || String(professor.full_name || "").trim();
+            option.textContent = fullName ? `${fullName} (${professor.email || "sin email"})` : `Profesor #${professorId}`;
+            professorPicker.appendChild(option);
+            pickerKeyToProfessor.set(pickerKey, professor);
+        });
+
+        const nextSelectedKey = Array.from(pickerKeyToProfessor.entries())
+            .find(([, professor]) => String(getProfessorId(professor) ?? "") === currentProfessorId)?.[0] || "";
+        professorPicker.value = nextSelectedKey;
     }
 
     // ─────────────────────────────────────────────
@@ -248,6 +305,118 @@ row.innerHTML = `
         professorActiveInput.checked = false;
         formTitle.textContent = "Crear profesor";
         cancelButton.classList.add("hidden");
+        setFormReadonly(false);
+        updateProfessorModeUi(false);
+        if (professorPicker) {
+            professorPicker.value = "";
+        }
+    }
+
+    function setFormReadonly(isReadonly) {
+        const textLikeInputs = [
+            professorNameInput,
+            professorSurnameInput,
+            professorSurname1Input,
+            professorSurname2Input,
+            professorEmailInput,
+            dniInput,
+            licenseNumberInput,
+            notesInput,
+        ];
+
+        textLikeInputs.forEach((input) => {
+            if (!input) {
+                return;
+            }
+            input.readOnly = isReadonly;
+        });
+
+        if (professorActiveInput) {
+            professorActiveInput.disabled = isReadonly;
+        }
+
+        if (submitButton) {
+            submitButton.disabled = isReadonly;
+            submitButton.title = isReadonly
+                ? "Modo consulta: pulsa Nuevo para volver a crear"
+                : "";
+        }
+
+        if (form) {
+            form.classList.toggle("is-readonly", isReadonly);
+        }
+    }
+
+    function populateFormFromProfessor(professor, options = { mode: "edit" }) {
+        const mode = options.mode || "edit";
+        const professorId = getProfessorId(professor);
+
+        professorIdInput.value = mode === "edit" ? String(professorId || "") : "";
+        const resolvedName = professor.name ?? "";
+        const resolvedSurname1 = professor.surname1 ?? "";
+        const resolvedSurname2 = professor.surname2 ?? "";
+        const resolvedSurname = professor.surname ?? [resolvedSurname1, resolvedSurname2].filter(Boolean).join(" ").trim();
+
+        professorNameInput.value = resolvedName;
+        if (professorSurnameInput) {
+            professorSurnameInput.value = resolvedSurname;
+        }
+        if (professorSurname1Input) {
+            professorSurname1Input.value = resolvedSurname1 || resolvedSurname.split(" ")[0] || "";
+        }
+        if (professorSurname2Input) {
+            professorSurname2Input.value = resolvedSurname2 || resolvedSurname.split(" ").slice(1).join(" ") || "";
+        }
+        professorEmailInput.value = professor.email ?? "";
+        dniInput.value = professor.dni ?? "";
+        licenseNumberInput.value = professor.license_number ?? "";
+        notesInput.value = professor.notes ?? "";
+        professorActiveInput.checked = Boolean(professor.active);
+
+        if (mode === "select") {
+            formTitle.textContent = "Profesor seleccionado (solo consulta)";
+            cancelButton.classList.add("hidden");
+            setFormReadonly(true);
+            updateProfessorModeUi(true, professor);
+        } else {
+            formTitle.textContent = "Editar profesor";
+            cancelButton.classList.remove("hidden");
+            setFormReadonly(false);
+            updateProfessorModeUi(false);
+        }
+
+        if (professorPicker) {
+            const selectedKey = Array.from(pickerKeyToProfessor.entries())
+                .find(([, item]) => String(getProfessorId(item) ?? "") === String(professorId ?? ""))?.[0] || "";
+            professorPicker.value = selectedKey;
+        }
+    }
+
+    function getProfessorId(professor) {
+        return professor?.id ?? professor?.teacher_id ?? professor?.user_id ?? null;
+    }
+
+    function findProfessorByAnyId(value) {
+        const target = String(value || "").trim();
+        return professorsCache.find((item) => String(getProfessorId(item) ?? "") === target) || null;
+    }
+
+    function updateProfessorModeUi(isConsultationMode, professor = null) {
+        if (professorModeBadge) {
+            professorModeBadge.classList.toggle("hidden", !isConsultationMode);
+        }
+
+        if (professorPickerHelp) {
+            if (isConsultationMode && professor) {
+                const fullName = [professor.name, professor.surname1, professor.surname2]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim() || String(professor.full_name || "").trim() || "Profesor seleccionado";
+                professorPickerHelp.textContent = `Mostrando datos de ${fullName}. Pulsa Nuevo para volver al modo creación.`;
+            } else {
+                professorPickerHelp.textContent = "Selecciona un profesor ya creado para consultar sus datos en el mismo formulario.";
+            }
+        }
     }
 
     function showState(type, message) {

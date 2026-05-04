@@ -21,7 +21,9 @@
 					<a href="/student/my-classes" class="role-menu-link {{ request()->is('student/my-classes') ? 'is-active' : '' }}">Mis clases</a>
 					<a href="/student/profile" class="role-menu-link {{ request()->is('student/profile') ? 'is-active' : '' }}">Mi perfil</a>
 				</nav>
-				<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
+				<div class="role-sidebar-logout">
+					<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
+				</div>
 			</div>
 		</aside>
 

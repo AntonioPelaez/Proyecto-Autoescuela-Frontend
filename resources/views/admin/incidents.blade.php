@@ -96,6 +96,15 @@
             </div>
 
             <div class="form-group">
+                <label for="incident-status">Estado *</label>
+                <select id="incident-status" name="status" class="form-control" required>
+                    <option value="abierta">Abierta</option>
+                    <option value="en_curso">En curso</option>
+                    <option value="cerrada">Cerrada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="incident-description">Descripción *</label>
                 <textarea id="incident-description" name="description" class="form-control" rows="4" required></textarea>
             </div>
@@ -103,6 +112,30 @@
             <div class="form-group">
                 <label for="incident-booking">Reserva Relacionada (opcional)</label>
                 <input type="text" id="incident-booking" name="bookingId" class="form-control" placeholder="ID de reserva (p.ej., 1)">
+            </div>
+
+            <div class="form-group">
+                <label for="incident-teacher">Profesor asignado (opcional)</label>
+                <select id="incident-teacher" name="teacherId" class="form-control">
+                    <option value="">Sin profesor asignado</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="incident-student">Alumno asignado (opcional)</label>
+                <select id="incident-student" name="studentId" class="form-control">
+                    <option value="">Sin alumno asignado</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="incident-responsable">Responsable *</label>
+                <select id="incident-responsable" name="responsable" class="form-control" required>
+                    <option value="">Selecciona responsable</option>
+                    <option value="alumno">Alumno</option>
+                    <option value="profesor">Profesor</option>
+                    <option value="externo">Factor externo</option>
+                </select>
             </div>
 
             <div class="table-actions">
@@ -126,7 +159,7 @@
                         <th>Descripción</th>
                         <th>Reserva</th>
                         <th>Creada</th>
-                        <th>Asignado a</th>
+                        <th>Profesor / Alumno</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -135,42 +168,6 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <!-- Modal/Form Oculto para Cambio de Estado -->
-    <div id="status-form-container" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
-        <h4>Cambiar Estado</h4>
-        <form id="status-form" class="incident-form">
-            <input type="hidden" id="status-incident-id" name="id">
-            <div class="form-group">
-                <label for="status-select">Nuevo Estado</label>
-                <select id="status-select" name="status" class="form-control">
-                    <option value="abierta">Abierta</option>
-                    <option value="en_curso">En curso</option>
-                    <option value="cerrada">Cerrada</option>
-                </select>
-            </div>
-            <div class="table-actions">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                <button type="button" class="btn btn-secondary" id="status-cancel">Cancelar</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Modal/Form Oculto para Reasignación -->
-    <div id="assign-form-container" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
-        <h4>Reasignar Incidencia</h4>
-        <form id="assign-form" class="incident-form">
-            <input type="hidden" id="assign-incident-id" name="id">
-            <div class="form-group">
-                <label for="assign-select">Asignar a (adminID)</label>
-                <input type="text" id="assign-select" name="assignedTo" class="form-control" placeholder="ID del admin (1, 2, 3...)">
-            </div>
-            <div class="table-actions">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-                <button type="button" class="btn btn-secondary" id="assign-cancel">Cancelar</button>
-            </div>
-        </form>
     </div>
 </div>
 

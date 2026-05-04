@@ -74,7 +74,6 @@
 					<table id="slots-table" class="table table-striped table-hover" role="table" aria-label="Listado de huecos ofertados">
 						<thead>
 							<tr>
-								<th scope="col">ID</th>
 								<th scope="col">Población</th>
 								<th scope="col">Fecha</th>
 								<th scope="col">Hora</th>

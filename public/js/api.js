@@ -423,4 +423,48 @@ const Api = {
             credentials: 'include'
         }).then(handleResponse);
     },
+    // ─────────── CRUD INCIDENTS ───────────
+getIncidents(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return fetch(`${API_BASE_URL}/incidents${query ? '?' + query : ''}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getIncident(id) {
+    return fetch(`${API_BASE_URL}/incidents/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+createIncident(data) {
+    return fetch(`${API_BASE_URL}/incidents`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+updateIncident(id, data) {
+    return fetch(`${API_BASE_URL}/incidents/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+deleteIncident(id) {
+    return fetch(`${API_BASE_URL}/incidents/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

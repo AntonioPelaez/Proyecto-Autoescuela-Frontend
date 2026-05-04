@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const professorIdInput = document.getElementById("professor-id");
     const professorNameInput = document.getElementById("professor-name");
     const professorSurnameInput = document.getElementById("professor-surname");
+    const professorSurname1Input = document.getElementById("professor-surname1");
+    const professorSurname2Input = document.getElementById("professor-surname2");
     const professorEmailInput = document.getElementById("professor-email");
     const dniInput = document.getElementById("professor-dni");
     const licenseNumberInput = document.getElementById("professor-license");
@@ -18,6 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const tableBody = document.getElementById(TABLE_BODY_ID);
     const messageBox = document.getElementById("professors-message");
 
+    if (!form || !tableBody) {
+        return;
+    }
+
     loadProfessors();
 
     // ─────────────────────────────────────────────
@@ -28,14 +34,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const id = professorIdInput.value;
         const name = professorNameInput.value.trim();
-        const surname = professorSurnameInput.value.trim();
+        const surname = (professorSurnameInput?.value || "").trim();
+        const surname1 = (professorSurname1Input?.value || "").trim();
+        const surname2 = (professorSurname2Input?.value || "").trim();
+        const combinedSurname = surname || [surname1, surname2].filter(Boolean).join(" ").trim();
         const email = professorEmailInput.value.trim();
         const dni = dniInput.value.trim();
         const license_number = licenseNumberInput.value.trim();
         const notes = notesInput.value.trim();
         const active = professorActiveInput.checked;
 
-        if (!name || !surname || !email) {
+        if (!name || !combinedSurname || !email) {
             showState("error", "El nombre, los apellidos y el email son obligatorios.");
             return;
         }
@@ -51,7 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (id) {
                 await Api.updateTeacher(id, {
                     name,
-                    surname,
+                    surname: combinedSurname,
+                    surname1: surname1 || undefined,
+                    surname2: surname2 || undefined,
                     email,
                     dni,
                     license_number,
@@ -62,7 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 await Api.createTeacher({
                     name,
-                    surname,
+                    surname: combinedSurname,
+                    surname1: surname1 || undefined,
+                    surname2: surname2 || undefined,
                     email,
                     dni,
                     license_number,
@@ -116,13 +129,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                 professorIdInput.value = professor.id;
-                professorNameInput.value = professor.name ?? "";
-                professorSurnameInput.value = professor.surname ?? "";
-                professorEmailInput.value = professor.email;
+                const resolvedName = professor.name ?? "";
+                const resolvedSurname1 = professor.surname1 ?? "";
+                const resolvedSurname2 = professor.surname2 ?? "";
+                const resolvedSurname = professor.surname ?? [resolvedSurname1, resolvedSurname2].filter(Boolean).join(" ").trim();
+
+                professorNameInput.value = resolvedName;
+                if (professorSurnameInput) {
+                    professorSurnameInput.value = resolvedSurname;
+                }
+                if (professorSurname1Input) {
+                    professorSurname1Input.value = resolvedSurname1 || resolvedSurname.split(" ")[0] || "";
+                }
+                if (professorSurname2Input) {
+                    professorSurname2Input.value = resolvedSurname2 || resolvedSurname.split(" ").slice(1).join(" ") || "";
+                }
+                professorEmailInput.value = professor.email ?? "";
                 dniInput.value = professor.dni ?? "";
                 licenseNumberInput.value = professor.license_number ?? "";
                 notesInput.value = professor.notes ?? "";
-                professorActiveInput.checked = professor.active;
+                professorActiveInput.checked = Boolean(professor.active);
 
                 formTitle.textContent = "Editar profesor";
                 cancelButton.classList.remove("hidden");
@@ -197,8 +223,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 row.innerHTML = `
     <td>${professor.id}</td>
-    <td>${professor.name}</td>
-    <td>${professor.email}</td>
+    <td>${[professor.name, professor.surname1, professor.surname2].filter(Boolean).join(' ') || professor.full_name || professor.name || '—'}</td>
+    <td>${professor.email || '—'}</td>
     <td>${vehicles}</td>
     <td>${status}</td>
     <td>

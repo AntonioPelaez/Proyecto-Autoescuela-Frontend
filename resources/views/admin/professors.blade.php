@@ -20,23 +20,27 @@
 						<form id="professor-form" novalidate role="form" aria-label="Formulario de gestión de profesores" style="max-width: 900px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 2rem 2.5rem;">
 							<input type="hidden" id="professor-id" name="id">
 
-							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
-								<div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; margin-bottom: 1.2rem;">
+							<div class="professor-identity-group">
+								<div class="professor-identity-grid">
 									<div class="input-group floating-label">
 										<input type="text" id="professor-name" name="name" class="input" placeholder="Nombre" required style="width:100%">
 										<label for="professor-name"><i class="fa fa-user"></i> Nombre</label>
 									</div>
 									<div class="input-group floating-label">
-										<input type="text" id="professor-surname" name="surname" class="input" placeholder="Apellidos" required style="width:100%">
-										<label for="professor-surname"><i class="fa fa-user"></i> Apellidos</label>
+										<input type="text" id="professor-surname1" name="surname1" class="input" placeholder="Primer apellido" required style="width:100%">
+										<label for="professor-surname1"><i class="fa fa-user"></i> Primer apellido</label>
+									</div>
+									<div class="input-group floating-label">
+										<input type="text" id="professor-surname2" name="surname2" class="input" placeholder="Segundo apellido" required style="width:100%">
+										<label for="professor-surname2"><i class="fa fa-user"></i> Segundo apellido</label>
 									</div>
 								</div>
+								<p class="professor-identity-help">Rellena los apellidos por separado para que queden correctamente en el listado y en documentos.</p>
+							</div>
 
-								<hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
-								<div class="input-group floating-label">
-									<input type="email" id="professor-email" name="email" class="input" placeholder=" " required style="width:100%">
-									<label for="professor-email"><i class="fa fa-envelope"></i> Email</label>
-								</div>
+							<div class="input-group floating-label" style="margin-bottom: 1.2rem;">
+								<input type="email" id="professor-email" name="email" class="input" placeholder=" " required style="width:100%">
+								<label for="professor-email"><i class="fa fa-envelope"></i> Email</label>
 							</div>
 
 							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
@@ -116,6 +120,40 @@
 			background: #fff0f0;
 			color: #a30000;
 			border: 1.5px solid #f5bcbc;
+		}
+		.professor-identity-group {
+			margin-bottom: 1.2rem;
+			padding: 1rem;
+			border: 1px solid #eef1f5;
+			border-radius: 10px;
+			background: linear-gradient(180deg, #fafbfd 0%, #ffffff 100%);
+		}
+		.professor-identity-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 1rem;
+		}
+		.professor-identity-grid .input {
+			transition: border-color 0.2s ease, box-shadow 0.2s ease;
+		}
+		.professor-identity-grid .input:focus {
+			border-color: #007bff;
+			box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.14);
+		}
+		.professor-identity-help {
+			margin: 0.3rem 0 0;
+			font-size: 0.84rem;
+			color: #6b7480;
+		}
+		@media (max-width: 980px) {
+			.professor-identity-grid {
+				grid-template-columns: 1fr 1fr;
+			}
+		}
+		@media (max-width: 640px) {
+			.professor-identity-grid {
+				grid-template-columns: 1fr;
+			}
 		}
 		</style>
 @endsection

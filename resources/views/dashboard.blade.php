@@ -22,7 +22,9 @@
                         {{-- Generado por dashboard.js según el rol --}}
                     </ul>
                 </nav>
-                <button type="button" class="btn btn-danger btn-sm btn-full" id="btn-logout">Cerrar sesión</button>
+                <div class="role-sidebar-logout">
+                    <button type="button" class="btn btn-danger btn-sm btn-full" id="btn-logout">Cerrar sesión</button>
+                </div>
             </div>
         </aside>
 

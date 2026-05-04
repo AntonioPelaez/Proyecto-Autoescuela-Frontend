@@ -21,10 +21,18 @@
 							<input type="hidden" id="professor-id" name="id">
 
 							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
-								<div class="input-group floating-label">
-									<input type="text" id="professor-name" name="name" class="input" placeholder=" " required style="width:100%">
-									<label for="professor-name"><i class="fa fa-user"></i> Nombre completo</label>
+								<div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; margin-bottom: 1.2rem;">
+									<div class="input-group floating-label">
+										<input type="text" id="professor-name" name="name" class="input" placeholder="Nombre" required style="width:100%">
+										<label for="professor-name"><i class="fa fa-user"></i> Nombre</label>
+									</div>
+									<div class="input-group floating-label">
+										<input type="text" id="professor-surname" name="surname" class="input" placeholder="Apellidos" required style="width:100%">
+										<label for="professor-surname"><i class="fa fa-user"></i> Apellidos</label>
+									</div>
 								</div>
+
+								<hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #eee;">
 								<div class="input-group floating-label">
 									<input type="email" id="professor-email" name="email" class="input" placeholder=" " required style="width:100%">
 									<label for="professor-email"><i class="fa fa-envelope"></i> Email</label>

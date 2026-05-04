@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("professor-form");
     const professorIdInput = document.getElementById("professor-id");
     const professorNameInput = document.getElementById("professor-name");
+    const professorSurnameInput = document.getElementById("professor-surname");
     const professorEmailInput = document.getElementById("professor-email");
     const dniInput = document.getElementById("professor-dni");
     const licenseNumberInput = document.getElementById("professor-license");
@@ -27,14 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const id = professorIdInput.value;
         const name = professorNameInput.value.trim();
+        const surname = professorSurnameInput.value.trim();
         const email = professorEmailInput.value.trim();
         const dni = dniInput.value.trim();
         const license_number = licenseNumberInput.value.trim();
         const notes = notesInput.value.trim();
         const active = professorActiveInput.checked;
 
-        if (!name || !email) {
-            showState("error", "El nombre y el email son obligatorios.");
+        if (!name || !surname || !email) {
+            showState("error", "El nombre, los apellidos y el email son obligatorios.");
             return;
         }
 
@@ -49,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (id) {
                 await Api.updateTeacher(id, {
                     name,
+                    surname,
                     email,
                     dni,
                     license_number,
@@ -59,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 await Api.createTeacher({
                     name,
+                    surname,
                     email,
                     dni,
                     license_number,
@@ -110,8 +114,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
 
+
                 professorIdInput.value = professor.id;
-                professorNameInput.value = professor.name;
+                professorNameInput.value = professor.name ?? "";
+                professorSurnameInput.value = professor.surname ?? "";
                 professorEmailInput.value = professor.email;
                 dniInput.value = professor.dni ?? "";
                 licenseNumberInput.value = professor.license_number ?? "";

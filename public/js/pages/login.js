@@ -45,7 +45,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Llamar a la API de login
-            const { token } = await Api.login(email, password);
+            const loginResponse = await Api.login(email, password);
+
+            // Soporta distintos contratos de login del backend
+            const token =
+                loginResponse?.token ??
+                loginResponse?.access_token ??
+                loginResponse?.data?.token ??
+                loginResponse?.data?.access_token;
+
+            if (!token) {
+                throw new Error('La API de login no devolvio token de autenticacion.');
+            }
 
             // 2. Guardar token en sesión
             Auth.setToken(token);

@@ -2,10 +2,10 @@
 // API real: integración con backend Laravel
 // ─────────────────────────────────────────────
 
-const API_BASE_URL = 'http://localhost:8000/api'; // Cambia esto si tu backend está en otro host
+const API_BASE_URL = `http://localhost:8000/api`;
 
 function getAuthHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
     const token = localStorage.getItem('token');
     if (token) headers['Authorization'] = 'Bearer ' + token;
     return headers;
@@ -320,17 +320,53 @@ const Api = {
         return fetch(`${API_BASE_URL}/availability-hours`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },
     getAvailabilitySlots(params = {}) {
-    const { town_id, date } = params;
+        const { town_id, date } = params;
+        const url = new URL(`${API_BASE_URL}/availability-slots`);
 
-    const url = new URL(`${API_BASE_URL}/availability-slots`);
-    url.searchParams.append('town_id', town_id);
-    url.searchParams.append('date', date);
+        if (town_id) {
+            url.searchParams.append('town_id', town_id);
+        }
+        if (date) {
+            url.searchParams.append('date', date);
+        }
 
-    return fetch(url, {
-        method: 'GET',
-        headers: getAuthHeaders()
-    }).then(handleResponse);
-},
+        return fetch(url, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            cache: 'no-store',
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    getAvailabilitySlot(id) {
+        return fetch(`${API_BASE_URL}/availability-slots/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    createAvailabilitySlot(data) {
+        return fetch(`${API_BASE_URL}/availability-slots`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    updateAvailabilitySlot(id, data) {
+        return fetch(`${API_BASE_URL}/availability-slots/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    updateSlotStatus(id, status) {
+        return fetch(`${API_BASE_URL}/availability-slots/${id}/status`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ status }),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
 
     createClassSession(data) {
         return fetch(`${API_BASE_URL}/class-sessions`, {

@@ -16,7 +16,7 @@
 			<div class="card card-body">
 				<h3>Admin</h3>
 				<nav class="role-menu" aria-label="Menu admin">
-					<a href="/dashboard" class="role-menu-link {{ request()->is('dashboard') ? 'is-active' : '' }}">Panel</a>
+					<a href="/admin/panel" class="role-menu-link {{ request()->is('admin/panel') ? 'is-active' : '' }}">Panel</a>
 					<a href="/admin/towns" class="role-menu-link {{ request()->is('admin/towns') ? 'is-active' : '' }}">Poblaciones</a>
 					<a href="/admin/professors" class="role-menu-link {{ request()->is('admin/professors') ? 'is-active' : '' }}">Profesores</a>
 					<a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>

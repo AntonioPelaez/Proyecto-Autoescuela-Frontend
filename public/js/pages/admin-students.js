@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     if (studentPicker) {
-        studentPicker.addEventListener('change', () => {
+        studentPicker.addEventListener('change', async () => {
             if (!studentPicker.value) {
                 resetForm();
                 showState('', '');

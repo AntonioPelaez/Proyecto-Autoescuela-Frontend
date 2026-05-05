@@ -11,6 +11,46 @@
 	const QUICK_DATE_ID = 'quick-date';
 	const QUICK_RESULTS_ID = 'student-quick-results';
 
+	function formatBookingTime(value) {
+		const raw = String(value || '').trim();
+		if (!raw) {
+			return '00:00';
+		}
+
+		if (raw.length >= 16 && /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(raw)) {
+			return raw.slice(11, 16);
+		}
+
+		if (/^\d{2}:\d{2}/.test(raw)) {
+			return raw.slice(0, 5);
+		}
+
+		return raw;
+	}
+
+	function _normalizeStatus(raw) {
+		const s = String(raw || '').toLowerCase();
+		if (s === 'confirmada' || s === 'confirmed' || s === 'booked') return 'confirmada';
+		if (s === 'cancelada' || s === 'cancelled' || s === 'canceled') return 'cancelada';
+		if (s === 'en_curso' || s === 'in_progress') return 'en_curso';
+		if (s === 'completada' || s === 'completed') return 'completada';
+		if (s === 'pending') return 'confirmada';
+		return s || 'confirmada';
+	}
+
+	function normalizeBookingRecord(booking) {
+		const teacherId = booking && (booking.teacher_id || booking.teacher_profile_id || booking.teacher && booking.teacher.id);
+		const vehicleId = booking && (booking.vehicle_id || booking.vehicle && booking.vehicle.id);
+		return {
+			...booking,
+			date: booking && (booking.date || booking.session_date || booking.scheduled_date) || '',
+			time: booking && (booking.time || formatBookingTime(booking.start_time || booking.slot_starts_at || booking.start)) || '00:00',
+			professorName: booking && (booking.professorName || booking.teacher_name || booking.teacherName || booking.teacher && booking.teacher.name) || (teacherId ? 'Profesor #' + teacherId : '-'),
+			vehicle: booking && (booking.vehicle_name || booking.vehicle_label || (booking.vehicle && booking.vehicle.name) || (booking.vehicle && booking.vehicle.label) || (booking.vehicle && booking.vehicle.brand && booking.vehicle.model ? `${booking.vehicle.brand} ${booking.vehicle.model}`.trim() : null) || (typeof booking.vehicle === 'string' ? booking.vehicle : null)) || (vehicleId ? 'Vehículo #' + vehicleId : 'Sin vehiculo asignado'),
+			status: _normalizeStatus(booking && booking.status),
+		};
+	}
+
 	function getDateTimeValue(item) {
 		const date = item && item.date ? item.date : '';
 		const time = item && item.time ? item.time : '00:00';
@@ -137,10 +177,15 @@
 				createCell(booking.time),
 				createCell(booking.professorName || '-'),
 				createCell(booking.vehicle || 'Sin vehiculo asignado'),
-				createCell(booking.status || '-')
+				createCell(_formatStatus(booking.status))
 			);
 			tbody.appendChild(row);
 		});
+	}
+
+	function _formatStatus(status) {
+		const map = { confirmada: 'Confirmada', pendiente: 'Pendiente', cancelada: 'Cancelada', en_curso: 'En curso', completada: 'Completada' };
+		return map[status] || status || '-';
 	}
 
 	function renderQuickResults(slots) {
@@ -182,14 +227,52 @@
 		container.appendChild(table);
 	}
 
+	function normalizeQuickSlots(apiResponse) {
+		const payload = apiResponse && apiResponse.data ? apiResponse.data : apiResponse;
+		const groupedSlots = payload && Array.isArray(payload.slots) ? payload.slots : [];
+		const result = [];
+
+		groupedSlots.forEach(function (teacherBlock) {
+			const teacherName = teacherBlock && teacherBlock.teacher_name ? teacherBlock.teacher_name : 'Profesor';
+			const vehicle = teacherBlock && (teacherBlock.vehicle_name || teacherBlock.vehicle_label || teacherBlock.vehicle)
+				? (teacherBlock.vehicle_name || teacherBlock.vehicle_label || teacherBlock.vehicle)
+				: 'Sin vehiculo asignado';
+			const slots = teacherBlock && Array.isArray(teacherBlock.slots) ? teacherBlock.slots : [];
+
+			slots.forEach(function (slot) {
+				if (slot && slot.reserved) {
+					return;
+				}
+
+				const raw = slot ? (slot.start || slot.slot_starts_at || slot.starts_at || slot.time) : '';
+				const time = raw && String(raw).includes('T')
+					? String(raw).split('T')[1].slice(0, 5)
+					: String(raw || '').slice(0, 5);
+
+				if (!time) {
+					return;
+				}
+
+				result.push({
+					time: time,
+					professorName: teacherName,
+					vehicle: vehicle,
+				});
+			});
+		});
+
+		return result;
+	}
+
 	async function loadTowns() {
 		const townSelect = document.getElementById(QUICK_TOWN_ID);
 		if (!townSelect) {
 			return;
 		}
 
-		const towns = await Api.getTowns();
-		const active = towns.filter(function (town) { return town.active; });
+		const response = await Api.getTowns();
+		const towns = response.data || response || [];
+		const active = towns.filter(function (town) { return town.is_active; });
 		townSelect.replaceChildren();
 
 		const defaultOption = document.createElement('option');
@@ -251,7 +334,8 @@
 
 			try {
 				UI.setLoading(QUICK_RESULTS_ID, true);
-				const slots = await Api.getAvailabilitySlots(townId, date);
+				const response = await Api.getAvailabilitySlots({ town_id: townId, date: date });
+				const slots = normalizeQuickSlots(response);
 				renderQuickResults(slots);
 				showState('success', 'Disponibilidad cargada. Puedes reservar desde la pantalla de Reservar nueva clase.');
 			} catch (error) {
@@ -263,10 +347,65 @@
 		});
 	}
 
+	// Devuelve mapa session_id → label de vehículo
+	async function buildTeacherVehicleMap(rawBookings) {
+		const map = {};
+		let storedMap = {};
+		let teacherCache = {};
+		try { storedMap = JSON.parse(localStorage.getItem('session_vehicle_map') || '{}'); } catch (_) {}
+		try { teacherCache = JSON.parse(localStorage.getItem('teacher_vehicle_cache') || '{}'); } catch (_) {}
+
+		const teacherIds = [...new Set(
+			rawBookings.map(b => b?.teacher_profile_id ?? b?.teacher_id ?? null).filter(Boolean)
+		)];
+		const teacherVehicles = {};
+		await Promise.all(teacherIds.map(async tid => {
+			try {
+				const res = await Api.getTeacherVehicles(tid);
+				teacherVehicles[tid] = Array.isArray(res?.vehicles) ? res.vehicles : [];
+			} catch (_) { teacherVehicles[tid] = []; }
+		}));
+
+		rawBookings.forEach(b => {
+			const tid = b?.teacher_profile_id ?? b?.teacher_id ?? null;
+			const sid = b?.id ?? null;
+			const vehicles = teacherVehicles[tid] || [];
+			if (!tid || !sid) return;
+
+			const findLabel = vid => {
+				const v = vehicles.find(x => Number(x.id) === Number(vid));
+				return v ? `${v.brand || ''} ${v.model || ''}`.trim() || v.plate_number : null;
+			};
+
+			const savedVid = storedMap[sid];
+			if (savedVid) { const l = findLabel(savedVid); if (l) { map[sid] = l; return; } }
+
+			const cachedVid = teacherCache[tid];
+			if (cachedVid) { const l = findLabel(cachedVid); if (l) { map[sid] = l; return; } }
+
+			const active = vehicles.filter(v => v.is_active);
+			if (active.length === 1) {
+				map[sid] = `${active[0].brand || ''} ${active[0].model || ''}`.trim() || active[0].plate_number;
+				return;
+			}
+
+			map[sid] = 'Ver con tu profesor';
+		});
+		return map;
+	}
+
 	async function loadPanelData() {
 		UI.setLoading(HISTORY_BODY_ID, true);
 		try {
-			const bookings = await Api.getMyBookings();
+			const response = await Api.getMyClasses();
+			const rawBookings = Array.isArray(response && response.data) ? response.data : (Array.isArray(response) ? response : []);
+			const teacherVehicleMap = await buildTeacherVehicleMap(rawBookings);
+			const bookings = rawBookings.map(b => {
+				const nb = normalizeBookingRecord(b);
+				const sid = b?.id ?? null;
+				if (sid && teacherVehicleMap[sid]) nb.vehicle = teacherVehicleMap[sid];
+				return nb;
+			});
 			renderNextClass(bookings);
 			renderSummary(bookings);
 			renderHistory(bookings);

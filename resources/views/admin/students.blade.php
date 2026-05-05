@@ -59,11 +59,28 @@
 					</div>
 				</div>
 
+				<div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.2rem;">
+					<div class="input-group">
+						<label class="input-label" for="student-dni">DNI / NIE</label>
+						<input type="text" id="student-dni" name="dni" class="input" maxlength="20" style="width:100%">
+					</div>
+					<div class="input-group">
+						<label class="input-label" for="student-birth-date">Fecha de nacimiento</label>
+						<input type="date" id="student-birth-date" name="birth_date" class="input" style="width:100%">
+					</div>
+				</div>
+
 				<div class="input-group" style="margin-bottom: 1.2rem;">
 					<label class="input-label" for="student-town">Población preferida</label>
 					<select id="student-town" name="town_id" class="input">
 						<option value="">Sin población asignada</option>
 					</select>
+				</div>
+
+				<div id="student-notes-block" style="margin-bottom: 1.2rem;">
+					<label class="input-label" for="student-notes">Notas internas</label>
+					<textarea id="student-notes" name="notes" class="input" rows="3" placeholder="Ej: Recoger al alumno en la plaza de toros de Antequera..." style="width: 100%; resize: vertical; font-family: inherit; font-size: 0.97rem;"></textarea>
+					<p style="margin: 0.35rem 0 0; color: #5b6672; font-size: 0.85rem;">Notas visibles solo para el equipo. El alumno no puede leerlas.</p>
 				</div>
 
 				<div id="student-password-block" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.2rem;">

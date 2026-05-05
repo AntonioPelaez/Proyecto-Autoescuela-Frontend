@@ -19,6 +19,7 @@
 					<a href="/admin/panel" class="role-menu-link {{ request()->is('admin/panel') ? 'is-active' : '' }}">Panel</a>
 					<a href="/admin/towns" class="role-menu-link {{ request()->is('admin/towns') ? 'is-active' : '' }}">Poblaciones</a>
 					<a href="/admin/professors" class="role-menu-link {{ request()->is('admin/professors') ? 'is-active' : '' }}">Profesores</a>
+					<a href="/admin/students" class="role-menu-link {{ request()->is('admin/students') ? 'is-active' : '' }}">Alumnos</a>
 					<a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>
 					<a href="/admin/slots" class="role-menu-link {{ request()->is('admin/slots') ? 'is-active' : '' }}">Huecos ofertados</a>
 					<a href="/admin/bookings" class="role-menu-link {{ request()->is('admin/bookings') ? 'is-active' : '' }}">Clases reservadas</a>

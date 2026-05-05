@@ -14,6 +14,7 @@ Route::view('/teacher/home', 'teacher.home');
 Route::view('/admin/panel', 'admin.panel');
 Route::view('/admin/towns', 'admin.towns');
 Route::view('/admin/professors', 'admin.professors');
+Route::view('/admin/students', 'admin.students');
 Route::view('/admin/vehicles', 'admin.vehicles');
 Route::view('/admin/slots', 'admin.slots');
 Route::view('/admin/bookings', 'admin.bookings');

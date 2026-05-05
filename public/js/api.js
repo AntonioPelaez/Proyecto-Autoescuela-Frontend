@@ -17,20 +17,31 @@ function getAuthHeaders() {
  */
 async function handleResponse(response) {
     let data;
+    let rawText = '';
     try {
-        data = await response.json();
+        rawText = await response.text();
+        data = rawText ? JSON.parse(rawText) : {};
     } catch {
-        data = {};
+        data = rawText || {};
     }
 
     if (!response.ok) {
+        const validationDetails = data && typeof data === 'object' && data.errors
+            ? Object.values(data.errors).flat().join(' ')
+            : '';
+        const normalizedMessage = data && typeof data === 'object'
+            ? (data.message || data.error || validationDetails)
+            : '';
+
         // Extrae mensaje de error y detalles si existen
         const error = {
             status: response.status,
             statusText: response.statusText,
-            message: data?.message || 'Error en la petición API',
-            errors: data?.errors || null,
-            raw: data
+            message: normalizedMessage || rawText || 'Error en la petición API',
+            errors: data && typeof data === 'object' ? data.errors || null : null,
+            error: data && typeof data === 'object' ? data.error || null : null,
+            raw: data,
+            rawText
         };
         // Permite capturar el error como objeto
         throw error;
@@ -90,7 +101,7 @@ const Api = {
 
     // ─────────── CRUD PUEBLOS ───────────
     getTowns() {
-        return fetch(`${API_BASE_URL}/towns`, {}).then(handleResponse);
+        return fetch(`${API_BASE_URL}/towns`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },
     getTown(id) {
         return fetch(`${API_BASE_URL}/towns/${id}`, {}).then(handleResponse);
@@ -313,11 +324,40 @@ const Api = {
         const query = new URLSearchParams(params).toString();
         return fetch(`${API_BASE_URL}/admin/classes${query ? '?' + query : ''}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },
+    cancelAdminBooking(id) {
+        return fetch(`${API_BASE_URL}/class-sessions/cancel`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ id }),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    reassignAdminBooking(classSessionId, teacherId, vehicleId) {
+        const body = { class_session_id: classSessionId, teacher_id: teacherId };
+        if (vehicleId) body.vehicle_id = vehicleId;
+        return fetch(`${API_BASE_URL}/class-sessions/reassign-teacher`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(body),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
     getDayClassSessions() {
         return fetch(`${API_BASE_URL}/class-sessions/day`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
     },
-    getAvailabilityHours() {
-        return fetch(`${API_BASE_URL}/availability-hours`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+    getAvailabilityHours(params = {}) {
+        const { town_id, teacher_id, date } = params;
+        const url = new URL(`${API_BASE_URL}/availability-hours`);
+
+        if (town_id) url.searchParams.append('town_id', town_id);
+        if (teacher_id) url.searchParams.append('teacher_id', teacher_id);
+        if (date) url.searchParams.append('date', date);
+
+        return fetch(url, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            credentials: 'include'
+        }).then(handleResponse);
     },
     getAvailabilitySlots(params = {}) {
         const { town_id, date } = params;
@@ -374,7 +414,10 @@ const Api = {
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
             credentials: 'include'
-        }).then(handleResponse);
+        }).then(handleResponse).catch((error) => {
+            error.requestBody = data;
+            throw error;
+        });
     },
     cancelClassSession(data) {
         return fetch(`${API_BASE_URL}/class-sessions/cancel`, {

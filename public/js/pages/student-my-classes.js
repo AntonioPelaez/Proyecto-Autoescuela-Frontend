@@ -41,9 +41,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Funciones internas
     // ─────────────────────────────────────────────
 
+    // Devuelve mapa session_id → label de vehículo
+    async function buildTeacherVehicleMap(rawBookings) {
+        const map = {};
+        let storedMap = {};
+        let teacherCache = {};
+        try { storedMap = JSON.parse(localStorage.getItem('session_vehicle_map') || '{}'); } catch (_) {}
+        try { teacherCache = JSON.parse(localStorage.getItem('teacher_vehicle_cache') || '{}'); } catch (_) {}
+
+        const teacherIds = [...new Set(
+            rawBookings.map(b => b?.teacher_profile_id ?? b?.teacher_id ?? null).filter(Boolean)
+        )];
+        const teacherVehicles = {};
+        await Promise.all(teacherIds.map(async tid => {
+            try {
+                const res = await Api.getTeacherVehicles(tid);
+                teacherVehicles[tid] = Array.isArray(res?.vehicles) ? res.vehicles : [];
+            } catch (_) { teacherVehicles[tid] = []; }
+        }));
+
+        rawBookings.forEach(b => {
+            const tid = b?.teacher_profile_id ?? b?.teacher_id ?? null;
+            const sid = b?.id ?? null;
+            const vehicles = teacherVehicles[tid] || [];
+            if (!tid || !sid) return;
+
+            const findLabel = vid => {
+                const v = vehicles.find(x => Number(x.id) === Number(vid));
+                return v ? `${v.brand || ''} ${v.model || ''}`.trim() || v.plate_number : null;
+            };
+
+            const savedVid = storedMap[sid];
+            if (savedVid) { const l = findLabel(savedVid); if (l) { map[sid] = l; return; } }
+
+            const cachedVid = teacherCache[tid];
+            if (cachedVid) { const l = findLabel(cachedVid); if (l) { map[sid] = l; return; } }
+
+            const active = vehicles.filter(v => v.is_active);
+            if (active.length === 1) {
+                map[sid] = `${active[0].brand || ''} ${active[0].model || ''}`.trim() || active[0].plate_number;
+                return;
+            }
+
+            map[sid] = 'Ver con tu profesor';
+        });
+        return map;
+    }
+
     async function loadMyClasses() {
         try {
-            const bookings = await Api.getMyClasses();
+            const response = await Api.getMyClasses();
+            const rawBookings = response?.data ?? response ?? [];
+            const teacherVehicleMap = await buildTeacherVehicleMap(Array.isArray(rawBookings) ? rawBookings : []);
+            const bookings = Array.isArray(rawBookings) ? rawBookings.map(b => {
+                const nb = normalizeBookingRecord(b);
+                const sid = b?.id ?? null;
+                if (sid && teacherVehicleMap[sid]) nb.vehicle = teacherVehicleMap[sid];
+                return nb;
+            }) : [];
             const today = new Date().toISOString().split('T')[0];
 
             // Separar próximas y pasadas
@@ -59,6 +114,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function formatBookingTime(value) {
+        const raw = String(value || '').trim();
+        if (!raw) {
+            return '—';
+        }
+
+        if (raw.length >= 16 && /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(raw)) {
+            return raw.slice(11, 16);
+        }
+
+        if (/^\d{2}:\d{2}/.test(raw)) {
+            return raw.slice(0, 5);
+        }
+
+        return raw;
+    }
+
+    function _normalizeStatus(raw) {
+        const s = String(raw || '').toLowerCase();
+        if (s === 'confirmada' || s === 'confirmed' || s === 'booked') return 'confirmada';
+        if (s === 'cancelada' || s === 'cancelled' || s === 'canceled') return 'cancelada';
+        if (s === 'en_curso' || s === 'in_progress') return 'en_curso';
+        if (s === 'completada' || s === 'completed') return 'completada';
+        if (s === 'pending') return 'confirmada';
+        return s || 'confirmada';
+    }
+
+    function normalizeBookingRecord(booking) {
+        const teacherId = booking?.teacher_id ?? booking?.teacher_profile_id ?? booking?.teacher?.id ?? null;
+        const vehicleId = booking?.vehicle_id ?? booking?.vehicle?.id ?? null;
+
+        return {
+            ...booking,
+            date: booking?.date || booking?.session_date || booking?.scheduled_date || '—',
+            time: booking?.time || formatBookingTime(booking?.start_time || booking?.slot_starts_at || booking?.start),
+            professorName: booking?.professorName || booking?.teacher_name || booking?.teacherName || booking?.teacher?.name || (teacherId ? `Profesor #${teacherId}` : 'Profesor'),
+            vehicle: booking?.vehicle_name || booking?.vehicle_label || booking?.vehicle?.name || booking?.vehicle?.label || (booking?.vehicle?.brand && booking?.vehicle?.model ? `${booking.vehicle.brand} ${booking.vehicle.model}`.trim() : null) || (typeof booking?.vehicle === 'string' ? booking.vehicle : null) || (vehicleId ? `Vehículo #${vehicleId}` : '(sin especificar)'),
+            townName: booking?.townName || booking?.town_name || booking?.town?.name || (booking?.town_id ? `Población #${booking.town_id}` : 'N/A'),
+            status: _normalizeStatus(booking?.status),
+        };
+    }
+
     function renderUpcoming(bookings) {
         upcomingTbody.innerHTML = '';
 
@@ -69,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         bookings.forEach(booking => {
             const row = document.createElement('tr');
-            const statusColor = booking.status === 'confirmada' ? 'badge-green' : 'badge-gray';
+            const statusColor = (booking.status === 'confirmada' || booking.status === 'pendiente') ? 'badge-green' : 'badge-gray';
             
             row.innerHTML = `
                 <td>${booking.date}</td>
@@ -144,8 +241,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function _formatStatus(status) {
         const statusMap = {
             'confirmada': 'Confirmada',
+            'pendiente': 'Pendiente',
             'cancelada': 'Cancelada',
             'en_curso': 'En curso',
+            'completada': 'Completada',
         };
         return statusMap[status] || status;
     }

@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const studentEmailInput = document.getElementById('student-email');
     const studentPhoneInput = document.getElementById('student-phone');
     const studentTownInput = document.getElementById('student-town');
+    const studentDniInput = document.getElementById('student-dni');
+    const studentBirthDateInput = document.getElementById('student-birth-date');
+    const studentNotesInput = document.getElementById('student-notes');
+    const studentNotesBlock = document.getElementById('student-notes-block');
     const studentFilterSearchInput = document.getElementById('student-filter-search');
     const studentFilterTownInput = document.getElementById('student-filter-town');
     const studentPasswordInput = document.getElementById('student-password');
@@ -96,11 +100,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         UI.setLoading(TABLE_BODY_ID, true);
         try {
+            const notesText = String(studentNotesInput?.value || '').trim();
             if (id) {
                 await Api.updateStudent(id, payload);
+                try {
+                    await Api.saveStudentNotes(id, { notes: notesText });
+                } catch {
+                    // Las notas no bloquean el guardado principal
+                }
                 showState('success', 'Alumno actualizado correctamente.');
             } else {
-                await Api.createStudent(payload);
+                const createResponse = await Api.createStudent(payload);
+                if (notesText) {
+                    const newStudent = unwrapApiPayload(createResponse);
+                    const newId = newStudent?.id ?? newStudent?.user_id ?? null;
+                    if (newId) {
+                        try {
+                            await Api.saveStudentNotes(newId, { notes: notesText });
+                        } catch {
+                            // Las notas no bloquean el guardado principal
+                        }
+                    }
+                }
                 showState('success', 'Alumno creado correctamente.');
             }
 
@@ -132,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            populateForm(selected, { mode: 'select' });
+            await populateForm(selected, { mode: 'select' });
             showState('success', 'Alumno seleccionado para consulta.');
         });
     }
@@ -174,7 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
-                populateForm(student);
+                await populateForm(student);
                 studentNameInput?.focus();
                 return;
             }
@@ -333,7 +354,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function populateForm(student, options = { mode: 'edit' }) {
+    async function populateForm(student, options = { mode: 'edit' }) {
         const mode = options.mode || 'edit';
         const studentId = getStudentId(student);
 
@@ -344,6 +365,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         studentEmailInput.value = student.email || '';
         studentPhoneInput.value = student.phone || '';
         studentTownInput.value = student.townId ? String(student.townId) : '';
+        if (studentDniInput) {
+            studentDniInput.value = student.dni || '';
+        }
+        if (studentBirthDateInput) {
+            studentBirthDateInput.value = student.birthDate || '';
+        }
+
+        // Cargar notas del alumno
+        if (studentNotesInput) {
+            studentNotesInput.value = '';
+        }
+        if (studentId) {
+            try {
+                const notesResponse = await Api.getStudentNotes(studentId);
+                const notesPayload = unwrapApiPayload(notesResponse);
+                if (studentNotesInput) {
+                    studentNotesInput.value = notesPayload?.notes ?? notesPayload?.content ?? '';
+                }
+            } catch {
+                // Las notas pueden no estar disponibles
+            }
+        }
 
         if (mode === 'select') {
             formTitle.textContent = 'Alumno seleccionado (solo consulta)';
@@ -370,6 +413,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     function resetForm() {
         form.reset();
         studentIdInput.value = '';
+        if (studentNotesInput) {
+            studentNotesInput.value = '';
+        }
+        if (studentDniInput) {
+            studentDniInput.value = '';
+        }
+        if (studentBirthDateInput) {
+            studentBirthDateInput.value = '';
+        }
         formTitle.textContent = 'Crear alumno';
         submitButton.textContent = 'Crear alumno';
         cancelButton.classList.add('hidden');
@@ -401,7 +453,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             studentSurname2Input,
             studentEmailInput,
             studentPhoneInput,
+            studentDniInput,
+            studentNotesInput,
         ];
+
+        if (studentBirthDateInput) {
+            studentBirthDateInput.disabled = isReadonly;
+        }
 
         textLikeInputs.forEach((input) => {
             if (!input) {
@@ -492,6 +550,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             payload.town_id = townId;
         }
 
+        const dni = String(studentDniInput?.value || '').trim();
+        if (dni) {
+            payload.dni = dni;
+        }
+
+        const birthDate = String(studentBirthDateInput?.value || '').trim();
+        if (birthDate) {
+            payload.birth_date = birthDate;
+        }
+
         payload.surname = [payload.surname1, payload.surname2].filter(Boolean).join(' ').trim();
         return payload;
     }
@@ -523,6 +591,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             rawStudent.town?.id
         );
 
+        const dni = rawStudent.dni ?? rawStudent.student_profile?.dni ?? '';
+        const birthDate = rawStudent.birth_date ?? rawStudent.birthDate ?? rawStudent.student_profile?.birth_date ?? '';
+
         return {
             id: rawStudent.id ?? rawStudent.student_id ?? rawStudent.user_id ?? '',
             name,
@@ -531,6 +602,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             email: rawStudent.email ?? rawStudent.user?.email ?? '',
             phone: rawStudent.phone ?? rawStudent.user?.phone ?? '',
             townId,
+            dni: typeof dni === 'string' ? dni : '',
+            birthDate: typeof birthDate === 'string' ? birthDate.slice(0, 10) : '',
             createdAt: rawStudent.created_at ?? rawStudent.createdAt ?? rawStudent.user?.created_at ?? rawStudent.user?.createdAt ?? null,
             active: normalizeBoolean(rawStudent.active ?? rawStudent.is_active ?? rawStudent.student_profile?.active ?? rawStudent.user?.active ?? rawStudent.user?.is_active),
             fullName: [name, surname1, surname2].filter(Boolean).join(' ').trim() || rawStudent.full_name || '—',

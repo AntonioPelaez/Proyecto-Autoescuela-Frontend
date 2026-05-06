@@ -314,6 +314,15 @@ const Api = {
         return this.getTeacherBookings(params);
     },
 
+    updateTeacherPassword(id, data) {
+    return fetch(`${API_BASE_URL}/teachers/${id}/password`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+    }).then(handleResponse);
+},
+
+
     // ─────────── CRUD VEHÍCULOS ───────────
     getVehicles() {
         return fetch(`${API_BASE_URL}/vehicles`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);

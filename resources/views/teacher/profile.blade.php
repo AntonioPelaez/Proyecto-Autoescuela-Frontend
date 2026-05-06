@@ -45,14 +45,6 @@
                     <input type="tel" id="profile-phone" name="phone" class="input"
                            autocomplete="tel" placeholder="6XX XXX XXX">
                 </div>
-
-                <div class="input-group">
-                    <label for="profile-license" class="input-label">Tipos de permiso que imparte</label>
-                    <input type="text" id="profile-license" name="license_types" class="input"
-                           placeholder="Ej: B, A2, C" autocomplete="off">
-                    <small class="input-hint">Separa los tipos con comas.</small>
-                </div>
-
                 <div class="profile-form-footer">
                     <button type="submit" class="btn btn-primary">Guardar cambios</button>
                 </div>

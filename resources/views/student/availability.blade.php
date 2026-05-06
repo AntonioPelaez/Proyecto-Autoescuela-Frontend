@@ -32,26 +32,13 @@
         </form>
     </div>
 
-    <!-- Step 2: Select Professor -->
-    <div class="table-section" id="professors-section" style="display: none;">
-        <h3>👨‍🏫 Paso 2: Elige Profesor</h3>
-        <div id="professors-container">
-            <div class="form-group">
-                <label for="professor-select">Profesor *</label>
-                <select id="professor-select" class="form-control">
-                    <option value="">Selecciona un profesor</option>
-                </select>
-            </div>
-            <div id="professor-help" style="margin-top: 10px; color: #666;"></div>
-        </div>
-    </div>
-
-    <!-- Step 3: Select Time Slot -->
+    <!-- Step 2: Select Time Slot -->
     <div class="table-section" id="time-slots-section" style="display: none;">
-        <h3>⏰ Paso 3: Elige Hora</h3>
+        <h3>⏰ Paso 2: Elige Hora Disponible</h3>
         <div id="time-slots-grid" class="time-slots-grid">
             <!-- Se pobla con JavaScript -->
         </div>
+        <p id="time-slots-meta" style="margin-top: 10px; color: #666;">Solo se muestran horas reservables. La autoescuela asignará automáticamente profesor y vehículo.</p>
     </div>
 
     <!-- Confirmation -->
@@ -62,7 +49,6 @@
             <button type="submit" class="btn btn-success">Confirmar Reserva</button>
             <button type="button" class="btn btn-secondary" id="cancel-booking">Cancelar</button>
         </form>
-        <input type="hidden" id="selected-professor-id" name="professorId">
     </div>
 
     <!-- Current Bookings -->

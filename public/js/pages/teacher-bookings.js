@@ -29,7 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cargar solo los horarios disponibles, pero NO las clases ni historial hasta que el usuario filtre
     await loadTimeSlots();
-    // No llamar a loadBookings aquí
+
+    await loadBookings({ date: today });
 
     // Form submit para filtrar
     filterForm.addEventListener('submit', async (e) => {
@@ -97,14 +98,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             let bookings = await Api.getTeacherBookings(filters);
+            console.log("API devuelve:", bookings);
             // Robustez: aceptar array directo o {data: array}
             if (!Array.isArray(bookings)) {
-                bookings = Array.isArray(bookings?.data) ? bookings.data : [];
-            }
+    if (Array.isArray(bookings?.reservas)) {
+        bookings = bookings.reservas;
+    } else if (Array.isArray(bookings?.data)) {
+        bookings = bookings.data;
+    } else {
+        bookings = [];
+    }
+}
+
             const today = new Date().toISOString().split('T')[0];
 
-            const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
-            const past = bookings.filter(b => b.date < today || b.status === 'cancelada');
+      const upcoming = bookings.filter(b =>
+    b.date >= today &&
+    ['pending', 'confirmed', 'completed'].includes(b.status)
+);
+
+const past = bookings.filter(b =>
+    b.date < today ||
+    b.status === 'cancelled'
+);
+
+
 
             renderUpcoming(upcoming);
             renderPast(past);
@@ -243,4 +261,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 3000);
         }
     }
+    function _getStatusColor(status) {
+    switch (status) {
+        case 'pending':
+        case 'pendiente':
+            return 'badge-yellow';
+        case 'confirmed':
+        case 'confirmada':
+            return 'badge-green';
+        case 'completed':
+        case 'completada':
+            return 'badge-blue';
+        case 'cancelled':
+        case 'cancelada':
+            return 'badge-red';
+        default:
+            return 'badge-gray';
+    }
+}
+function _formatStatus(status) {
+    switch (status) {
+        case 'pending': return 'Pendiente';
+        case 'confirmed': return 'Confirmada';
+        case 'completed': return 'Completada';
+        case 'cancelled': return 'Cancelada';
+        default: return status;
+    }
+}
+
 });

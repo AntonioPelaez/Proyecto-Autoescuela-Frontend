@@ -4,21 +4,97 @@
 @section('main-id', 'admin-panel-page')
 
 @section('content') 
+    <div class="page-shell page-shell-admin">
     <header>
         <h1>Panel de administración</h1>
-        <p style="margin: 0.4rem 0 0; color: #5b6672;">Acceso rápido a las secciones principales del sistema.</p>
+        <div class="table-actions">
+            <a href="/admin/bookings" class="btn btn-primary">Ver clases reservadas</a>
+            <a href="/admin/incidents" class="btn btn-outline">Abrir incidencias</a>
+        </div>
     </header>
 
+    <div class="page-shell-intro">
+        <p>Consulta una vista global del sistema con datos generales de las secciones principales para tomar decisiones rápidas sin entrar en cada pantalla.</p>
+    </div>
+
+    <div id="admin-panel-summary-state" class="hidden" tabindex="-1"></div>
+
     <section class="card">
-        <div class="card-body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-            <a href="/admin/towns" class="btn btn-outline">Poblaciones</a>
-            <a href="/admin/professors" class="btn btn-outline">Profesores</a>
-            <a href="/admin/students" class="btn btn-outline">Alumnos</a>
-            <a href="/admin/vehicles" class="btn btn-outline">Vehículos</a>
-            <a href="/admin/slots" class="btn btn-outline">Huecos ofertados</a>
-            <a href="/admin/bookings" class="btn btn-outline">Clases reservadas</a>
-            <a href="/admin/incidents" class="btn btn-outline">Incidencias</a>
-            <a href="/admin/help" class="btn btn-outline">Ayuda</a>
+        <div class="card-header">
+            <h2>Resumen de gestión</h2>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Sección</th>
+                        <th>Total</th>
+                        <th>Estado general</th>
+                        <th>Acceso</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-management-body"></tbody>
+            </table>
         </div>
     </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Operación diaria</h2>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Bloque</th>
+                        <th>Total</th>
+                        <th>Detalle</th>
+                        <th>Acceso</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-operations-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Estado de incidencias</h2>
+        </div>
+        <div class="card-body" id="admin-incidents-summary"></div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Accesos complementarios</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-actions">
+                <a href="/admin/towns" class="btn btn-outline btn-sm">Poblaciones</a>
+                <a href="/admin/professors" class="btn btn-outline btn-sm">Profesores</a>
+                <a href="/admin/students" class="btn btn-outline btn-sm">Alumnos</a>
+                <a href="/admin/vehicles" class="btn btn-outline btn-sm">Vehículos</a>
+                <a href="/admin/slots" class="btn btn-outline btn-sm">Huecos ofertados</a>
+                <a href="/admin/help" class="btn btn-outline btn-sm">Ayuda</a>
+            </div>
+        </div>
+    </section>
+    </div>
+@endsection
+
+@section('scripts')
+    <script src="{{ asset('js/pages/admin-panel.js') }}" defer></script>
+    <style>
+    #admin-panel-summary-state {
+        margin-bottom: 1rem;
+    }
+    #admin-incidents-summary ul {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: #334155;
+    }
+    #admin-incidents-summary li {
+        margin: 0.25rem 0;
+    }
+    </style>
 @endsection

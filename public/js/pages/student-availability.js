@@ -10,10 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateSelect = document.getElementById('date-select');
     const timeSlotsSection = document.getElementById('time-slots-section');
     const timeSlotsGrid = document.getElementById('time-slots-grid');
-    const professorsSection = document.getElementById('professors-section');
-    const professorsContainer = document.getElementById('professors-container');
-    const professorSelect = document.getElementById('professor-select');
-    const professorHelp = document.getElementById('professor-help');
+    const timeSlotsMeta = document.getElementById('time-slots-meta');
     const bookingSummary = document.getElementById('booking-summary');
     const summaryDetails = document.getElementById('summary-details');
     const confirmForm = document.getElementById('confirm-form');
@@ -24,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedTown = null;
     let selectedDate = null;
     let selectedTime = null;
-    let selectedProfessor = null;
+    let selectedSlot = null;
     let currentStudentProfileId = null;
     let slotsCache = [];
     let timeSlots = [];
@@ -55,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedTown = { id: townId, name: townSelect.options[townSelect.selectedIndex].text };
         selectedDate = date;
         selectedTime = null;
-        selectedProfessor = null;
+        selectedSlot = null;
 
         try {
             await loadSlotsForSelection(selectedTown.id, selectedDate);
@@ -64,30 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        renderProfessorSelector();
-        professorsSection.style.display = 'block';
-        timeSlotsSection.style.display = 'none';
-        bookingSummary.style.display = 'none';
-        professorsSection.scrollIntoView({ behavior: 'smooth' });
-    });
-
-    professorSelect.addEventListener('change', async () => {
-        const professorId = professorSelect.value;
-        selectedTime = null;
-        bookingSummary.style.display = 'none';
-
-        if (!professorId) {
-            selectedProfessor = null;
-            professorHelp.textContent = '';
-            timeSlotsSection.style.display = 'none';
-            return;
-        }
-
-        selectedProfessor = await buildProfessorSelection(professorId);
         loadTimeSlotsFromCache();
-        renderTimeSlots();
-        updateProfessorHelp();
+        await renderTimeSlots();
         timeSlotsSection.style.display = 'block';
+        bookingSummary.style.display = 'none';
         timeSlotsSection.scrollIntoView({ behavior: 'smooth' });
     });
 
@@ -95,14 +72,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     confirmForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (!selectedProfessor || !selectedTime) {
+        if (!selectedTime) {
             showMessage('error', 'Por favor completa todos los pasos.');
             return;
         }
 
-        const selectedSlot = getSelectedSlotForBooking();
+        try {
+            // Revalidación: solo se permite reservar horas que sigan libres al confirmar.
+            await loadSlotsForSelection(selectedTown.id, selectedDate);
+            loadTimeSlotsFromCache();
+        } catch (error) {
+            showMessage('error', error.message || 'No se pudo revalidar la disponibilidad.');
+            return;
+        }
+
+        selectedSlot = getAutoAssignedSlotForTime(selectedTime);
         if (!selectedSlot) {
-            showMessage('error', 'No se ha encontrado el hueco seleccionado para la reserva.');
+            showMessage('error', 'La hora seleccionada ya no está disponible. Elige otra hora.');
+            await renderTimeSlots();
+            bookingSummary.style.display = 'none';
             return;
         }
 
@@ -112,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             let result;
             if (typeof Api.createBookingByTimeSlot === 'function') {
-                result = await Api.createBookingByTimeSlot(selectedTown.id, selectedDate, selectedTime, selectedProfessor.id);
+                result = await Api.createBookingByTimeSlot(selectedTown.id, selectedDate, selectedTime, selectedSlot.professorId);
             } else {
                 console.log('📤 booking payload:', bookingPayload);
                 result = await Api.createClassSession(bookingPayload);
@@ -139,7 +127,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             bookingSummary.style.display = 'none';
             selectionForm.reset();
             timeSlotsSection.style.display = 'none';
-            professorsSection.style.display = 'none';
+            selectedTime = null;
+            selectedSlot = null;
             await loadMyBookings();
         } catch (error) {
             console.error('❌ booking error:', error?.raw || error, 'payload:', bookingPayload);
@@ -152,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     cancelBooking.addEventListener('click', () => {
         bookingSummary.style.display = 'none';
         selectedTime = null;
+        selectedSlot = null;
         renderTimeSlotButtons();
     });
 
@@ -198,12 +188,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadSlotsForSelection(townId, date) {
-        const response = await Api.getAvailabilitySlots({
-            town_id: townId,
-            date: date,
-        });
+        const teacherCandidates = teachersList.filter(isTeacherReservableForBooking);
+        const hoursBasedSlots = [];
 
-        slotsCache = adaptBackendSlots(response, townId, date);
+        if (teacherCandidates.length) {
+            await Promise.all(teacherCandidates.map(async (teacher) => {
+                try {
+                    const response = await Api.getAvailabilityHours({
+                        town_id: townId,
+                        teacher_id: teacher.id,
+                        date,
+                    });
+
+                    const intervals = Array.isArray(response?.hours)
+                        ? response.hours
+                        : (Array.isArray(response?.data?.hours) ? response.data.hours : []);
+
+                    intervals.forEach((slot, index) => {
+                        const start = slot?.start || slot?.slot_starts_at || slot?.starts_at || '';
+                        const end = slot?.end || slot?.slot_ends_at || slot?.ends_at || '';
+                        const time = extractHour(start);
+                        if (!time) {
+                            return;
+                        }
+
+                        const vehicleId = slot?.vehicle_id ? Number(slot.vehicle_id) : null;
+                        const vehicle = resolveVehicle(vehicleId);
+                        const vehicleLabel = vehicle
+                            ? `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || vehicle.plate_number || `Vehículo #${vehicleId}`
+                            : (vehicleId ? `Vehículo #${vehicleId}` : 'Vehículo por asignar');
+
+                        hoursBasedSlots.push({
+                            id: `hours-${teacher.id}-${date}-${index}`,
+                            townId: Number(townId),
+                            date,
+                            time,
+                            startTime: extractHour(start),
+                            endTime: extractHour(end),
+                            slotStartsAt: start || null,
+                            slotEndsAt: end || null,
+                            professorId: Number(teacher.id),
+                            professorName: [teacher.name, teacher.surname, teacher.surname1, teacher.surname2].filter(Boolean).join(' '),
+                            professorEmail: teacher?.email || 'No disponible',
+                            vehicle: vehicleLabel,
+                            vehicleId,
+                            status: slot?.reserved ? 'booked' : 'pending',
+                        });
+                    });
+                } catch (_) {
+                    // Si un profesor falla, seguimos con el resto.
+                }
+            }));
+        }
+
+        if (hoursBasedSlots.length) {
+            slotsCache = hoursBasedSlots;
+        } else {
+            // Fallback de compatibilidad por si el endpoint por profesor no devuelve datos.
+            const response = await Api.getAvailabilitySlots({
+                town_id: townId,
+                date,
+            });
+            slotsCache = adaptBackendSlots(response, townId, date);
+        }
+
         await resolveUnknownVehicles();
     }
 
@@ -237,17 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function loadTimeSlotsFromCache() {
-        const available = slotsCache.filter(slot => {
-            if (slot.status === 'booked') {
-                return false;
-            }
-
-            if (!selectedProfessor) {
-                return true;
-            }
-
-            return Number(slot.professorId) === Number(selectedProfessor.id);
-        });
+        const available = slotsCache.filter(slot => slot.status !== 'booked');
         const uniqueTimes = Array.from(new Set(available.map(slot => slot.time))).sort((a, b) => a.localeCompare(b));
         timeSlots = uniqueTimes.map(time => ({ time, display: time }));
     }
@@ -257,7 +295,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!timeSlots.length) {
             timeSlotsGrid.innerHTML = '<p style="grid-column: 1/-1; color: #999;">No hay horarios disponibles.</p>';
+            if (timeSlotsMeta) {
+                timeSlotsMeta.textContent = 'No hay horas reservables para esta población y fecha. Prueba con otro día.';
+            }
             return;
+        }
+
+        if (timeSlotsMeta) {
+            const availableSlots = slotsCache.filter(slot => slot.status !== 'booked');
+            const teacherCount = new Set(availableSlots.map(slot => Number(slot.professorId))).size;
+            const sortedTimes = [...new Set(availableSlots.map(slot => slot.time))].sort((a, b) => a.localeCompare(b));
+            const start = sortedTimes[0];
+            const end = sortedTimes[sortedTimes.length - 1];
+            timeSlotsMeta.textContent = `Mostrando ${sortedTimes.length} hora(s) libres entre ${start} y ${end} para esta fecha (${teacherCount} profesor(es) con disponibilidad).`;
         }
 
         for (const slot of timeSlots) {
@@ -288,87 +338,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function renderProfessorSelector() {
-        professorSelect.innerHTML = '<option value="">Selecciona un profesor</option>';
-
-        teachersList.forEach(teacher => {
-            const option = document.createElement('option');
-            option.value = teacher.id;
-            option.textContent = [teacher.name, teacher.surname, teacher.surname1, teacher.surname2].filter(Boolean).join(' ');
-            professorSelect.appendChild(option);
-        });
-
-        professorHelp.textContent = 'Elige un profesor para ver sus horas libres en la fecha seleccionada.';
-    }
-
-    async function buildProfessorSelection(professorId) {
-        const teacher = resolveTeacher(professorId);
-        const matchingSlot = slotsCache.find(slot => Number(slot.professorId) === Number(professorId));
-        let vehicleLabel = matchingSlot?.vehicle || 'Por asignar';
-
-        try {
-            const res = await Api.getTeacherVehicles(professorId);
-            const vehicles = Array.isArray(res) ? res : (res?.vehicles ?? res?.data ?? []);
-            if (vehicles.length) {
-                const preferredVehicle = matchingSlot
-                    ? vehicles.find(v => Number(v.id) === Number(matchingSlot.vehicleId))
-                    : vehicles[0];
-                const vehicle = preferredVehicle || vehicles[0];
-                if (vehicle) {
-                    vehicleLabel = `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || vehicle.plate_number || vehicleLabel;
-                }
-            }
-        } catch (error) {
-            console.warn('No se pudo obtener el vehículo del profesor', professorId, error);
-        }
-
-        return {
-            id: Number(professorId),
-            name: teacher ? [teacher.name, teacher.surname, teacher.surname1, teacher.surname2].filter(Boolean).join(' ') : `Profesor #${professorId}`,
-            email: teacher?.email || 'No disponible',
-            vehicle: vehicleLabel,
-        };
-    }
-
-    function updateProfessorHelp() {
-        if (!selectedProfessor) {
-            professorHelp.textContent = '';
-            return;
-        }
-
-        const availableCount = slotsCache.filter(slot => slot.status !== 'booked' && Number(slot.professorId) === Number(selectedProfessor.id)).length;
-        if (availableCount > 0) {
-            professorHelp.textContent = `${selectedProfessor.name} tiene ${availableCount} horario${availableCount === 1 ? '' : 's'} disponible${availableCount === 1 ? '' : 's'} este día.`;
-            return;
-        }
-
-        professorHelp.textContent = `${selectedProfessor.name} no tiene horas disponibles ese día.`;
-    }
-
     function showBookingSummary() {
-        if (!selectedProfessor || !selectedTime || !selectedTown || !selectedDate) return;
+        if (!selectedTime || !selectedTown || !selectedDate) return;
+
+        const autoSlot = getAutoAssignedSlotForTime(selectedTime);
+        selectedSlot = autoSlot;
+        const autoTeacher = autoSlot ? resolveTeacher(autoSlot.professorId) : null;
+        const autoTeacherName = autoTeacher
+            ? [autoTeacher.name, autoTeacher.surname, autoTeacher.surname1, autoTeacher.surname2].filter(Boolean).join(' ')
+            : 'Se asignará automáticamente';
+        const autoVehicle = autoSlot?.vehicle || 'Se asignará automáticamente';
 
         summaryDetails.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-m);">
                 <div><strong>Población:</strong> ${selectedTown.name}</div>
                 <div><strong>Fecha:</strong> ${selectedDate}</div>
                 <div><strong>Hora:</strong> ${selectedTime}</div>
-                <div><strong>Profesor:</strong> ${selectedProfessor.name}</div>
-                <div><strong>Vehículo:</strong> ${selectedProfessor.vehicle || 'Por asignar'}</div>
+                <div><strong>Profesor:</strong> ${autoTeacherName}</div>
+                <div><strong>Vehículo:</strong> ${autoVehicle}</div>
             </div>
+            <p style="margin-top: 10px; color: #555;">La autoescuela asigna internamente el profesor y vehículo disponibles para esta hora.</p>
         `;
 
-        document.getElementById('selected-professor-id').value = selectedProfessor.id;
         bookingSummary.style.display = 'block';
         bookingSummary.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function getSelectedSlotForBooking() {
-        return slotsCache.find(slot => (
-            slot.status !== 'booked' &&
-            Number(slot.professorId) === Number(selectedProfessor?.id) &&
-            String(slot.time) === String(selectedTime)
-        )) || null;
+    function getAutoAssignedSlotForTime(time) {
+        const candidates = slotsCache
+            .filter(slot => slot.status !== 'booked' && String(slot.time) === String(time))
+            .sort((a, b) => {
+                const pa = Number(a.professorId || 0);
+                const pb = Number(b.professorId || 0);
+                if (pa !== pb) return pa - pb;
+                const va = Number(a.vehicleId || 0);
+                const vb = Number(b.vehicleId || 0);
+                return va - vb;
+            });
+
+        return candidates[0] || null;
     }
 
     function buildBookingPayload(slot) {
@@ -597,6 +605,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function resolveTeacher(teacherId) {
         return teachersList.find(t => Number(t.id) === Number(teacherId)) || null;
+    }
+
+    function isTeacherReservableForBooking(teacher) {
+        const flag = teacher?.is_active_for_booking;
+        return flag === false || flag === 0 || flag === '0' || flag == null;
     }
 
     function resolveVehicle(vehicleId) {

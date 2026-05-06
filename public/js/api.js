@@ -7,7 +7,14 @@ const API_BASE_URL = `http://localhost:8000/api`;
 function getAuthHeaders() {
     const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
     const token = localStorage.getItem('token');
-    if (token) headers['Authorization'] = 'Bearer ' + token;
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+        if (window.__DEBUG_API) {
+            console.log('[API] Token enviado:', token.substring(0, 20) + '...');
+        }
+    } else {
+        console.warn('[API] No hay token en localStorage. Usuario no autenticado.');
+    }
     return headers;
 }
 
@@ -47,6 +54,40 @@ async function handleResponse(response) {
         throw error;
     }
     return data;
+}
+
+function buildDefaultTimeSlots() {
+    const slots = [];
+    for (let hour = 8; hour <= 21; hour += 1) {
+        const hh = String(hour).padStart(2, '0');
+        const value = `${hh}:00`;
+        slots.push({ time: value, display: value });
+    }
+    return slots;
+}
+
+function normalizeTimeSlots(raw) {
+    const source = Array.isArray(raw)
+        ? raw
+        : (Array.isArray(raw && raw.data) ? raw.data : []);
+
+    const normalized = source
+        .map((item) => {
+            if (!item) return null;
+            if (typeof item === 'string') {
+                return { time: item, display: item };
+            }
+
+            const time = item.time || item.start_time || item.hour || item.value || null;
+            if (!time) return null;
+
+            const display = item.display || item.label || time;
+            return { time, display };
+        })
+        .filter(Boolean)
+        .sort((a, b) => String(a.time).localeCompare(String(b.time)));
+
+    return normalized.length ? normalized : buildDefaultTimeSlots();
 }
 
 const Api = {
@@ -230,8 +271,47 @@ const Api = {
 
         }).then(handleResponse);
     },
-    getTeacherReservas() {
-        return fetch(`${API_BASE_URL}/teachers/reservas`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+    getTeacherBookings(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return fetch(`${API_BASE_URL}/teachers/reservas${query ? '?' + query : ''}`, {
+            headers: getAuthHeaders(),
+            credentials: 'include'
+        }).then(handleResponse);
+    },
+    /**
+     * Obtiene los horarios disponibles para el profesor autenticado en una fecha
+     * @param {Object} params - { date: 'YYYY-MM-DD' }
+     */
+    getTimeSlots(params = {}) {
+        try {
+            // Obtener teacher_id del usuario autenticado
+            const user = (window.Auth && typeof window.Auth.getUser === 'function') ? window.Auth.getUser() : (typeof Auth !== 'undefined' ? Auth.getUser() : null);
+            const teacher_id = user && Number(user.teacher_profile_id);
+            const date = params.date || null;
+            if (!teacher_id || isNaN(teacher_id) || teacher_id <= 0) {
+                // Validación silenciosa: no mostrar mensajes, solo usar horarios por defecto
+                return Promise.resolve(buildDefaultTimeSlots());
+            }
+            if (!date) {
+                return Promise.resolve(buildDefaultTimeSlots());
+            }
+            const url = new URL(`${API_BASE_URL}/availability-hours`);
+            url.searchParams.append('teacher_id', teacher_id);
+            url.searchParams.append('date', date);
+            return fetch(url, {
+                method: 'GET',
+                headers: getAuthHeaders(),
+                credentials: 'include'
+            })
+                .then(handleResponse)
+                .then(normalizeTimeSlots)
+                .catch(() => buildDefaultTimeSlots());
+        } catch (e) {
+            return Promise.resolve(buildDefaultTimeSlots());
+        }
+    },
+    getTeacherReservas(params = {}) {
+        return this.getTeacherBookings(params);
     },
 
     // ─────────── CRUD VEHÍCULOS ───────────

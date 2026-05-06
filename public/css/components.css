@@ -575,6 +575,16 @@
    gap: var(--space-m);
 }
 
+#bookings-container {
+   display: flex;
+   flex-direction: column;
+   gap: var(--space-m);
+}
+
+#bookings-container > .booking-card + .booking-card {
+   margin-top: 2px;
+}
+
 .booking-card {
    display: flex;
    justify-content: space-between;

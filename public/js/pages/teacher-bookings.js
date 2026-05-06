@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     availabilityDate.value = today;
     availabilityDate.min = today;
 
-    // Cargar datos iniciales
+    // Cargar solo los horarios disponibles, pero NO las clases ni historial hasta que el usuario filtre
     await loadTimeSlots();
-    await loadBookings({ date: today, student: '', status: '' });
+    // No llamar a loadBookings aquí
 
     // Form submit para filtrar
     filterForm.addEventListener('submit', async (e) => {
@@ -82,7 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadTimeSlots() {
         try {
-            timeSlots = await Api.getTimeSlots();
+            // Usar la fecha seleccionada en el filtro de disponibilidad
+            const date = availabilityDate.value;
+            timeSlots = await Api.getTimeSlots({ date });
         } catch (error) {
             console.error('Error loading time slots:', error);
         }
@@ -94,7 +96,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         pastTbody.innerHTML = '';
 
         try {
-            const bookings = await Api.getTeacherBookings(filters);
+            let bookings = await Api.getTeacherBookings(filters);
+            // Robustez: aceptar array directo o {data: array}
+            if (!Array.isArray(bookings)) {
+                bookings = Array.isArray(bookings?.data) ? bookings.data : [];
+            }
             const today = new Date().toISOString().split('T')[0];
 
             const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
@@ -120,8 +126,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         availabilityGrid.innerHTML = '';
 
         try {
+            // Cargar los horarios disponibles para la fecha seleccionada
+            timeSlots = await Api.getTimeSlots({ date });
             // Obtener mis reservas para esa fecha
-            const bookings = await Api.getTeacherBookings({ date });
+            let bookings = await Api.getTeacherBookings({ date });
+            if (!Array.isArray(bookings)) {
+                bookings = Array.isArray(bookings?.data) ? bookings.data : [];
+            }
             const bookedTimes = bookings.map(b => b.time);
 
             // Renderear todos los horarios disponibles
@@ -229,27 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showToast(message, type === 'success' ? 'info' : 'error');
             setTimeout(() => {
                 messageBox.style.display = 'none';
-            }, 5000);
+            }, 3000);
         }
-    }
-
-    function _formatStatus(status) {
-        const statusMap = {
-            'confirmada': 'Confirmada',
-            'en_curso': 'En curso',
-            'completada': 'Completada',
-            'cancelada': 'Cancelada',
-        };
-        return statusMap[status] || status;
-    }
-
-    function _getStatusColor(status) {
-        const colorMap = {
-            'confirmada': 'badge-yellow',
-            'en_curso': 'badge-blue',
-            'completada': 'badge-green',
-            'cancelada': 'badge-red',
-        };
-        return colorMap[status] || 'badge-gray';
     }
 });

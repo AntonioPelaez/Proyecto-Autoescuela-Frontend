@@ -26,12 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterDateFrom.value = lastMonth.toISOString().split('T')[0];
     filterDateTo.value = nextTwoMonths.toISOString().split('T')[0];
 
-    // Cargar clases inicial
-    await loadClasses({
-        dateFrom: filterDateFrom.value,
-        dateTo: filterDateTo.value,
-        status: ''
-    });
+    // No cargar clases ni historial hasta que el usuario pulse filtrar
 
     // Form submit para filtrar
     filterForm.addEventListener('submit', async (e) => {
@@ -87,7 +82,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // Para este caso, usaremos getTeacherBookings con los filtros
-            const bookings = await Api.getTeacherBookings(filters);
+            let bookings = await Api.getTeacherBookings(filters);
+            // Robustez: asegurar que bookings siempre sea array
+            if (!Array.isArray(bookings)) {
+                bookings = Array.isArray(bookings?.data) ? bookings.data : [];
+            }
             const today = new Date().toISOString().split('T')[0];
 
             // Separar próximas y pasadas

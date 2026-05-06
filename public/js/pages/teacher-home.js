@@ -187,6 +187,7 @@
 			renderPanel(bookings);
 			showState('success', 'Panel del profesor cargado correctamente.');
 		} catch (error) {
+			console.error('Error al cargar panel del profesor:', error);
 			showState('error', error && error.message ? error.message : 'No se pudo cargar el panel del profesor.');
 			UI.showToast('Error al cargar el panel del profesor.', 'error');
 		} finally {

@@ -89,46 +89,55 @@
 	}
 
 	function renderWeekSummary(bookings) {
-		const container = document.getElementById(WEEK_SUMMARY_ID);
-		if (!container) {
-			return;
-		}
+    const container = document.getElementById(WEEK_SUMMARY_ID);
+    if (!container) {
+        return;
+    }
 
-		container.replaceChildren();
+    container.replaceChildren();
 
-		const today = new Date();
-		const end = new Date(today);
-		end.setDate(today.getDate() + 7);
+    // 🔥 Normalizar fechas a medianoche
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-		const weekly = bookings.filter(function (item) {
-			return item.dt && item.dt >= today && item.dt < end;
-		});
+    const end = new Date(today);
+    end.setDate(today.getDate() + 7);
 
-		const byDate = weekly.reduce(function (acc, item) {
-			const key = item.date;
-			acc[key] = (acc[key] || 0) + 1;
-			return acc;
-		}, {});
+    const weekly = bookings.filter(function (item) {
+        if (!item.dt) return false;
 
-		const days = Object.keys(byDate).sort();
-		if (!days.length) {
-			const paragraph = document.createElement('p');
-			paragraph.className = 'table-empty';
-			paragraph.textContent = 'No hay clases planificadas para los proximos 7 dias.';
-			container.appendChild(paragraph);
-			return;
-		}
+        const dt = new Date(item.dt);
+        dt.setHours(0, 0, 0, 0);
 
-		const list = document.createElement('ul');
-		days.forEach(function (day) {
-			const item = document.createElement('li');
-			const strong = document.createElement('strong');
-			strong.textContent = day + ': ';
-			item.append(strong, document.createTextNode(String(byDate[day]) + ' clase(s)'));
-			list.appendChild(item);
-		});
-		container.appendChild(list);
-	}
+        return dt >= today && dt < end;
+    });
+
+    const byDate = weekly.reduce(function (acc, item) {
+        const key = item.date;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+    }, {});
+
+    const days = Object.keys(byDate).sort();
+    if (!days.length) {
+        const paragraph = document.createElement('p');
+        paragraph.className = 'table-empty';
+        paragraph.textContent = 'No hay clases planificadas para los próximos 7 días.';
+        container.appendChild(paragraph);
+        return;
+    }
+
+    const list = document.createElement('ul');
+    days.forEach(function (day) {
+        const item = document.createElement('li');
+        const strong = document.createElement('strong');
+        strong.textContent = day + ': ';
+        item.append(strong, document.createTextNode(String(byDate[day]) + ' clase(s)'));
+        list.appendChild(item);
+    });
+    container.appendChild(list);
+}
+
 
 	function renderPanel(bookings) {
 		const todayIso = getTodayIso();
@@ -182,19 +191,28 @@
 		UI.setLoading(HISTORY_BODY_ID, true);
 
 		try {
-			const raw = await Api.getTeacherBookings();
-			const bookings = Array.isArray(raw) ? raw.map(mapBooking) : [];
-			renderPanel(bookings);
-			showState('success', 'Panel del profesor cargado correctamente.');
-		} catch (error) {
-			console.error('Error al cargar panel del profesor:', error);
-			showState('error', error && error.message ? error.message : 'No se pudo cargar el panel del profesor.');
-			UI.showToast('Error al cargar el panel del profesor.', 'error');
-		} finally {
-			UI.setLoading(TODAY_BODY_ID, false);
-			UI.setLoading(UPCOMING_BODY_ID, false);
-			UI.setLoading(HISTORY_BODY_ID, false);
-		}
+    const raw = await Api.getTeacherBookings();
+
+    let bookings = [];
+
+    if (Array.isArray(raw)) {
+        bookings = raw;
+    } else if (Array.isArray(raw?.reservas)) {
+        bookings = raw.reservas;
+    } else if (Array.isArray(raw?.data)) {
+        bookings = raw.data;
+    }
+
+    bookings = bookings.map(mapBooking);
+
+    renderPanel(bookings);
+    showState('success', 'Panel del profesor cargado correctamente.');
+} catch (error) {
+    console.error('Error al cargar panel del profesor:', error);
+    showState('error', error && error.message ? error.message : 'No se pudo cargar el panel del profesor.');
+    UI.showToast('Error al cargar el panel del profesor.', 'error');
+}
+
 	}
 
 	document.addEventListener('DOMContentLoaded', init);

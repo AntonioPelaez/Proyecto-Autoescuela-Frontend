@@ -76,15 +76,82 @@ function setApiSyncState(state, details = "") {
 }
 
 // ─────────────────────────────────────────────
-// DESACTIVAR BLOQUEO DE HORAS (NO USAMOS SLOTS)
+// CUADRÍCULA DE HORAS BASADA EN availability-slots
 // ─────────────────────────────────────────────
-async function updateHourGridWithBookings() {
-    return; // No bloquear horas en disponibilidades semanales
+
+function renderHourGridFromSlots(slots) {
+    const grid = document.getElementById("slot-time-grid");
+    if (!grid) return;
+
+    grid.replaceChildren();
+
+    slots.forEach(slot => {
+        const hour = slot.start.slice(11, 16); // "HH:MM"
+
+        const btn = document.createElement("button");
+        btn.className = "hour-btn";
+        btn.textContent = hour;
+
+        if (slot.reserved) {
+            btn.classList.add("hour-booked");
+            btn.disabled = true;
+            btn.title = "Hora ocupada";
+        }
+
+        btn.addEventListener("click", () => {
+            if (selectedTimes.has(hour)) {
+                selectedTimes.delete(hour);
+            } else {
+                selectedTimes.add(hour);
+            }
+            syncSelectedTimesInput();
+            updateSelectedHourUI(grid);
+        });
+
+        grid.appendChild(btn);
+    });
+
+    updateSelectedHourUI(grid);
+}
+
+function updateSelectedHourUI(grid) {
+    grid.querySelectorAll(".hour-btn").forEach(btn => {
+        const hour = btn.textContent.trim();
+        btn.classList.toggle("selected", selectedTimes.has(hour));
+    });
+}
+
+async function loadHourGrid() {
+    if (!slotTownInput.value || !slotDateInput.value || !slotProfessorInput.value) return;
+
+    try {
+        const response = await Api.getAvailabilitySlots({
+            town_id: slotTownInput.value,
+            date: slotDateInput.value
+        });
+
+        const teacherId = slotProfessorInput.value;
+
+        const teacherBlock = response.slots.find(
+            block => String(block.teacher_id) === String(teacherId)
+        );
+
+        if (!teacherBlock) {
+            renderHourGridFromSlots([]);
+            return;
+        }
+
+        renderHourGridFromSlots(teacherBlock.slots);
+
+    } catch (error) {
+        console.error("Error cargando cuadrícula de horas", error);
+    }
 }
 
 // ─────────────────────────────────────────────
 // CARGAR DISPONIBILIDADES SEMANALES
 // ─────────────────────────────────────────────
+
 async function loadSlots() {
     setApiSyncState('loading');
 
@@ -119,6 +186,7 @@ async function loadSlots() {
 // ─────────────────────────────────────────────
 // RENDERIZAR DISPONIBILIDADES SEMANALES
 // ─────────────────────────────────────────────
+
 function renderWeeklyAvailabilities(slots) {
     tableBody.replaceChildren();
 
@@ -235,18 +303,13 @@ form.addEventListener("submit", async (event) => {
     }
 });
 
-function resetForm() {
-    form.reset();
-    slotIdInput.value = "";
-    clearSelectedTimes();
-    formTitle.textContent = "Crear hueco";
-    cancelButton.classList.add("hidden");
-}
-
 // ─────────────────────────────────────────────
-// MENSAJES
+// EVENTOS PARA ACTUALIZAR CUADRÍCULA DE HORAS
 // ─────────────────────────────────────────────
 
+slotTownInput.addEventListener("change", loadHourGrid);
+slotDateInput.addEventListener("change", loadHourGrid);
+slotProfessorInput.addEventListener("change", loadHourGrid);
 function showState(type, message) {
     if (!message) {
         messageBox.textContent = "";
@@ -290,12 +353,8 @@ function showState(type, message) {
 // INICIALIZACIÓN
 // ─────────────────────────────────────────────
 
-// ─────────────────────────────────────────────
-// INICIALIZACIÓN
-// ─────────────────────────────────────────────
-
 (async function initializePage() {
     await loadSelectors();
-    await loadSlots(); // ← Carga inicial correcta
+    await loadSlots();
 })();
 });

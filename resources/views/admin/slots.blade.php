@@ -80,8 +80,8 @@
 								<th scope="col">Hora inicio</th>
 								<th scope="col">Hora fin</th>
 								<!-- <th scope="col">Duración (min)</th> -->
-								<th scope="col">Activo</th>
-								<th>Acciones</th>
+								<th scope="col">Minutos</th>
+								<th>Activo</th>
 							</tr>
 						</thead>
 						<tbody id="slots-table-body"></tbody>

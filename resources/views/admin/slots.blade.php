@@ -13,7 +13,7 @@
 
 			<section class="card">
 				<div class="card-header">
-					<h2 id="slot-form-title">Crear hueco</h2>
+					<h2 id="slot-form-title">Filtrar hueco</h2>
 				</div>
 				<div class="card-body">
 					<form id="slot-form" novalidate role="form" aria-label="Formulario de gestión de huecos de clase">
@@ -58,7 +58,7 @@
 						</div>
 
 						<div class="table-actions">
-							<button type="submit" id="slot-submit" class="btn btn-primary" aria-label="Filtrar huecos">Filtrar</button>
+							<button type="submit" id="slot-submit" class="btn btn-primary" aria-label="Filtrar huecos">Filtrar hueco</button>
 							<button type="button" id="slot-cancel" class="btn btn-outline hidden" aria-label="Cancelar edición">Cancelar edición</button>
 						</div>
 					</form>
@@ -74,12 +74,13 @@
 					<table id="slots-table" class="table table-striped table-hover" role="table" aria-label="Listado de huecos ofertados">
 						<thead>
 							<tr>
-								<th scope="col">Población</th>
-								<th scope="col">Fecha</th>
-								<th scope="col">Hora</th>
 								<th scope="col">Profesor</th>
-								<th scope="col">Vehículo</th>
-								<th>Estado</th>
+								<th scope="col">Población</th>
+								<th scope="col">Día</th>
+								<th scope="col">Hora inicio</th>
+								<th scope="col">Hora fin</th>
+								<!-- <th scope="col">Duración (min)</th> -->
+								<th scope="col">Activo</th>
 								<th>Acciones</th>
 							</tr>
 						</thead>
@@ -90,6 +91,7 @@
 @endsection
 
 @section('scripts')
+	<script>console.log('[COPILOT DEBUG] Blade cargado');</script>
 	<script src="{{ asset('js/pages/admin-slots.js') }}" defer></script>
 	<style>
 	.state-message {

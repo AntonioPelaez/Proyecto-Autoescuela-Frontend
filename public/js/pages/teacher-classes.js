@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterDateFrom.value = lastMonth.toISOString().split('T')[0];
     filterDateTo.value = nextTwoMonths.toISOString().split('T')[0];
 
+    await loadClasses({
+    dateFrom: filterDateFrom.value,
+    dateTo: filterDateTo.value,
+    status: filterClassStatus.value
+});
+
+
     // No cargar clases ni historial hasta que el usuario pulse filtrar
 
     // Form submit para filtrar
@@ -81,12 +88,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         pastTbody.innerHTML = '';
 
         try {
-            // Para este caso, usaremos getTeacherBookings con los filtros
             let bookings = await Api.getTeacherBookings(filters);
-            // Robustez: asegurar que bookings siempre sea array
-            if (!Array.isArray(bookings)) {
-                bookings = Array.isArray(bookings?.data) ? bookings.data : [];
-            }
+
+if (!Array.isArray(bookings)) {
+    if (Array.isArray(bookings?.reservas)) {
+        bookings = bookings.reservas;
+    } else if (Array.isArray(bookings?.data)) {
+        bookings = bookings.data;
+    } else {
+        bookings = [];
+    }
+}
+
             const today = new Date().toISOString().split('T')[0];
 
             // Separar próximas y pasadas

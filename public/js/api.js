@@ -525,6 +525,16 @@ const Api = {
         }).then(handleResponse);
     },
 
+    completeClassSession(data) {
+    return fetch(`${API_BASE_URL}/class-sessions/complete`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+
     // ─────────── EXCEPCIONES DE DISPONIBILIDAD ───────────
     getTeacherAvailabilityExceptions() {
         return fetch(`${API_BASE_URL}/teachers/availability-exceptions`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);

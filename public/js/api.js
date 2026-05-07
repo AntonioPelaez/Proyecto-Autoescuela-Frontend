@@ -608,5 +608,26 @@ deleteIncident(id) {
         credentials: 'include'
     }).then(handleResponse);
 },
+getWeeklyAvailabilities(params = {}) {
+    const url = new URL(`${API_BASE_URL}/teacher-weekly-availabilities`);
 
+    if (params.teacher_profile_id) {
+        url.searchParams.append('teacher_profile_id', params.teacher_profile_id);
+    }
+    if (params.town_id) {
+        url.searchParams.append('town_id', params.town_id);
+    }
+    if (params.day_of_week !== undefined && params.day_of_week !== null) {
+        url.searchParams.append('day_of_week', params.day_of_week);
+    }
+    if (params.is_active !== undefined && params.is_active !== null) {
+        url.searchParams.append('is_active', params.is_active);
+    }
+
+    return fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

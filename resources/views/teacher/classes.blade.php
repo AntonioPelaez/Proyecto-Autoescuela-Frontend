@@ -113,4 +113,54 @@
 
 @section('scripts')
     <script src="{{ asset('js/pages/teacher-classes.js') }}"></script>
+    <style>
+        .badge-confirmed {
+    border: 2px solid #0d6efd;
+    color: #0d6efd;
+    background: #e7f1ff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.badge-progress {
+    background: #0d6efd;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.badge-completed {
+    background: #198754;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.badge-cancelled {
+    background: #dc3545;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.btn-complete {
+    background-color: #198754;
+    color: white;
+    border: 1px solid #198754;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.btn-complete:hover {
+    background-color: #157347;
+    border-color: #157347;
+}
+.btn-cancel{
+    background: #dc3545;
+}
+    </style>
 @endsection

@@ -27,26 +27,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterDateTo.value = nextTwoMonths.toISOString().split('T')[0];
 
     await loadClasses({
-    dateFrom: filterDateFrom.value,
-    dateTo: filterDateTo.value,
-    status: filterClassStatus.value
-});
+        dateFrom: filterDateFrom.value,
+        dateTo: filterDateTo.value,
+        status: filterClassStatus.value
+    });
 
-
-    // No cargar clases ni historial hasta que el usuario pulse filtrar
-
-    // Form submit para filtrar
+    // Filtrar
     filterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const filters = {
+        await loadClasses({
             dateFrom: filterDateFrom.value,
             dateTo: filterDateTo.value,
             status: filterClassStatus.value
-        };
-        await loadClasses(filters);
+        });
     });
 
-    // Status form submit
+    // Formulario de cambiar estado (en curso / completada)
     statusForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const bookingId = document.getElementById('class-status-booking-id').value;
@@ -79,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // ─────────────────────────────────────────────
-    // Funciones internas
+    // Cargar clases
     // ─────────────────────────────────────────────
 
     async function loadClasses(filters) {
@@ -90,19 +86,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             let bookings = await Api.getTeacherBookings(filters);
 
-if (!Array.isArray(bookings)) {
-    if (Array.isArray(bookings?.reservas)) {
-        bookings = bookings.reservas;
-    } else if (Array.isArray(bookings?.data)) {
-        bookings = bookings.data;
-    } else {
-        bookings = [];
-    }
-}
+            if (!Array.isArray(bookings)) {
+                if (Array.isArray(bookings?.reservas)) bookings = bookings.reservas;
+                else if (Array.isArray(bookings?.data)) bookings = bookings.data;
+                else bookings = [];
+            }
 
             const today = new Date().toISOString().split('T')[0];
 
-            // Separar próximas y pasadas
             const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
             const past = bookings.filter(b => b.date < today || b.status === 'cancelada');
 
@@ -114,12 +105,14 @@ if (!Array.isArray(bookings)) {
             }
         } catch (error) {
             showMessage('error', error.message || 'Error al cargar clases.');
-            upcomingTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
-            pastTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
         } finally {
             UI.setLoading(false);
         }
     }
+
+    // ─────────────────────────────────────────────
+    // Render Próximas Clases
+    // ─────────────────────────────────────────────
 
     function renderUpcomingClasses(bookings) {
         upcomingTbody.innerHTML = '';
@@ -142,30 +135,71 @@ if (!Array.isArray(bookings)) {
                 <td>${booking.townName || 'N/A'}</td>
                 <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-status" data-booking-id="${booking.id}" data-date="${booking.date}" data-time="${booking.time}" data-student="${booking.studentName}">
-                        Cambiar Estado
-                    </button>
+
+                    ${booking.status !== 'completada' && booking.status !== 'cancelada' ? `
+                        <button class="btn btn-sm btn-complete" data-booking-id="${booking.id}">
+                            Completar
+                        </button>
+                    ` : ''}
+
+                    ${booking.status !== 'cancelada' ? `
+                        <button class="btn btn-sm btn-cancel" data-booking-id="${booking.id}">
+                            Cancelar
+                        </button>
+                    ` : ''}
+
                 </td>
             `;
 
-            // Event handler para cambiar estado
-            const statusBtn = row.querySelector('.btn-status');
-            statusBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const bookingId = statusBtn.dataset.bookingId;
-                const date = statusBtn.dataset.date;
-                const time = statusBtn.dataset.time;
-                const student = statusBtn.dataset.student;
+            // Completar
+            const completeBtn = row.querySelector('.btn-complete');
+            if (completeBtn) {
+                completeBtn.addEventListener('click', async () => {
+                    UI.setLoading(true);
+                    try {
+                        await Api.completeClassSession({ id: booking.id });
+                        showMessage('success', 'Clase marcada como completada.');
+                        await loadClasses({
+                            dateFrom: filterDateFrom.value,
+                            dateTo: filterDateTo.value,
+                            status: filterClassStatus.value
+                        });
+                    } catch (error) {
+                        showMessage('error', error.message || 'No se pudo completar la clase.');
+                    } finally {
+                        UI.setLoading(false);
+                    }
+                });
+            }
 
-                document.getElementById('class-status-booking-id').value = bookingId;
-                document.getElementById('class-status-info').textContent = `Clase de ${student} el ${date} a las ${time}`;
-                statusFormContainer.style.display = 'block';
-                statusFormContainer.scrollIntoView({ behavior: 'smooth' });
-            });
+            // Cancelar
+            const cancelBtn = row.querySelector('.btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', async () => {
+                    UI.setLoading(true);
+                    try {
+                        await Api.updateBookingStatus(booking.id, 'cancelada');
+                        showMessage('success', 'Clase cancelada correctamente.');
+                        await loadClasses({
+                            dateFrom: filterDateFrom.value,
+                            dateTo: filterDateTo.value,
+                            status: filterClassStatus.value
+                        });
+                    } catch (error) {
+                        showMessage('error', error.message || 'No se pudo cancelar la clase.');
+                    } finally {
+                        UI.setLoading(false);
+                    }
+                });
+            }
 
             upcomingTbody.appendChild(row);
         });
     }
+
+    // ─────────────────────────────────────────────
+    // Render Historial
+    // ─────────────────────────────────────────────
 
     function renderPastClasses(bookings) {
         pastTbody.innerHTML = '';
@@ -193,6 +227,10 @@ if (!Array.isArray(bookings)) {
         });
     }
 
+    // ─────────────────────────────────────────────
+    // Mensajes
+    // ─────────────────────────────────────────────
+
     function showMessage(type, message) {
         messageBox.className = `message-state ${type}`;
         messageBox.textContent = message;
@@ -205,24 +243,24 @@ if (!Array.isArray(bookings)) {
             }, 5000);
         }
     }
-
     function _formatStatus(status) {
-        const statusMap = {
-            'confirmada': 'Confirmada',
-            'en_curso': 'En curso',
-            'completada': 'Completada',
-            'cancelada': 'Cancelada',
-        };
-        return statusMap[status] || status;
-    }
+    const statusMap = {
+        'confirmed': 'Confirmada',
+        'in_progress': 'En curso',
+        'completed': 'Completada',
+        'cancelled': 'Cancelada',
+    };
+    return statusMap[status] || status;
+}
 
     function _getStatusColor(status) {
-        const colorMap = {
-            'confirmada': 'badge-yellow',
-            'en_curso': 'badge-blue',
-            'completada': 'badge-green',
-            'cancelada': 'badge-red',
-        };
-        return colorMap[status] || 'badge-gray';
-    }
+    const colorMap = {
+        'confirmed': 'badge-confirmed',
+        'in_progress': 'badge-progress',
+        'completed': 'badge-completed',
+        'cancelled': 'badge-cancelled',
+    };
+    return colorMap[status] || 'badge-gray';
+}
+
 });

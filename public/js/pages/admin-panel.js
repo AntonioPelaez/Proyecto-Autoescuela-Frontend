@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             Api.getVehicles(),
             Api.getAdminClasses(),
             Api.getIncidents(),
-            Api.getAvailabilitySlots({ date: todayYmd }),
+             Api.getWeeklyAvailabilities({ day_of_week: today.getDay() }),
         ]);
 
         const failedSections = [];
@@ -108,9 +108,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (slotsResult.status === 'fulfilled') {
-            const slots = normalizeSlots(toArray(slotsResult.value));
-            const reserved = slots.filter((slot) => String(slot.status || '').toLowerCase() === 'booked').length;
-            const available = Math.max(0, slots.length - reserved);
+           const slots = toArray(slotsResult.value.data || []);
+const available = slots.length;
+const reserved = 0;
             operationsRows.push({
                 section: 'Huecos ofertados (hoy)',
                 total: slots.length,

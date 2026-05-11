@@ -65,6 +65,91 @@
 				</div>
 			</section>
 
+
+
+	
+	<!-- Crear disponiblidad -->
+<!-- Crear disponibilidad -->
+<section class="card" style="margin-top: 1.5rem;">
+    <div class="card-header">
+        <h2>Crear disponibilidad</h2>
+    </div>
+
+    <div class="card-body">
+        <form id="availability-form">
+
+            <!-- Día de la semana -->
+            <div class="input-group">
+                <label class="input-label" for="availability-day">Día de la semana</label>
+                <select id="availability-day" class="input" required>
+                    <option value="">Selecciona un día</option>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miércoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sábado</option>
+                    <option value="0">Domingo</option>
+                </select>
+            </div>
+
+			<!-- Profesor -->
+			<div class="input-group">
+				<label class="input-label" for="availability-professor">Profesor</label>
+				<select id="availability-professor" class="input" required>
+					<option value="">Selecciona un profesor</option>
+				</select>
+			</div>
+
+
+			<!-- Cuadrícula de horas -->
+			<div class="input-group">
+				<label class="input-label">Horario</label>
+
+				<div class="slot-time-wrapper">
+					<div id="availability-time-grid" class="slot-time-grid"></div>
+				</div>
+
+				<input type="hidden" id="availability-start">
+				<input type="hidden" id="availability-end">
+			</div>
+
+            <!-- Tipo -->
+            <div class="input-group">
+                <label class="input-label" for="availability-type">Tipo</label>
+                <select id="availability-type" class="input" required>
+                    <option value="normal">Normal</option>
+                    <option value="especial">Especial</option>
+                </select>
+            </div>
+
+            <!-- Razón (solo si es especial) -->
+            <div class="input-group hidden" id="availability-reason-wrapper">
+                <label class="input-label" for="availability-reason">Razón de la excepcionalidad</label>
+                <input type="text" id="availability-reason" class="input" placeholder="Motivo...">
+            </div>
+
+            <!-- Tipo de bloque -->
+            <div class="input-group">
+                <label class="input-label" for="availability-block-type">Tipo de bloque</label>
+                <select id="availability-block-type" class="input" required>
+                    <option value="">Selecciona tipo</option>
+                    <option value="block">Bloque</option>
+                    <option value="extra">Extra</option>
+                </select>
+            </div>
+
+            <button type="button" id="availability-create" class="btn btn-success" style="margin-top:1rem;">
+                Crear disponibilidad
+            </button>
+
+        </form>
+    </div>
+</section>
+
+
+
+	<!-- Listado de huecos -->
 			<section class="card">
 				<div class="card-header">
 					<h2>Listado de huecos</h2>
@@ -94,81 +179,159 @@
 	<script>console.log('[COPILOT DEBUG] Blade cargado');</script>
 	<script src="{{ asset('js/pages/admin-slots.js') }}" defer></script>
 	<style>
-	.state-message {
-	  margin: 1.2rem 0 0.7rem 0;
-	  font-size: 1.08rem;
-	  font-weight: 500;
-	  border-radius: 8px;
-	  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-	  outline: none;
-	}
-	.state-success {
-	  background: #eafbe7;
-	  color: #1a4d1a;
-	  border: 1.5px solid #b6e2c6;
-	}
-	.state-error {
-	  background: #fff0f0;
-	  color: #a30000;
-	  border: 1.5px solid #f5bcbc;
-	}
-	#slot-time-grid .hour-btn {
-	  border: 1px solid #cfd6dd;
-	  background: #ffffff;
-	  color: #1f2937;
-	  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-	}
-	.slot-time-help {
-	  margin: 0;
-	  color: #5f6b7a;
-	  font-size: 0.92rem;
-	}
-	#slot-time-grid .hour-btn:hover:not(:disabled) {
-	  border-color: #b0b9c3;
-	  background: #f5f7fa;
-	}
-	#slot-time-grid .hour-btn.selected,
-	#slot-time-grid .hour-btn.selected:hover {
-	  background: #dc2626;
-	  border-color: #b91c1c;
-	  color: #ffffff;
-	}
-	#slot-time-grid .hour-btn.hour-booked,
-	#slot-time-grid .hour-btn.hour-booked:hover {
-	  background: #eceff3;
-	  border-color: #d4dbe3;
-	  color: #8a95a3;
-	  cursor: not-allowed;
-	}
-	.slots-api-status {
-	  margin-left: auto;
-	  margin-right: 0.75rem;
-	  font-size: 0.88rem;
-	  color: #4b5563;
-	}
-	.slots-api-status.is-ok {
-	  color: #166534;
-	}
-	.slots-api-status.is-error {
-	  color: #991b1b;
-	}
-	/* ── Badges de estado del hueco ── */
-	.slot-status {
-	  display: inline-block;
-	  padding: 0.18em 0.7em;
-	  border-radius: 999px;
-	  font-size: 0.82rem;
-	  font-weight: 600;
-	  letter-spacing: 0.01em;
-	}
-	.slot-status--pending     { background: #dbeafe; color: #1e40af; }
-	.slot-status--booked      { background: #dcfce7; color: #166534; }
-	.slot-status--deactivated { background: #f3f4f6; color: #6b7280; }
-	.slot-status--cancelled   { background: #fee2e2; color: #991b1b; }
-	/* ── Botones de acción compactos ── */
-	td .btn-danger  { background: #dc2626; color: #fff; border-color: #b91c1c; }
-	td .btn-danger:hover  { background: #b91c1c; }
-	td .btn-success { background: #16a34a; color: #fff; border-color: #15803d; }
-	td .btn-success:hover { background: #15803d; }
+.state-message {
+  margin: 1.2rem 0 0.7rem 0;
+  font-size: 1.08rem;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  outline: none;
+}
+.state-success {
+  background: #eafbe7;
+  color: #1a4d1a;
+  border: 1.5px solid #b6e2c6;
+}
+.state-error {
+  background: #fff0f0;
+  color: #a30000;
+  border: 1.5px solid #f5bcbc;
+}
+
+/* ───────────────────────────────────────────── */
+/*  GRID DE HORAS (Filtrar hueco + Disponibilidad) */
+/* ───────────────────────────────────────────── */
+
+/* Layout común para ambos grids */
+.slot-time-grid {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Estilo de los botones de hora */
+.slot-time-grid .hour-btn {
+  border: 1px solid #cfd6dd;
+  background: #ffffff;
+  color: #1f2937;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.slot-time-grid .hour-btn:hover:not(:disabled) {
+  border-color: #b0b9c3;
+  background: #f5f7fa;
+}
+
+.slot-time-grid .hour-btn.selected,
+.slot-time-grid .hour-btn.selected:hover {
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #ffffff;
+}
+
+.slot-time-grid .hour-btn.hour-booked,
+.slot-time-grid .hour-btn.hour-booked:hover {
+  background: #eceff3;
+  border-color: #d4dbe3;
+  color: #8a95a3;
+  cursor: not-allowed;
+}
+
+/* Texto de ayuda */
+.slot-time-help {
+  margin: 0;
+  color: #5f6b7a;
+  font-size: 0.92rem;
+}
+
+/* ───────────────────────────────────────────── */
+
+.slots-api-status {
+  margin-left: auto;
+  margin-right: 0.75rem;
+  font-size: 0.88rem;
+  color: #4b5563;
+}
+.slots-api-status.is-ok {
+  color: #166534;
+}
+.slots-api-status.is-error {
+  color: #991b1b;
+}
+
+/* ── Badges de estado del hueco ── */
+.slot-status {
+  display: inline-block;
+  padding: 0.18em 0.7em;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.slot-status--pending     { background: #dbeafe; color: #1e40af; }
+.slot-status--booked      { background: #dcfce7; color: #166534; }
+.slot-status--deactivated { background: #f3f4f6; color: #6b7280; }
+.slot-status--cancelled   { background: #fee2e2; color: #991b1b; }
+
+/* ── Botones de acción compactos ── */
+td .btn-danger  { background: #dc2626; color: #fff; border-color: #b91c1c; }
+td .btn-danger:hover  { background: #b91c1c; }
+td .btn-success { background: #16a34a; color: #fff; border-color: #15803d; }
+td .btn-success:hover { background: #15803d; }
+
+/* ============================================================
+   ESTILOS NUEVOS — SOLO PARA LA DISPONIBILIDAD DEL ADMIN
+   (NO AFECTA AL GRID DE HUECOS NI A LOS BOTONES EXISTENTES)
+   ============================================================ */
+
+/* Contenedor exclusivo del grid de disponibilidad */
+#availability-time-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem;
+}
+
+/* Botones de hora SOLO dentro del grid de disponibilidad */
+#availability-time-grid .hour-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
+/* Hover */
+#availability-time-grid .hour-btn:hover {
+  background: #e5e7eb;
+}
+
+/* Estado seleccionado (azul, igual que profesor) */
+#availability-time-grid .hour-btn.selected {
+  background: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+/* Estado seleccionado + hover */
+#availability-time-grid .hour-btn.selected:hover {
+  background: #1d4ed8;
+}
+
+/* Estado deshabilitado (por si algún día lo usas) */
+#availability-time-grid .hour-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
 	</style>
 @endsection

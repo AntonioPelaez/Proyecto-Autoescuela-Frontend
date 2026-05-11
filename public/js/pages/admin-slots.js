@@ -279,6 +279,25 @@ function renderProfessorOptions(professors) {
         option.value = String(professor.id);
         option.textContent = professor.name;
         slotProfessorInput.appendChild(option);
+
+        // Rellenar también el selector de disponibilidad
+        const availabilityProfessorSelect = document.getElementById("availability-professor");
+        if (availabilityProfessorSelect) {
+        availabilityProfessorSelect.replaceChildren();
+
+        const defaultOption2 = document.createElement("option");
+        defaultOption2.value = "";
+        defaultOption2.textContent = "Selecciona un profesor";
+        availabilityProfessorSelect.appendChild(defaultOption2);
+
+        professors.forEach((professor) => {
+        const option = document.createElement("option");
+        option.value = String(professor.id);
+        option.textContent = professor.name;
+        availabilityProfessorSelect.appendChild(option);
+    });
+}
+
     });
 }
 
@@ -302,6 +321,146 @@ form.addEventListener("submit", async (event) => {
         showState("error", error?.message || "No se pudo aplicar el filtro.");
     }
 });
+
+// ─────────────────────────────────────────────
+// GRID DE HORAS PARA CREAR DISPONIBILIDAD
+// ─────────────────────────────────────────────
+
+let availabilitySelectedTimes = new Set();
+
+function renderAvailabilityHourGrid() {
+    const grid = document.getElementById("availability-time-grid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+
+    const hours = [
+        "08:00", "08:45",
+        "09:30", "10:15",
+        "11:00", "11:45",
+        "12:30", "13:15",
+        "14:00", "14:45",
+        "15:30", "16:15",
+        "17:00", "17:45",
+        "18:30", "19:15",
+        "20:00", "20:45"
+    ];
+
+    hours.forEach(time => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+
+        // ⭐ CAMBIO CRÍTICO
+        btn.className = "hour-btn";
+
+        btn.textContent = time;
+
+        btn.addEventListener("click", () => {
+            if (availabilitySelectedTimes.has(time)) {
+                availabilitySelectedTimes.delete(time);
+                btn.classList.remove("selected");
+            } else {
+                availabilitySelectedTimes.add(time);
+                btn.classList.add("selected");
+            }
+
+            updateAvailabilityRange();
+        });
+
+        grid.appendChild(btn);
+    });
+}
+
+function updateAvailabilityRange() {
+    const startInput = document.getElementById("availability-start");
+    const endInput = document.getElementById("availability-end");
+
+    if (availabilitySelectedTimes.size === 0) {
+        startInput.value = "";
+        endInput.value = "";
+        return;
+    }
+
+    const sorted = [...availabilitySelectedTimes].sort();
+    startInput.value = sorted[0];
+    endInput.value = sorted[sorted.length - 1];
+}
+
+// Renderizar al cargar la página
+renderAvailabilityHourGrid();
+
+
+// ─────────────────────────────────────────────
+// MOSTRAR/OCULTAR RAZÓN SI ES ESPECIAL
+// ─────────────────────────────────────────────
+
+const availabilityType = document.getElementById("availability-type");
+const availabilityReasonWrapper = document.getElementById("availability-reason-wrapper");
+
+availabilityType.addEventListener("change", () => {
+    if (availabilityType.value === "especial") {
+        availabilityReasonWrapper.classList.remove("hidden");
+    } else {
+        availabilityReasonWrapper.classList.add("hidden");
+    }
+});
+
+
+// ─────────────────────────────────────────────
+// CREAR DISPONIBILIDAD (POST al backend)
+// ─────────────────────────────────────────────
+
+document.getElementById("availability-create").addEventListener("click", async () => {
+
+    const teacherId = slotProfessorInput.value;
+    const townId = slotTownInput.value;
+    const day = document.getElementById("availability-day").value;
+    const start = document.getElementById("availability-start").value;
+    const end = document.getElementById("availability-end").value;
+    const type = document.getElementById("availability-type").value;
+    const reason = document.getElementById("availability-reason").value;
+    const blockType = document.getElementById("availability-block-type").value;
+
+    if (!teacherId || !townId || !day || !start || !end || !blockType) {
+        showState("error", "Todos los campos son obligatorios excepto la razón (solo en especial).");
+        return;
+    }
+
+    const payload = {
+        teacher_profile_id: teacherId,
+        town_id: townId,
+        day_of_week: Number(day),
+        starts_time: start,
+        end_time: end,
+        slot_minutes: 45,
+        is_active: true,
+        type: type,
+        block_type: blockType
+    };
+
+    if (type === "especial") {
+        payload.reason = reason;
+    }
+
+    try {
+        await fetch("http://localhost:8000/api/teacher-weekly-availabilities", {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        }).then(handleResponse);
+
+        showState("success", "Disponibilidad creada correctamente.");
+        availabilitySelectedTimes.clear();
+        renderAvailabilityHourGrid();
+        await loadSlots();
+
+    } catch (error) {
+        console.error(error);
+        showState("error", "No se pudo crear la disponibilidad.");
+    }
+});
+
+
 
 // ─────────────────────────────────────────────
 // EVENTOS PARA ACTUALIZAR CUADRÍCULA DE HORAS

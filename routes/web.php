@@ -27,3 +27,4 @@ Route::view('/admin/help', 'admin.help');
 Route::view('/register', 'auth.register');
 Route::view('/student/profile', 'student.profile');
 Route::view('/teacher/profile', 'teacher.profile');
+Route::view('/teacher/availability', 'teacher.teacher-availability');

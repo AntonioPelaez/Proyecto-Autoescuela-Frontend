@@ -9,7 +9,7 @@ const Router = {
     _routes: {
         admin:   ['/dashboard', '/admin/panel', '/admin/towns', '/admin/professors', '/admin/students', '/admin/vehicles', '/admin/slots', '/admin/bookings', '/admin/incidents', '/admin/help'],
         student: ['/dashboard', '/student/home', '/student/availability', '/student/my-classes'],
-        teacher: ['/dashboard', '/teacher/home', '/teacher/classes', '/teacher/bookings'],
+        teacher: ['/dashboard', '/teacher/home', '/teacher/classes', '/teacher/bookings', '/teacher/availability'], //Aqui lo he añadido.
     },
 
     // Home canónico por rol

@@ -1,6 +1,5 @@
 /**
- * register.js — Formulario de registro de alumno (mock frontend)
- * No requiere sesión activa. Simula llamada a Api.register().
+ * register.js — Formulario de registro de alumno (frontend adaptado al backend)
  */
 (function () {
     'use strict';
@@ -135,31 +134,54 @@
             e.preventDefault();
             clearErrors();
 
+            // Apellidos → surname1 + surname2
+            const surname = document.getElementById('reg-surname').value.trim();
+            const [surname1, ...rest] = surname.split(" ");
+            const surname2 = rest.join(" ") || null;
+
             const data = {
-                name:             document.getElementById('reg-name').value,
-                surname:          document.getElementById('reg-surname').value,
-                email:            document.getElementById('reg-email').value,
-                phone:            document.getElementById('reg-phone').value,
-                town_id:          document.getElementById('reg-town').value,
-                password:         document.getElementById('reg-password').value,
+                name: document.getElementById('reg-name').value.trim(),
+                surname: surname, // solo para validación local
+                surname1: surname1 || null,
+                surname2: surname2,
+                email: document.getElementById('reg-email').value.trim(),
+                phone: document.getElementById('reg-phone').value.trim(),
+                town_id: document.getElementById('reg-town').value,
+                password: document.getElementById('reg-password').value,
                 password_confirm: document.getElementById('reg-password-confirm').value,
-                terms:            document.getElementById('reg-terms').checked,
+                terms: document.getElementById('reg-terms').checked,
+                role_id: 3, // alumno
+                dni: null,
+                date_of_birth: null,
+                pickup_notes: null,
             };
 
             if (!validate(data)) return;
 
+            // Payload REAL que enviamos al backend
+            const payload = {
+                name: data.name,
+                surname1: data.surname1,
+                surname2: data.surname2,
+                email: data.email,
+                phone: data.phone,
+                password: data.password,
+                role_id: 3,
+                town_id: data.town_id, // ← añadir esto
+                dni: null,
+                date_of_birth: null,
+                pickup_notes: null,
+            };
+
             setLoading(true);
 
             try {
-                // Llamada real a la API de registro (ajusta el método según tu backend)
-                // Por ejemplo: await Api.register(data);
-                await Api.register(data);
+                await Api.register(payload);
 
                 showGlobalSuccess('¡Cuenta creada correctamente! En breve recibirás un email de confirmación.');
                 form.reset();
                 document.getElementById('password-strength').innerHTML = '';
 
-                // Redirigir al login tras 2 segundos
                 setTimeout(() => { window.location.href = '/login'; }, 2000);
 
             } catch (err) {

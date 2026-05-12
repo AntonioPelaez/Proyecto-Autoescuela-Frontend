@@ -88,8 +88,6 @@
                     <option value="3">Miércoles</option>
                     <option value="4">Jueves</option>
                     <option value="5">Viernes</option>
-                    <option value="6">Sábado</option>
-                    <option value="0">Domingo</option>
                 </select>
             </div>
 
@@ -100,6 +98,15 @@
 					<option value="">Selecciona un profesor</option>
 				</select>
 			</div>
+
+      <!-- Población (solo para disponibilidad) -->
+      <div class="input-group">
+          <label class="input-label" for="availability-town">Población</label>
+          <select id="availability-town" class="input" required>
+              <option value="">Selecciona una población</option>
+          </select>
+      </div>
+
 
 
 			<!-- Cuadrícula de horas -->

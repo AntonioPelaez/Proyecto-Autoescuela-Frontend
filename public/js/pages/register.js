@@ -1,19 +1,21 @@
 /**
  * register.js — Formulario de registro de alumno (frontend adaptado al backend)
  */
-(function () {
+(function() {
     'use strict';
 
     // ── Utilidades de UI ────────────────────────────────────────────
     function showError(id, msg) {
         const el = document.getElementById(id);
-        if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+        if (el) { el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none'; }
         const input = document.getElementById(id.replace('err-', 'reg-'));
         if (input) input.classList.toggle('input-invalid', !!msg);
     }
 
     function clearErrors() {
-        document.querySelectorAll('.input-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+        document.querySelectorAll('.input-error').forEach(el => { el.textContent = '';
+            el.style.display = 'none'; });
         document.querySelectorAll('.input-invalid').forEach(el => el.classList.remove('input-invalid'));
     }
 
@@ -35,29 +37,29 @@
 
     function setLoading(on) {
         const spinner = document.getElementById('register-spinner');
-        const btn     = document.getElementById('register-submit');
+        const btn = document.getElementById('register-submit');
         if (spinner) spinner.classList.toggle('hidden', !on);
-        if (btn)     btn.disabled = on;
+        if (btn) btn.disabled = on;
     }
 
     // ── Fortaleza de contraseña ─────────────────────────────────────
     function passwordStrength(pwd) {
         if (!pwd) return { level: 0, label: '' };
         let score = 0;
-        if (pwd.length >= 8)  score++;
+        if (pwd.length >= 8) score++;
         if (pwd.length >= 12) score++;
         if (/[A-Z]/.test(pwd)) score++;
         if (/[0-9]/.test(pwd)) score++;
         if (/[^A-Za-z0-9]/.test(pwd)) score++;
 
-        if (score <= 1) return { level: 1, label: 'Débil',   cls: 'strength-weak' };
+        if (score <= 1) return { level: 1, label: 'Débil', cls: 'strength-weak' };
         if (score <= 3) return { level: 2, label: 'Aceptable', cls: 'strength-ok' };
-        return             { level: 3, label: 'Fuerte',  cls: 'strength-strong' };
+        return { level: 3, label: 'Fuerte', cls: 'strength-strong' };
     }
 
     function renderStrength(inputId, barId) {
         const input = document.getElementById(inputId);
-        const bar   = document.getElementById(barId);
+        const bar = document.getElementById(barId);
         if (!input || !bar) return;
         input.addEventListener('input', () => {
             const s = passwordStrength(input.value);
@@ -83,12 +85,12 @@
             showError('err-email', 'Introduce un email válido.');
             valid = false;
         }
-        if (!data.phone.trim() || !/^[6-9][0-9]{8}$/.test(data.phone.replace(/\s/g, ''))) {
-            showError('err-phone', 'Introduce un teléfono español válido (9 dígitos, empieza por 6-9).');
-            valid = false;
-        }
         if (!data.town_id) {
             showError('err-town', 'Selecciona una sede.');
+            valid = false;
+        }
+        if (!data.phone.trim() || !/^[6-9][0-9]{8}$/.test(data.phone.replace(/\s/g, ''))) {
+            showError('err-phone', 'Introduce un teléfono español válido (9 dígitos, empieza por 6-9).');
             valid = false;
         }
         if (!data.password || data.password.length < 8) {
@@ -107,14 +109,36 @@
         return valid;
     }
 
+    // ── Cargar sedes desde la API ───────────────────────────────────
+    async function loadTowns() {
+        const select = document.getElementById('reg-town');
+
+        try {
+            const towns = await Api.getTowns(); // ← TU MÉTODO API
+            select.innerHTML = '<option value="">Selecciona una sede</option>';
+
+            towns.forEach(town => {
+                const opt = document.createElement('option');
+                opt.value = town.id;
+                opt.textContent = town.name;
+                select.appendChild(opt);
+            });
+
+        } catch (err) {
+            select.innerHTML = '<option value="">Error cargando sedes</option>';
+        }
+    }
+
     // ── Inicialización ──────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
+
+        loadTowns(); // ← Cargar sedes al iniciar
 
         // Toggle visibilidad contraseñas
         document.querySelectorAll('.input-password-toggle').forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetId = btn.getAttribute('data-target');
-                const input    = document.getElementById(targetId);
+                const input = document.getElementById(targetId);
                 if (!input) return;
                 const show = input.type === 'password';
                 input.type = show ? 'text' : 'password';
@@ -130,7 +154,7 @@
         const form = document.getElementById('register-form');
         if (!form) return;
 
-        form.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', async(e) => {
             e.preventDefault();
             clearErrors();
 
@@ -141,19 +165,15 @@
 
             const data = {
                 name: document.getElementById('reg-name').value.trim(),
-                surname: surname, // solo para validación local
+                surname: surname,
                 surname1: surname1 || null,
                 surname2: surname2,
                 email: document.getElementById('reg-email').value.trim(),
                 phone: document.getElementById('reg-phone').value.trim(),
-                town_id: document.getElementById('reg-town').value,
                 password: document.getElementById('reg-password').value,
                 password_confirm: document.getElementById('reg-password-confirm').value,
                 terms: document.getElementById('reg-terms').checked,
-                role_id: 3, // alumno
-                dni: null,
-                date_of_birth: null,
-                pickup_notes: null,
+                town_id: document.getElementById('reg-town').value, // ← CORRECTO
             };
 
             if (!validate(data)) return;
@@ -167,7 +187,7 @@
                 phone: data.phone,
                 password: data.password,
                 role_id: 3,
-                town_id: data.town_id, // ← añadir esto
+                town_id: data.town_id,
                 dni: null,
                 date_of_birth: null,
                 pickup_notes: null,

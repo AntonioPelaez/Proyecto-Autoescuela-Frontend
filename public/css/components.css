@@ -784,6 +784,36 @@
    margin: var(--space-m) 0;
 }
 
+.time-slot-wrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+}
+
+.time-slot-btn {
+    width: 100%;
+    position: relative;
+}
+
+.teacher-count-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    background: #1976d2;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
+
 /* ---------------------------------------------
    Visual polish transversal
    --------------------------------------------- */

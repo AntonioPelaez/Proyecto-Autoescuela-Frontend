@@ -307,10 +307,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sortedTimes = [...new Set(availableSlots.map(slot => slot.time))].sort((a, b) => a.localeCompare(b));
             const start = sortedTimes[0];
             const end = sortedTimes[sortedTimes.length - 1];
+
             timeSlotsMeta.textContent = `Mostrando ${sortedTimes.length} hora(s) libres entre ${start} y ${end} para esta fecha (${teacherCount} profesor(es) con disponibilidad).`;
         }
 
         for (const slot of timeSlots) {
+
+            const wrapper = document.createElement('div');
+            wrapper.className = "time-slot-wrapper";
+
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'time-slot-btn';
@@ -324,9 +329,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showBookingSummary();
             });
 
-            timeSlotsGrid.appendChild(btn);
+            const teachersForTime = slotsCache
+                .filter(s => s.time === slot.time && s.status !== 'booked');
+
+            const count = teachersForTime.length;
+
+            const badge = document.createElement('div');
+            badge.className = "teacher-count-badge";
+            badge.textContent = count;
+
+            wrapper.appendChild(btn);
+            wrapper.appendChild(badge);
+
+            timeSlotsGrid.appendChild(wrapper);
         }
     }
+
 
     function renderTimeSlotButtons() {
         const buttons = timeSlotsGrid.querySelectorAll('.time-slot-btn');

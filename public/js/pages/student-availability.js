@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmForm = document.getElementById('confirm-form');
     const cancelBooking = document.getElementById('cancel-booking');
     const bookingsContainer = document.getElementById('bookings-container');
+    const pendingContainer = document.getElementById('pending-classes');
     const messageBox = document.getElementById('message-state');
 
     let selectedTown = null;
@@ -148,6 +149,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Funciones internas
     // ─────────────────────────────────────────────
+
+    async function getTeacherClassCount(teacherId) {
+    try {
+        const res = await Api.getClassesByTeacher(teacherId);
+        const classes = res.data || res || [];
+        return classes.length;
+    } catch (e) {
+        console.warn("No se pudieron cargar clases del profesor", teacherId, e);
+        return 0;
+    }
+}
+
+
+const teacherStatsCache = {};
+
+async function getCachedTeacherStats(teacherId) {
+    if (teacherStatsCache[teacherId]) {
+        return teacherStatsCache[teacherId];
+    }
+
+    const count = await getTeacherClassCount(teacherId);
+    teacherStatsCache[teacherId] = { totalClasses: count };
+    return teacherStatsCache[teacherId];
+}
 
     async function loadTowns() {
         try {
@@ -356,31 +381,91 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function showBookingSummary() {
-        if (!selectedTime || !selectedTown || !selectedDate) return;
+function showBookingSummary() {
+    if (!selectedTime || !selectedTown || !selectedDate) return;
 
-        const autoSlot = getAutoAssignedSlotForTime(selectedTime);
-        selectedSlot = autoSlot;
-        const autoTeacher = autoSlot ? resolveTeacher(autoSlot.professorId) : null;
-        const autoTeacherName = autoTeacher
-            ? [autoTeacher.name, autoTeacher.surname, autoTeacher.surname1, autoTeacher.surname2].filter(Boolean).join(' ')
-            : 'Se asignará automáticamente';
-        const autoVehicle = autoSlot?.vehicle || 'Se asignará automáticamente';
+    // Profesores disponibles para esa hora
+    const teachersForTime = slotsCache
+        .filter(s => s.time === selectedTime && s.status !== 'booked');
 
-        summaryDetails.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-m);">
-                <div><strong>Población:</strong> ${selectedTown.name}</div>
-                <div><strong>Fecha:</strong> ${selectedDate}</div>
-                <div><strong>Hora:</strong> ${selectedTime}</div>
-                <div><strong>Profesor:</strong> ${autoTeacherName}</div>
-                <div><strong>Vehículo:</strong> ${autoVehicle}</div>
-            </div>
-            <p style="margin-top: 10px; color: #555;">La autoescuela asigna internamente el profesor y vehículo disponibles para esta hora.</p>
-        `;
+    // Autoasignación inicial
+    selectedSlot = teachersForTime[0] || null;
 
-        bookingSummary.style.display = 'block';
-        bookingSummary.scrollIntoView({ behavior: 'smooth' });
-    }
+    const autoTeacherName = selectedSlot
+        ? selectedSlot.professorName
+        : 'Se asignará automáticamente';
+
+    const autoVehicle = selectedSlot?.vehicle || 'Se asignará automáticamente';
+
+    // Crear mapa rápido para saber quién está disponible
+    const availableTeacherIds = new Set(teachersForTime.map(t => t.professorId));
+
+    summaryDetails.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-m);">
+            <div><strong>Población:</strong> ${selectedTown.name}</div>
+            <div><strong>Fecha:</strong> ${selectedDate}</div>
+            <div><strong>Hora:</strong> ${selectedTime}</div>
+            <div><strong>Profesor (auto):</strong> ${autoTeacherName}</div>
+            <div><strong>Vehículo:</strong> ${autoVehicle}</div>
+        </div>
+
+        <p style="margin-top: 10px; color: #555;">Puedes elegir cualquier profesor. Los que no estén disponibles aparecerán deshabilitados.</p>
+
+        <div style="margin-top: 15px;">
+            <label><strong>Elegir profesor:</strong></label>
+            <select id="teacher-select" class="form-control">
+                ${teachersList.map(t => `
+                    <option value="${t.id}"
+                        ${availableTeacherIds.has(t.id) ? '' : 'disabled'}
+                        ${selectedSlot && selectedSlot.professorId === t.id ? 'selected' : ''}
+                        id="teacher-option-${t.id}"
+                    >
+                        ${t.name} ${t.surname || ''} ${t.surname1 || ''} ${t.surname2 || ''}
+                        ${availableTeacherIds.has(t.id) ? '' : ' (No disponible)'}
+                    </option>
+                `).join('')}
+            </select>
+        </div>
+    `;
+
+    bookingSummary.style.display = 'block';
+    bookingSummary.scrollIntoView({ behavior: 'smooth' });
+
+    // Listener del selector
+    setTimeout(() => {
+        const teacherSelect = document.getElementById('teacher-select');
+        teacherSelect.addEventListener('change', () => {
+            const chosenId = Number(teacherSelect.value);
+
+            // Si el profesor está disponible, actualizamos selectedSlot
+            const slot = slotsCache.find(s =>
+                s.time === selectedTime &&
+                s.professorId === chosenId &&
+                s.status !== 'booked'
+            );
+
+            if (slot) {
+                selectedSlot = slot;
+            } else {
+                selectedSlot = teachersForTime[0] || null;
+            }
+        });
+
+        // Cargar estadísticas de cada profesor (clases impartidas)
+        teachersList.forEach(async (t) => {
+            const stats = await getCachedTeacherStats(t.id);
+            const option = document.getElementById(`teacher-option-${t.id}`);
+
+            if (option) {
+                const baseName = `${t.name} ${t.surname || ''} ${t.surname1 || ''} ${t.surname2 || ''}`.trim();
+                const availability = availableTeacherIds.has(t.id) ? '' : ' (No disponible)';
+                option.textContent = `${baseName} — ${stats.totalClasses} clases${availability}`;
+            }
+        });
+
+    }, 50);
+}
+
 
     function getAutoAssignedSlotForTime(time) {
         const candidates = slotsCache
@@ -492,27 +577,79 @@ document.addEventListener('DOMContentLoaded', async () => {
         return map;
     }
 
-    async function loadMyBookings() {
-        try {
-            const response = await Api.getMyClasses();
-            const rawBookings = response.data || response || [];
-            const teacherVehicleMap = await buildTeacherVehicleMap(Array.isArray(rawBookings) ? rawBookings : []);
-            const bookings = Array.isArray(rawBookings) ? rawBookings.map(b => {
-                const nb = normalizeBookingRecord(b);
-                const sid = b?.id ?? null;
-                if (sid && teacherVehicleMap[sid]) nb.vehicle = teacherVehicleMap[sid];
-                return nb;
-            }) : [];
+async function loadMyBookings() {
+    try {
+        const response = await Api.getMyClasses();
+        const rawBookings = response.data || response || [];
 
-            if (bookings.length === 0) {
-                bookingsContainer.innerHTML = '<p style="color: #999;">Aún no tienes clases reservadas.</p>';
-                return;
-            }
+        // Mapa de vehículos por profesor/sesión
+        const teacherVehicleMap = await buildTeacherVehicleMap(
+            Array.isArray(rawBookings) ? rawBookings : []
+        );
 
-            bookingsContainer.innerHTML = bookings.map(b => {
-                const statusLabel = { confirmada: 'Confirmada', pendiente: 'Pendiente', cancelada: 'Cancelada', en_curso: 'En curso', completada: 'Completada' }[b.status] || b.status;
-                const badgeClass = (b.status === 'cancelada') ? 'badge-red' : 'badge-green';
-                return `
+        // Normalización completa
+        const bookings = Array.isArray(rawBookings)
+            ? rawBookings.map(b => {
+                  const nb = normalizeBookingRecord(b);
+                  const sid = b?.id ?? null;
+                  if (sid && teacherVehicleMap[sid]) {
+                      nb.vehicle = teacherVehicleMap[sid];
+                  }
+                  return nb;
+              })
+            : [];
+
+        // ===============================
+        // CLASES PENDIENTES
+        // ===============================
+        const pendientes = bookings.filter(b => b.status === 'pendiente');
+
+        pendingContainer.innerHTML = pendientes.length
+            ? pendientes
+                  .map(
+                      b => `
+            <div class="booking-card">
+                <div class="booking-info">
+                    <div><strong>📅 Fecha:</strong> ${b.date}</div>
+                    <div><strong>⏰ Hora:</strong> ${b.time}</div>
+                    <div><strong>👨‍🏫 Profesor:</strong> ${b.professorName}</div>
+                    <div><strong>🚗 Vehículo:</strong> ${b.vehicle}</div>
+                </div>
+                <div class="booking-actions">
+                    <span class="badge-inline badge-pendiente">Pendiente</span>
+                    <button class="btn btn-sm btn-confirm-student" data-id="${b.id}">
+                        Confirmar clase
+                    </button>
+                </div>
+            </div>
+        `
+                  )
+                  .join('')
+            : '<p style="color:#999;">No tienes clases pendientes.</p>';
+
+        // ===============================
+        // CLASES CONFIRMADAS
+        // ===============================
+        const confirmadas = bookings.filter(b => b.status === 'confirmada');
+
+        bookingsContainer.innerHTML = confirmadas.length
+            ? confirmadas
+                  .map(b => {
+                      const statusLabel =
+                          {
+                              confirmada: 'Confirmada',
+                              pendiente: 'Pendiente',
+                              cancelada: 'Cancelada',
+                              en_curso: 'En curso',
+                              completada: 'Completada',
+                          }[b.status] || b.status;
+
+                      const badgeClass =
+                          b.status === 'cancelada'
+                              ? 'badge-cancelada'
+                              : 'badge-confirmada';
+
+                      return `
                 <div class="booking-card">
                     <div class="booking-info">
                         <div><strong>📅 Fecha:</strong> ${b.date}</div>
@@ -524,12 +661,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <span class="badge-inline ${badgeClass}">${statusLabel}</span>
                     </div>
                 </div>`;
-            }).join('');
-        } catch (error) {
-            console.error('Error loading bookings:', error);
-            bookingsContainer.innerHTML = '<p style="color: #d32f2f;">Error al cargar reservas.</p>';
-        }
+                  })
+                  .join('')
+            : '<p style="color: #999;">Aún no tienes clases confirmadas.</p>';
+
+        // ===============================
+        // BOTONES PARA CONFIRMAR CLASE
+        // ===============================
+        document.querySelectorAll('.btn-confirm-student').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                UI.setLoading(true);
+                try {
+                    await Api.confirmClassSession({ id });
+                    showMessage('success', 'Clase confirmada correctamente.');
+                    await loadMyBookings();
+                } catch (error) {
+                    showMessage(
+                        'error',
+                        error.message || 'No se pudo confirmar la clase.'
+                    );
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+        bookingsContainer.innerHTML =
+            '<p style="color: #d32f2f;">Error al cargar reservas.</p>';
     }
+}
+
 
     function getTownNameById(townId) {
         if (!townId) {

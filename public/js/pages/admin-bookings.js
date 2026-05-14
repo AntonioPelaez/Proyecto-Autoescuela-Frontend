@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!professorId) return;
 		try {
 			const data = await Api.getTeacherVehicles(professorId);
-			const vehicles = data.vehicles || data || [];
+			const vehicles = data.vehicle ? [data.vehicle] : [];
 			vehicles.forEach((v) => {
 				const opt = document.createElement('option');
 				opt.value = String(v.id);
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				.filter(Boolean)
 				.join(' ')
 				.trim() || professor.name || 'Profesor';
-			const isEligibleForReassign = professor.is_active_for_booking === false;
+			const isEligibleForReassign = professor.is_active_for_booking === true;
 
 			const filterOption = document.createElement('option');
 			filterOption.value = String(professor.id);

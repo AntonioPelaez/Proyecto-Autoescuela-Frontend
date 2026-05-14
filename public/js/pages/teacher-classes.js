@@ -12,9 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const upcomingTbody = document.getElementById('upcoming-classes-tbody');
     const pastTbody = document.getElementById('past-classes-tbody');
     const messageBox = document.getElementById('message-state');
-    const statusFormContainer = document.getElementById('class-status-form-container');
-    const statusForm = document.getElementById('class-status-form');
-    const statusCancel = document.getElementById('class-status-cancel');
 
     // Set default dates (last 30 days to next 60 days)
     const today = new Date();
@@ -42,38 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Formulario de cambiar estado (en curso / completada)
-    statusForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const bookingId = document.getElementById('class-status-booking-id').value;
-        const newStatus = document.getElementById('class-status-select').value;
-
-        if (!newStatus) {
-            showMessage('error', 'Debes seleccionar un estado.');
-            return;
-        }
-
-        UI.setLoading(true);
-        try {
-            await Api.updateBookingStatus(bookingId, newStatus);
-            showMessage('success', 'Estado de clase actualizado correctamente.');
-            statusFormContainer.style.display = 'none';
-            await loadClasses({
-                dateFrom: filterDateFrom.value,
-                dateTo: filterDateTo.value,
-                status: filterClassStatus.value
-            });
-        } catch (error) {
-            showMessage('error', error.message || 'Error al actualizar estado.');
-        } finally {
-            UI.setLoading(false);
-        }
-    });
-
-    statusCancel.addEventListener('click', () => {
-        statusFormContainer.style.display = 'none';
-    });
-
     // ─────────────────────────────────────────────
     // Cargar clases
     // ─────────────────────────────────────────────
@@ -94,8 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const today = new Date().toISOString().split('T')[0];
 
-            const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
-            const past = bookings.filter(b => b.date < today || b.status === 'cancelada');
+            const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelled');
+            const past = bookings.filter(b => b.date < today || b.status === 'cancelled');
 
             renderUpcomingClasses(upcoming);
             renderPastClasses(past);
@@ -136,13 +101,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
                 <td>
 
-                    ${booking.status !== 'completada' && booking.status !== 'cancelada' ? `
+                    ${booking.status === 'pending' ? `
+                        <button class="btn btn-sm btn-confirm" data-booking-id="${booking.id}">
+                            Confirmar clase
+                        </button>
+                    ` : ''}
+
+                    ${booking.status === 'confirmed' ? `
                         <button class="btn btn-sm btn-complete" data-booking-id="${booking.id}">
                             Completar
                         </button>
                     ` : ''}
 
-                    ${booking.status !== 'cancelada' ? `
+                    ${booking.status !== 'cancelled' ? `
                         <button class="btn btn-sm btn-cancel" data-booking-id="${booking.id}">
                             Cancelar
                         </button>
@@ -151,14 +122,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             `;
 
-            // Completar
+            // Confirmar clase
+            const confirmBtn = row.querySelector('.btn-confirm');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', async () => {
+                    UI.setLoading(true);
+                    try {
+                        await Api.confirmClassSession({ id: booking.id });
+                        showMessage('success', 'Clase confirmada correctamente.');
+                        await loadClasses({
+                            dateFrom: filterDateFrom.value,
+                            dateTo: filterDateTo.value,
+                            status: filterClassStatus.value
+                        });
+                    } catch (error) {
+                        showMessage('error', error.message || 'No se pudo confirmar la clase.');
+                    } finally {
+                        UI.setLoading(false);
+                    }
+                });
+            }
+
+            // Completar clase
             const completeBtn = row.querySelector('.btn-complete');
             if (completeBtn) {
                 completeBtn.addEventListener('click', async () => {
                     UI.setLoading(true);
                     try {
                         await Api.completeClassSession({ id: booking.id });
-                        showMessage('success', 'Clase marcada como completada.');
+                        showMessage('success', 'Clase completada correctamente.');
                         await loadClasses({
                             dateFrom: filterDateFrom.value,
                             dateTo: filterDateTo.value,
@@ -172,13 +164,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Cancelar
+            // Cancelar clase
             const cancelBtn = row.querySelector('.btn-cancel');
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', async () => {
                     UI.setLoading(true);
                     try {
-                        await Api.updateBookingStatus(booking.id, 'cancelada');
+                        await Api.cancelClassSession({ id: booking.id });
                         showMessage('success', 'Clase cancelada correctamente.');
                         await loadClasses({
                             dateFrom: filterDateFrom.value,
@@ -243,24 +235,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 5000);
         }
     }
+
+    // ─────────────────────────────────────────────
+    // Estados y colores
+    // ─────────────────────────────────────────────
+
     function _formatStatus(status) {
-    const statusMap = {
-        'confirmed': 'Confirmada',
-        'in_progress': 'En curso',
-        'completed': 'Completada',
-        'cancelled': 'Cancelada',
-    };
-    return statusMap[status] || status;
-}
+        const statusMap = {
+            'pending': 'Pendiente',
+            'confirmed': 'Confirmada',
+            'in_progress': 'En curso',
+            'completed': 'Completada',
+            'cancelled': 'Cancelada',
+        };
+        return statusMap[status] || status;
+    }
 
     function _getStatusColor(status) {
-    const colorMap = {
-        'confirmed': 'badge-confirmed',
-        'in_progress': 'badge-progress',
-        'completed': 'badge-completed',
-        'cancelled': 'badge-cancelled',
-    };
-    return colorMap[status] || 'badge-gray';
-}
+        const colorMap = {
+            'pending': 'badge-pending',
+            'confirmed': 'badge-confirmed',
+            'in_progress': 'badge-progress',
+            'completed': 'badge-completed',
+            'cancelled': 'badge-cancelled',
+        };
+        return colorMap[status] || 'badge-gray';
+    }
 
 });

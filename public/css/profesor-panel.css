@@ -1,0 +1,30 @@
+/* profesor-panel.css — Estilos específicos del panel de profesor */
+
+/* Botón de hora en disponibilidad */
+.hour-btn {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  width: 100%;
+}
+
+.hour-btn:hover {
+  background: #e5e7eb;
+}
+
+.hour-btn.selected {
+  background: #2563eb;
+  color: white;
+  border-color: #1d4ed8;
+}
+
+.slot-time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+/* Puedes añadir aquí más estilos específicos de profesor si aparecen en otras páginas */

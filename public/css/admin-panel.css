@@ -1,0 +1,79 @@
+/* admin-panel.css — Estilos específicos del panel de administración */
+
+/* Panel principal y secciones */
+.page-shell-admin {
+  /* Puedes añadir ajustes de layout específicos aquí si lo necesitas */
+}
+
+/* Mensajes de estado */
+.message-state {
+  padding: 14px 16px;
+  border-radius: var(--radius-m);
+  border: 1px solid rgba(191, 209, 228, 0.85);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-s);
+}
+.message-state.success {
+  border-color: rgba(21, 128, 61, 0.24);
+  color: var(--color-success);
+  background: rgba(240, 253, 244, 0.92);
+}
+.message-state.error {
+  border-color: rgba(198, 40, 40, 0.24);
+  color: var(--color-error);
+  background: rgba(254, 242, 242, 0.92);
+}
+.message-state.info {
+  border-color: rgba(15, 91, 216, 0.24);
+  color: var(--color-primary-dark);
+  background: rgba(239, 246, 255, 0.92);
+}
+
+/* Badges para incidencias */
+.priority-badge,
+.status-badge {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.priority-badge.baja {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+.priority-badge.media {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+.priority-badge.alta {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+.status-badge.abierta {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+.status-badge.en_curso {
+  background-color: #e1f5fe;
+  color: #01579b;
+}
+.status-badge.cerrada {
+  background-color: #f3e5f5;
+  color: #6a1b9a;
+}
+
+/* Secciones de formulario en admin (filtros, crear, etc) */
+.filter-section,
+.form-section,
+.table-section {
+  margin-bottom: var(--space-l);
+  padding: var(--space-l);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 251, 255, 0.94) 100%);
+  border-radius: var(--radius-m);
+  border: 1px solid rgba(191, 209, 228, 0.85);
+  box-shadow: var(--shadow-s);
+}
+
+/* Puedes añadir aquí más estilos específicos de admin si aparecen en otras páginas */

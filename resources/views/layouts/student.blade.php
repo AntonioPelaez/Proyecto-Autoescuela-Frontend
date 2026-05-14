@@ -1,45 +1,50 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>@yield('title') - Autoescuela</title>
-	<meta name="robots" content="noindex,nofollow">
-	<link rel="preconnect" href="https://fonts.bunny.net">
-	<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title') - Autoescuela</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body class="page-role page-role-student">
 
-	<div class="container role-layout">
-		<aside class="role-sidebar">
-			<div class="card card-body">
-				<h3>Alumno</h3>
-				<nav class="role-menu" aria-label="Menu alumno">
-					<a href="/student/home" class="role-menu-link {{ request()->is('student/home') ? 'is-active' : '' }}">Panel</a>
-					<a href="/student/availability" class="role-menu-link {{ request()->is('student/availability') ? 'is-active' : '' }}">Reservar</a>
-					<a href="/student/my-classes" class="role-menu-link {{ request()->is('student/my-classes') ? 'is-active' : '' }}">Mis clases</a>
-					<a href="/student/profile" class="role-menu-link {{ request()->is('student/profile') ? 'is-active' : '' }}">Mi perfil</a>
-				</nav>
-				<div class="role-sidebar-logout">
-					<button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
-				</div>
-			</div>
-		</aside>
+    <div class="container role-layout">
+        <aside class="role-sidebar">
+            <div class="card card-body">
+                <h3>Alumno</h3>
+                <nav class="role-menu" aria-label="Menu alumno">
+                    <a href="/student/home" class="role-menu-link {{ request()->is('student/home') ? 'is-active' : '' }}">Panel</a>
+                    <a href="/student/availability" class="role-menu-link {{ request()->is('student/availability') ? 'is-active' : '' }}">Reservar</a>
+                    <a href="/student/my-classes" class="role-menu-link {{ request()->is('student/my-classes') ? 'is-active' : '' }}">Mis clases</a>
+                    <a href="/student/profile" class="role-menu-link {{ request()->is('student/profile') ? 'is-active' : '' }}">Mi perfil</a>
+                </nav>
+                <div class="role-sidebar-logout">
+                    <button type="button" class="btn btn-danger btn-sm btn-full" data-action="logout">Cerrar sesión</button>
+                </div>
+            </div>
+        </aside>
 
-		<main class="role-main" id="@yield('main-id')">
-			<div class="role-main-inner">
-			@yield('content')
-			</div>
-		</main>
-	</div>
+        <main class="role-main" id="@yield('main-id')">
+            <div class="role-main-inner">
+                @yield('content')
+            </div>
+        </main>
+    </div>
 
-	<script src="{{ asset('js/auth.js') }}" defer></script>
-	<script src="{{ asset('js/router.js') }}" defer></script>
-	<script src="{{ asset('js/api.js') }}" defer></script>
-	<script src="{{ asset('js/ui.js') }}" defer></script>
-	<script src="{{ asset('js/logout.js') }}" defer></script>
-	@yield('scripts')
+    {{-- ⚠️ Api.js SIEMPRE debe cargarse primero y SIN defer --}}
+    <script src="{{ asset('js/api.js') }}"></script>
+
+    {{-- El resto puede ir con defer --}}
+    <script src="{{ asset('js/auth.js') }}" defer></script>
+    <script src="{{ asset('js/router.js') }}" defer></script>
+    <script src="{{ asset('js/ui.js') }}" defer></script>
+    <script src="{{ asset('js/logout.js') }}" defer></script>
+
+    {{-- Scripts específicos de cada página --}}
+    @yield('scripts')
 
 </body>
 </html>

@@ -114,53 +114,72 @@
 @section('scripts')
     <script src="{{ asset('js/pages/teacher-classes.js') }}"></script>
     <style>
-        .badge-confirmed {
-    border: 2px solid #0d6efd;
-    color: #0d6efd;
-    background: #e7f1ff;
-    padding: 3px 8px;
+/* ─────────────────────────────────────────────
+   BADGES DE ESTADO — Autoescuela AIBE
+   ───────────────────────────────────────────── */
+
+.badge-inline {
+    display: inline-block;
+    padding: 4px 10px;
     border-radius: 6px;
+    font-size: 0.85rem;
     font-weight: 600;
+    color: #fff;
+    text-transform: capitalize;
 }
 
+/* Pendiente */
+.badge-pending {
+    background-color: #f0ad4e; /* amarillo */
+}
+
+/* Confirmada */
+.badge-confirmed {
+    background-color: #0275d8; /* azul */
+}
+
+/* En curso */
 .badge-progress {
-    background: #0d6efd;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 600;
+    background-color: #6f42c1; /* morado */
 }
 
+/* Completada */
 .badge-completed {
-    background: #198754;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 600;
+    background-color: #5cb85c; /* verde */
 }
 
+/* Cancelada */
 .badge-cancelled {
-    background: #dc3545;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 600;
+    background-color: #d9534f; /* rojo */
+}
+
+/* Gris por defecto */
+.badge-gray {
+    background-color: #777;
+}
+.btn-confirm {
+    background-color: #0275d8;
+    color: #fff;
+}
+.btn-confirm:hover {
+    background-color: #025aa5;
 }
 
 .btn-complete {
-    background-color: #198754;
-    color: white;
-    border: 1px solid #198754;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 600;
+    background-color: #5cb85c;
+    color: #fff;
 }
 .btn-complete:hover {
-    background-color: #157347;
-    border-color: #157347;
+    background-color: #449d44;
 }
-.btn-cancel{
-    background: #dc3545;
+
+.btn-cancel {
+    background-color: #d9534f;
+    color: #fff;
 }
+.btn-cancel:hover {
+    background-color: #c9302c;
+}
+
     </style>
 @endsection

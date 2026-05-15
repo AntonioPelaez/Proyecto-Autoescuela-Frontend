@@ -1,30 +1,29 @@
-import { showState } from '../ui-feedback.js';
+import { showState } from "../ui-feedback.js";
 
-document.addEventListener('DOMContentLoaded', async () => {
-
+document.addEventListener("DOMContentLoaded", async () => {
     Router.init();
 
-    const townSelect = document.getElementById('town-select');
-    const dateSelect = document.getElementById('date-select');
-    const messageBox = document.getElementById('message-state');
-    const form = document.getElementById('selection-form');
+    const townSelect = document.getElementById("town-select");
+    const dateSelect = document.getElementById("date-select");
+    const messageBox = document.getElementById("message-state");
+    const form = document.getElementById("selection-form");
 
-    const slotsSection = document.getElementById('time-slots-section');
-    const slotsGrid = document.getElementById('time-slots-grid');
+    const slotsSection = document.getElementById("time-slots-section");
+    const slotsGrid = document.getElementById("time-slots-grid");
 
-    const summaryBox = document.getElementById('booking-summary');
-    const summaryDetails = document.getElementById('summary-details');
-    const confirmForm = document.getElementById('confirm-form');
-    const cancelBtn = document.getElementById('cancel-booking');
+    const summaryBox = document.getElementById("booking-summary");
+    const summaryDetails = document.getElementById("summary-details");
+    const confirmForm = document.getElementById("confirm-form");
+    const cancelBtn = document.getElementById("cancel-booking");
 
-    const pendingBox = document.getElementById('pending-classes');
-    const confirmedBox = document.getElementById('bookings-container');
+    const pendingBox = document.getElementById("pending-classes");
+    const confirmedBox = document.getElementById("bookings-container");
 
-    const teacherSection = document.createElement('div');
-    teacherSection.id = 'teacher-selector-section';
-    teacherSection.className = 'table-section';
-    teacherSection.style.display = 'none';
-    slotsSection.insertAdjacentElement('afterend', teacherSection);
+    const teacherSection = document.createElement("div");
+    teacherSection.id = "teacher-selector-section";
+    teacherSection.className = "table-section";
+    teacherSection.style.display = "none";
+    slotsSection.insertAdjacentElement("afterend", teacherSection);
 
     let weeklyAvailabilities = [];
     let teachersById = {};
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let student = null;
     window.allVehicles = [];
 
-    slotsSection.style.display = 'none';
+    slotsSection.style.display = "none";
 
     // ============================
     // 0) Cargar alumno + vehículos
@@ -44,19 +43,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const me = await Api.getMe();
         student = {
-            full_name: `${me.name} ${me.surname1 ?? ''} ${me.surname2 ?? ''}`.trim(),
-            profile_id:
-                me.student_profile_id ??
-                me.studentProfile?.id ??
-                me.student_profile?.id
+            full_name: `${me.name} ${me.surname1 ?? ""} ${me.surname2 ?? ""}`.trim(),
+            profile_id: me.student_profile_id ?? me.studentProfile?.id ?? me.student_profile?.id,
         };
 
         const vehiclesResult = await Api.getVehicles();
         window.allVehicles = Array.isArray(vehiclesResult)
             ? vehiclesResult
-            : (vehiclesResult.data || vehiclesResult.vehicles || []);
+            : vehiclesResult.data || vehiclesResult.vehicles || [];
     } catch (err) {
-        console.error('Error cargando datos iniciales:', err);
+        console.error("Error cargando datos iniciales:", err);
     }
 
     // ============================
@@ -67,20 +63,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadTowns() {
         try {
             const result = await Api.getTowns();
-            const towns = Array.isArray(result) ? result : (result.data || result.towns || []);
+            const towns = Array.isArray(result) ? result : result.data || result.towns || [];
 
             townSelect.innerHTML = '<option value="">Selecciona población</option>';
 
-            towns.forEach(town => {
+            towns.forEach((town) => {
                 if (!town.is_active) return;
-                const opt = document.createElement('option');
+                const opt = document.createElement("option");
                 opt.value = town.id;
                 opt.textContent = town.name;
                 townSelect.appendChild(opt);
             });
         } catch (err) {
             console.error(err);
-            showState(messageBox, 'error', 'No se pudieron cargar las poblaciones.');
+            showState(messageBox, "error", "No se pudieron cargar las poblaciones.");
         }
     }
 
@@ -90,33 +86,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadMyClasses() {
         try {
             const result = await Api.getMyClasses();
-            const classes = Array.isArray(result) ? result : (result.data || []);
+            const classes = Array.isArray(result) ? result : result.data || [];
             myClasses = classes;
 
-            const pending = classes.filter(c => c.status === 'pending');
-            const confirmed = classes.filter(c => c.status === 'confirmed');
+            const pending = classes.filter((c) => c.status === "pending");
+            const confirmed = classes.filter((c) => c.status === "confirmed");
 
+            // PENDIENTES
             pendingBox.innerHTML = pending.length
-                ? pending.map(c => `
-                    <div class="pending-item">
-                        <strong>${c.session_date}</strong> — ${c.start_time}<br>
-                        Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ''} ${c.teacher_surname2 ?? ''}
-                        <br>
-                        <button class="btn btn-success btn-sm btn-confirm-class" data-id="${c.id}">Confirmar</button>
-                        <button class="btn btn-danger btn-sm btn-cancel-class" data-id="${c.id}">Cancelar</button>
-                    </div>
-                `).join('')
+                ? pending
+                      .map(
+                          (c) => `
+                <div class="pending-item">
+                    <strong>${c.session_date}</strong> — ${c.start_time}<br>
+                    Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ""} ${c.teacher_surname2 ?? ""}<br>
+                    <button class="btn btn-success btn-sm btn-confirm-class" data-id="${c.id}">Confirmar</button>
+                    <button class="btn btn-danger btn-sm btn-cancel-class" data-id="${c.id}">Cancelar</button>
+                </div>
+            `,
+                      )
+                      .join("")
                 : `<p style="color:#999;">No tienes clases pendientes.</p>`;
 
+            // CONFIRMADAS
             confirmedBox.innerHTML = confirmed.length
-                ? confirmed.map(c => `
-                    <div class="confirmed-item">
-                        <strong>${c.session_date}</strong> — ${c.start_time}<br>
-                        Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ''} ${c.teacher_surname2 ?? ''}
-                    </div>
-                `).join('')
+                ? confirmed
+                      .map(
+                          (c) => `
+                <div class="confirmed-item">
+                    <strong>${c.session_date}</strong> — ${c.start_time}<br>
+                    Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ""} ${c.teacher_surname2 ?? ""}
+                </div>
+            `,
+                      )
+                      .join("")
                 : `<p style="color:#999;">No tienes clases confirmadas.</p>`;
 
+            // Eventos
+            document.querySelectorAll(".btn-confirm-class").forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                    try {
+                        await Api.confirmClassSession(btn.dataset.id);
+                        await loadMyClasses();
+                    } catch (err) {
+                        console.error(err);
+                        showState(messageBox, "error", "Error al confirmar la clase.");
+                    }
+                });
+            });
+
+            document.querySelectorAll(".btn-cancel-class").forEach((btn) => {
+                btn.addEventListener("click", async () => {
+                    try {
+                        await Api.cancelClassSession(btn.dataset.id);
+                        await loadMyClasses();
+                    } catch (err) {
+                        console.error(err);
+                        showState(messageBox, "error", "Error al cancelar la clase.");
+                    }
+                });
+            });
         } catch (err) {
             console.error(err);
             pendingBox.innerHTML = `<p style="color:red;">Error cargando clases.</p>`;
@@ -129,33 +158,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================
     // 3) Buscar horarios
     // ============================
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         if (!townSelect.value) {
-            showState(messageBox, 'error', 'Por favor, selecciona una población.');
+            showState(messageBox, "error", "Por favor, selecciona una población.");
             return;
         }
 
         if (!dateSelect.value) {
-            showState(messageBox, 'error', 'Por favor, selecciona una fecha.');
+            showState(messageBox, "error", "Por favor, selecciona una fecha.");
             return;
         }
 
         await loadSlots(townSelect.value, dateSelect.value);
     });
 
-    function isSlotReserved(slot) {
+    // ============================
+    // FUNCIÓN CLAVE: PROFESORES LIBRES POR SLOT
+    // ============================
+    function getFreeTeacherIdsForSlot(slot) {
         const slotDate = slot.start.slice(0, 10);
         const slotStartTime = slot.start.slice(11, 19);
         const slotEndTime = slot.end.slice(11, 19);
 
-        return myClasses.some(c =>
-            ((c.status === 'pending' || c.status === 'confirmed' || c.status === 'completed')) &&
-            c.session_date === slotDate &&
-            c.start_time < slotEndTime &&
-            c.end_time > slotStartTime
+        const busyTeacherIds = new Set(
+            myClasses
+                .filter(
+                    (c) =>
+                        ["pending", "confirmed", "completed"].includes(c.status) &&
+                        c.session_date === slotDate &&
+                        c.start_time < slotEndTime &&
+                        c.end_time > slotStartTime
+                )
+                .map((c) => c.teacher_profile_id)
         );
+
+        const availableTeacherIds = weeklyAvailabilities
+            .filter(
+                (w) =>
+                    w.starts_time <= slotStartTime &&
+                    w.end_time > slotStartTime
+            )
+            .map((w) => w.teacher_profile_id);
+
+        return availableTeacherIds.filter((id) => !busyTeacherIds.has(id));
     }
 
     // ============================
@@ -163,61 +210,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================
     async function loadSlots(townId, date) {
         try {
-            showState(messageBox, 'info', 'Buscando horarios...');
+            showState(messageBox, "info", "Buscando horarios...");
 
-            slotsSection.style.display = 'block';
+            slotsSection.style.display = "block";
 
             const jsDay = new Date(date).getDay();
             const day_of_week = jsDay === 0 ? 7 : jsDay;
 
             const [slotsResult, weeklyResult, teachersResult] = await Promise.all([
                 Api.getAvailabilitySlots({ town_id: townId, date }),
-                Api.getWeeklyAvailabilities({ town_id: townId, day_of_week, is_active: 1 }),
-                Api.getTeachers()
+                Api.getWeeklyAvailabilities({
+                    town_id: townId,
+                    day_of_week,
+                    is_active: 1,
+                }),
+                Api.getTeachers(),
             ]);
 
             // ============================
-            // UNIFICAR HORAS (NO DUPLICADOS)
+            // UNIFICAR HORAS + AÑADIR PROFESOR
             // ============================
             let rawSlots = [];
 
             if (Array.isArray(slotsResult?.slots)) {
-                rawSlots = slotsResult.slots.flatMap(t => t.slots);
+                rawSlots = slotsResult.slots.flatMap((t) =>
+                    t.slots.map((s) => ({
+                        ...s,
+                        teacher_profile_id: t.teacher_id,
+                    }))
+                );
             } else if (Array.isArray(slotsResult?.slots?.slots)) {
-                rawSlots = slotsResult.slots.slots;
+                rawSlots = slotsResult.slots.slots.map((s) => ({
+                    ...s,
+                    teacher_profile_id: slotsResult.slots.teacher_id,
+                }));
             } else if (Array.isArray(slotsResult)) {
-                rawSlots = slotsResult;
+                rawSlots = slotsResult.map((s) => ({
+                    ...s,
+                    teacher_profile_id: s.teacher_id ?? null,
+                }));
             }
 
             const unique = {};
-            rawSlots.forEach(s => {
+            rawSlots.forEach((s) => {
                 const key = s.start;
                 if (!unique[key]) unique[key] = s;
             });
 
             const slots = Object.values(unique);
 
+            // ORDENAR HORAS
+            slots.sort((a, b) => a.start.localeCompare(b.start));
+
             // ============================
             // CARGAR PROFESORES
             // ============================
             allTeachers = Array.isArray(teachersResult)
                 ? teachersResult
-                : (teachersResult.data || []);
+                : teachersResult.data || [];
 
-            // SOLO PROFESORES
-            allTeachers = allTeachers.filter(t => t.name && t.surname1);
+            allTeachers = allTeachers.filter((t) => t.name && t.surname1);
 
             teachersById = {};
-            allTeachers.forEach(t => { teachersById[t.id] = t; });
+            allTeachers.forEach((t) => {
+                teachersById[t.id] = t;
+            });
 
-            weeklyAvailabilities =
-                Array.isArray(weeklyResult)
-                    ? weeklyResult
-                    : (weeklyResult.data || weeklyResult.weekly_availabilities || []);
+            weeklyAvailabilities = Array.isArray(weeklyResult)
+                ? weeklyResult
+                : weeklyResult.data || weeklyResult.weekly_availabilities || [];
 
-            slotsGrid.innerHTML = '';
-            teacherSection.style.display = 'none';
-            summaryBox.style.display = 'none';
+            slotsGrid.innerHTML = "";
+            teacherSection.style.display = "none";
+            summaryBox.style.display = "none";
             selectedSlot = null;
             selectedTeacher = null;
 
@@ -227,32 +292,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // ============================
-            // MOSTRAR HORAS
+            // MOSTRAR HORAS (CORREGIDO)
             // ============================
-            slots.forEach(slot => {
+            slots.forEach((slot) => {
                 const hora = slot.start.slice(11, 16);
-                const startTime = slot.start.slice(11, 19);
 
-                const availableTeacherIds = weeklyAvailabilities
-                    .filter(w => w.starts_time <= startTime && w.end_time > startTime)
-                    .map(w => w.teacher_profile_id);
+                const freeTeacherIds = getFreeTeacherIdsForSlot(slot);
 
-                slot._availableTeacherIds = availableTeacherIds;
+                slot._availableTeacherIds = freeTeacherIds;
 
-                const reserved = isSlotReserved(slot);
+                const btn = document.createElement("button");
+                btn.className = "time-slot-btn";
 
-                const btn = document.createElement('button');
-                btn.className = 'time-slot-btn';
-
-                if (reserved) {
-                    btn.classList.add('reserved');
+                if (freeTeacherIds.length === 0) {
+                    btn.classList.add("reserved");
                     btn.disabled = true;
                     btn.innerHTML = `<span>${hora}</span><span class="prof-count" style="color:#d9534f;">Ocupada</span>`;
                 } else {
-                    btn.innerHTML = `<span>${hora}</span><span class="prof-count">${availableTeacherIds.length} prof.</span>`;
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
-                        btn.classList.add('selected');
+                    btn.innerHTML = `<span>${hora}</span><span class="prof-count">${freeTeacherIds.length} prof.</span>`;
+                    btn.addEventListener("click", () => {
+                        document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
+                        btn.classList.add("selected");
 
                         selectedSlot = slot;
                         selectedTeacher = null;
@@ -265,10 +325,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 slotsGrid.appendChild(btn);
             });
 
-            showState(messageBox, 'success', 'Horarios cargados correctamente.');
+            showState(messageBox, "success", "Horarios cargados correctamente.");
         } catch (err) {
             console.error(err);
-            showState(messageBox, 'error', 'Error cargando horarios.');
+            showState(messageBox, "error", "Error cargando horarios.");
         }
     }
 
@@ -289,8 +349,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
 
-        const teacherSelect = document.getElementById('teacher-select');
-        const statsBox = document.getElementById('teacher-stats');
+        const teacherSelect = document.getElementById("teacher-select");
+        const statsBox = document.getElementById("teacher-stats");
 
         for (const t of allTeachers) {
             let fullName = t.name;
@@ -301,7 +361,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fullName = stats.full_name || fullName;
                 statsData = stats.stats || statsData;
             } catch (e) {
-                console.error('Error stats profesor', t.id, e);
+                console.error("Error stats profesor", t.id, e);
             }
 
             teachersById[t.id].full_name = fullName;
@@ -309,7 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const isAvailable = availableIds.has(t.id);
 
-            const option = document.createElement('option');
+            const option = document.createElement("option");
             option.value = t.id;
             option.disabled = !isAvailable;
             option.textContent = isAvailable
@@ -319,13 +379,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             teacherSelect.appendChild(option);
         }
 
-        teacherSection.style.display = 'block';
+        teacherSection.style.display = "block";
 
-        teacherSelect.addEventListener('change', () => {
+        teacherSelect.addEventListener("change", () => {
             const teacherId = parseInt(teacherSelect.value);
             if (!teacherId) {
                 selectedTeacher = null;
-                statsBox.innerHTML = '';
+                statsBox.innerHTML = "";
                 clearSummary();
                 return;
             }
@@ -344,8 +404,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6) Resumen
     // ============================
     function clearSummary() {
-        summaryDetails.innerHTML = '';
-        summaryBox.style.display = 'none';
+        summaryDetails.innerHTML = "";
+        summaryBox.style.display = "none";
     }
 
     function renderSummary() {
@@ -354,13 +414,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hora = selectedSlot.start.slice(11, 16);
         const fecha = selectedSlot.start.slice(0, 10);
 
+        const vehicle = selectedTeacher.vehicles?.[0];
+        const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : "Sin vehículo asignado";
 
-        // VEHÍCULO SEGÚN PROFESOR
-const vehicle = selectedTeacher.vehicles?.[0];
-const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Sin vehículo asignado';
-
-
-        const townName = townSelect.options[townSelect.selectedIndex]?.textContent || '';
+        const townName = townSelect.options[townSelect.selectedIndex]?.textContent || "";
 
         summaryDetails.innerHTML = `
             <p><strong>Alumno:</strong> ${student.full_name}</p>
@@ -371,17 +428,17 @@ const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Sin vehícu
             <p><strong>Vehículo:</strong> ${vehicleName}</p>
         `;
 
-        summaryBox.style.display = 'block';
+        summaryBox.style.display = "block";
     }
 
     // ============================
     // 7) Confirmar reserva
     // ============================
-    confirmForm.addEventListener('submit', async (e) => {
+    confirmForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         if (!selectedSlot || !selectedTeacher || !student) {
-            showState(messageBox, 'error', 'Debes seleccionar hora y profesor.');
+            showState(messageBox, "error", "Debes seleccionar hora y profesor.");
             return;
         }
 
@@ -390,20 +447,19 @@ const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Sin vehícu
                 teacher_id: selectedTeacher.id,
                 student_id: student.profile_id,
                 town_id: parseInt(townSelect.value),
-                vehicle_id: selectedTeacher.vehicle_id,
+                vehicle_id: selectedTeacher.vehicles?.[0]?.id,
                 date: selectedSlot.start.slice(0, 10),
                 start: selectedSlot.start,
-                end: selectedSlot.end
+                end: selectedSlot.end,
             };
-
             await Api.createClassSession(payload);
 
-            showState(messageBox, 'success', 'Reserva creada correctamente.');
+            showState(messageBox, "success", "Reserva creada correctamente.");
             clearSummary();
-            teacherSection.style.display = 'none';
+            teacherSection.style.display = "none";
             selectedSlot = null;
             selectedTeacher = null;
-            document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
 
             await loadMyClasses();
             if (dateSelect.value && townSelect.value) {
@@ -411,18 +467,18 @@ const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Sin vehícu
             }
         } catch (err) {
             console.error(err);
-            showState(messageBox, 'error', err.message || 'Error al crear la reserva.');
+            showState(messageBox, "error", err.message || "Error al crear la reserva.");
         }
     });
 
     // ============================
     // 8) Cancelar selección
     // ============================
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener("click", () => {
         clearSummary();
-        teacherSection.style.display = 'none';
+        teacherSection.style.display = "none";
         selectedSlot = null;
         selectedTeacher = null;
-        document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
     });
 });

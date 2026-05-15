@@ -247,7 +247,7 @@
     color: #444;
 }
 #time-slots-section {
-    display: block !important;
+    display: block;
 }
 .table-section {
     background: #ffffff;

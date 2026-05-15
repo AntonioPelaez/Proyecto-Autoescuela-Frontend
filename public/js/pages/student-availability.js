@@ -150,6 +150,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // Validar que se hayan seleccionado población y fecha
+        if (!townSelect.value) {
+            showState(messageBox, 'error', 'Por favor, selecciona una población.');
+            return;
+        }
+
+        if (!dateSelect.value) {
+            showState(messageBox, 'error', 'Por favor, selecciona una fecha.');
+            return;
+        }
+
         await loadSlots(townSelect.value, dateSelect.value);
     });
 

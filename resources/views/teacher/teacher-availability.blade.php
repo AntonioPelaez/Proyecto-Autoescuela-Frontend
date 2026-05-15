@@ -47,15 +47,15 @@
         </select>
       </div>
 
-      <!-- Cuadrícula de horas -->
+      <!-- Horario de inicio y fin -->
       <div class="input-group">
-        <label class="input-label">Horario</label>
-        <p class="slot-time-help">Pulsa una o varias horas para seleccionarlas. Pulsa de nuevo para desmarcar.</p>
-        <div class="slot-time-wrapper">
-          <div id="availability-time-grid" class="slot-time-grid" aria-live="polite"></div>
-        </div>
-        <input type="hidden" id="availability-start" name="start">
-        <input type="hidden" id="availability-end" name="end">
+        <label class="input-label" for="availability-start-time">Hora de inicio *</label>
+        <input type="time" id="availability-start-time" name="start" class="input" required>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label" for="availability-end-time">Hora de fin *</label>
+        <input type="time" id="availability-end-time" name="end" class="input" required>
       </div>
 
       <!-- Tipo (front) -->

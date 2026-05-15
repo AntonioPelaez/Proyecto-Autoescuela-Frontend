@@ -496,103 +496,7 @@ async function loadHourGrid() {
     // ─────────────────────────────────────────────
     // GRID DE HORAS PARA CREAR DISPONIBILIDAD (ADMIN)
     // ─────────────────────────────────────────────
-
-    let availabilitySelectedTimes = new Set();
-
-    function generateAdminHours() {
-        const hours = [];
-
-        let cursor = 8 * 60; // 08:00
-
-        const end = 21 * 60; // 20:00
-
-        while (cursor <= end) {
-            const hh = String(Math.floor(cursor / 60)).padStart(2, "0");
-
-            const mm = String(cursor % 60).padStart(2, "0");
-
-            hours.push(`${hh}:${mm}`);
-
-            cursor += 60; // 🔥 intervalos de 60 minutos
-        }
-
-        return hours;
-    }
-
-    function renderAvailabilityHourGrid() {
-        const grid = document.getElementById("availability-time-grid");
-
-        if (!grid) return;
-
-        grid.innerHTML = "";
-
-        const hours = generateAdminHours(); // 🔥 ahora dinámico
-
-        hours.forEach((time) => {
-            const btn = document.createElement("button");
-
-            btn.type = "button";
-
-            btn.className = "hour-btn";
-
-            btn.textContent = time;
-
-            btn.addEventListener("click", () => {
-                if (availabilitySelectedTimes.has(time)) {
-                    availabilitySelectedTimes.delete(time);
-                } else {
-                    availabilitySelectedTimes.add(time);
-                }
-
-                updateAvailabilityRange();
-
-                updateHourUI();
-            });
-
-            grid.appendChild(btn);
-        });
-
-        updateHourUI();
-    }
-
-    function updateAvailabilityRange() {
-        const startInput = document.getElementById("availability-start");
-
-        const endInput = document.getElementById("availability-end");
-
-        if (availabilitySelectedTimes.size === 0) {
-            startInput.value = "";
-
-            endInput.value = "";
-
-            return;
-        }
-
-        const sorted = [...availabilitySelectedTimes].sort();
-
-        startInput.value = sorted[0];
-
-        endInput.value = sorted[sorted.length - 1];
-    }
-
-    function updateHourUI() {
-        const grid = document.getElementById("availability-time-grid");
-
-        if (!grid) return;
-
-        grid.querySelectorAll(".hour-btn").forEach((btn) => {
-            const hour = btn.textContent.trim();
-
-            btn.classList.toggle(
-                "selected",
-                availabilitySelectedTimes.has(hour),
-            );
-        });
-    }
-
-    // Renderizar cuadrícula de disponibilidad al cargar
-
-    renderAvailabilityHourGrid();
+    // (Eliminado: ahora usamos inputs de tipo time en lugar de grilla)
 
     // ─────────────────────────────────────────────
     // MOSTRAR/OCULTAR RAZÓN SI ES ESPECIAL
@@ -625,13 +529,13 @@ async function loadHourGrid() {
 
             const teacherId = availabilityProfessorSelect.value;
 
-            const townId = document.getElementById("availability-town").value; // se usa la población del filtro
+            const townId = document.getElementById("availability-town").value;
 
             const day = document.getElementById("availability-day").value;
 
-            const start = document.getElementById("availability-start").value;
+            const start = document.getElementById("availability-start-time").value;
 
-            const end = document.getElementById("availability-end").value;
+            const end = document.getElementById("availability-end-time").value;
 
             const type = document.getElementById("availability-type").value;
 
@@ -644,30 +548,25 @@ async function loadHourGrid() {
             if (!teacherId || !townId || !day || !start || !end || !blockType) {
                 showState(
                     "error",
-
                     "Todos los campos son obligatorios excepto la razón (solo en tipo especial).",
                 );
+                return;
+            }
 
+            if (start >= end) {
+                showState("error", "La hora de inicio debe ser menor que la hora de fin.");
                 return;
             }
 
             const payload = {
                 teacher_profile_id: teacherId,
-
                 town_id: townId,
-
                 day_of_week: Number(day),
-
                 starts_time: start + ":00",
-
                 end_time: end + ":00",
-
                 slot_minutes: 60,
-
                 is_active: true,
-
                 type: type,
-
                 block_type: blockType,
             };
 
@@ -676,34 +575,26 @@ async function loadHourGrid() {
             }
 
             try {
-                await fetch(
-                    "http://localhost:8000/api/teacher-weekly-availabilities",
-                    {
-                        method: "POST",
+                UI.setLoading(true);
 
-                        headers: getAuthHeaders(),
-
-                        body: JSON.stringify(payload),
-                    },
-                ).then(handleResponse);
+                await Api.createWeeklyAvailability(payload);
 
                 showState(
                     "success",
-
                     `Disponibilidad creada: día ${day} de ${start} a ${end}.`,
                 );
 
-                availabilitySelectedTimes.clear();
-
-                updateAvailabilityRange();
-
-                updateHourUI();
+                // Limpiar formulario
+                document.getElementById("availability-start-time").value = "";
+                document.getElementById("availability-end-time").value = "";
+                document.getElementById("availability-day").value = "";
 
                 await loadSlots();
             } catch (error) {
                 console.error(error);
-
                 showState("error", "No se pudo crear la disponibilidad.");
+            } finally {
+                UI.setLoading(false);
             }
         });
 

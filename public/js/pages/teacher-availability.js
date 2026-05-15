@@ -9,9 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const townGroup = document.getElementById('availability-town-group');
     const townSelect = document.getElementById('availability-town');
     const daySelect = document.getElementById('availability-day');
-    const timeGrid = document.getElementById('availability-time-grid');
-    const startInput = document.getElementById('availability-start');
-    const endInput = document.getElementById('availability-end');
+    const startTimeInput = document.getElementById('availability-start-time');
+    const endTimeInput = document.getElementById('availability-end-time');
     const typeSelect = document.getElementById('availability-type');
     const reasonWrapper = document.getElementById('availability-reason-wrapper');
     const reasonInput = document.getElementById('availability-reason');
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageBox = document.getElementById('availability-message');
     const weeklyBody = document.getElementById('teacher-availability-body');
 
-    let availabilitySelectedTimes = new Set();
     let currentTeacherId = null;
     let teacherTowns = [];
 
@@ -65,75 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 350);
             }, 3000);
         }
-    }
-
-    function syncAvailabilityRange() {
-        if (availabilitySelectedTimes.size === 0) {
-            startInput.value = '';
-            endInput.value = '';
-            return;
-        }
-
-        const sorted = [...availabilitySelectedTimes].sort();
-
-        // Convertimos a HH:MM:SS
-        startInput.value = sorted[0] + ':00';
-        endInput.value = sorted[sorted.length - 1] + ':00';
-    }
-
-    function updateHourUI() {
-        if (!timeGrid) return;
-
-        timeGrid.querySelectorAll('.hour-btn').forEach(btn => {
-            const hour = btn.dataset.time;
-            btn.classList.toggle('selected', availabilitySelectedTimes.has(hour));
-        });
-    }
-
-    function generateTeacherHours() {
-        const hours = [];
-        let cursor = 8 * 60; // 08:00
-        const end = 20 * 60; // 20:00
-
-        while (cursor <= end) {
-            const hh = String(Math.floor(cursor / 60)).padStart(2, "0");
-            const mm = String(cursor % 60).padStart(2, "0");
-            hours.push(`${hh}:${mm}`);
-            cursor += 60;
-        }
-
-        return hours;
-    }
-
-    function renderAvailabilityHourGrid() {
-        if (!timeGrid) return;
-
-        timeGrid.innerHTML = '';
-
-        const hours = generateTeacherHours();
-
-        hours.forEach(time => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'hour-btn';
-            btn.textContent = time;
-            btn.dataset.time = time; // ← CRÍTICO
-
-            btn.addEventListener('click', () => {
-                if (availabilitySelectedTimes.has(time)) {
-                    availabilitySelectedTimes.delete(time);
-                } else {
-                    availabilitySelectedTimes.add(time);
-                }
-
-                syncAvailabilityRange();
-                updateHourUI();
-            });
-
-            timeGrid.appendChild(btn);
-        });
-
-        updateHourUI();
     }
 
     async function loadInitialData() {
@@ -181,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 townGroup.style.display = 'none';
             }
 
-            renderAvailabilityHourGrid();
             await loadWeeklyAvailabilities();
 
         } catch (error) {
@@ -235,8 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const teacherId = currentTeacherId;
         const townId = townSelect.value || null;
         const day = daySelect.value;
-        const start = startInput.value;
-        const end = endInput.value;
+        const start = startTimeInput.value;
+        const end = endTimeInput.value;
         const type = typeSelect.value;
         const reason = reasonInput.value;
         const blockType = blockTypeSelect.value;
@@ -246,12 +174,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (start >= end) {
+            showMessage('error', 'La hora de inicio debe ser menor que la hora de fin.');
+            return;
+        }
+
         const payload = {
             teacher_profile_id: teacherId,
             town_id: townId,
             day_of_week: Number(day),
-            starts_time: start,
-            end_time: end,
+            starts_time: start + ':00',
+            end_time: end + ':00',
             slot_minutes: 60,
             is_active: true,
             type: type,
@@ -265,17 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             UI.setLoading(true);
 
-            await fetch(`${API_BASE_URL}/teacher-weekly-availabilities`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(payload)
-            }).then(handleResponse);
+            await Api.createWeeklyAvailability(payload);
 
             showMessage('success', 'Disponibilidad creada correctamente.');
 
-            availabilitySelectedTimes.clear();
-            syncAvailabilityRange();
-            updateHourUI();
+            // Limpiar formulario
+            startTimeInput.value = '';
+            endTimeInput.value = '';
+            daySelect.value = '';
 
             await loadWeeklyAvailabilities();
 

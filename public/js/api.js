@@ -516,21 +516,22 @@ const Api = {
             credentials: 'include'
         }).then(handleResponse);
     },
-    confirmClassSession(data) {
-        return fetch(`${API_BASE_URL}/class-sessions/confirm`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(data),
-            credentials: 'include'
-        }).then(handleResponse);
-    },
+    confirmClassSession(id) {
+    return fetch(`${API_BASE_URL}/class-sessions/confirm`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id }),   // ✔ AHORA SÍ ENVÍAS { id: 12 }
+        credentials: 'include',
+    }).then(handleResponse);
+},
 
-    completeClassSession(data) {
+
+    completeClassSession(id) {
     return fetch(`${API_BASE_URL}/class-sessions/complete`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
+        body: JSON.stringify({id}),
+        credentials: 'include',
     }).then(handleResponse);
 },
 

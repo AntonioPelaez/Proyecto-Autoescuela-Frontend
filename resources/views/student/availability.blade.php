@@ -141,5 +141,121 @@
     background-color: #777;
     color: #fff;
 }
+.teacher-option-btn {
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 2px solid #d0d7ff;
+    background: #f7f9ff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.teacher-option-btn:hover {
+    background: #e8eeff;
+    border-color: #8aa2ff;
+}
+
+.teacher-option-btn.selected {
+    background: #4c6fff;
+    color: white;
+    border-color: #4c6fff;
+}
+
+.teacher-stats {
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.time-slot-btn {
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 2px solid #d0d7ff;
+    background: #f7f9ff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.time-slot-btn:hover {
+    background: #e8eeff;
+    border-color: #8aa2ff;
+}
+
+.time-slot-btn.selected {
+    background: #4c6fff;
+    color: white;
+    border-color: #4c6fff;
+}
+
+.prof-count {
+    font-size: 0.85rem;
+    color: #444;
+}
+/* GRID DE HORAS — NECESARIO PARA QUE SE VEAN */
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* BOTONES DE HORA */
+.time-slot-btn {
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 2px solid #d0d7ff;
+    background: #f7f9ff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.time-slot-btn:hover {
+    background: #e8eeff;
+    border-color: #8aa2ff;
+}
+
+.time-slot-btn.selected {
+    background: #4c6fff;
+    color: white;
+    border-color: #4c6fff;
+}
+
+.prof-count {
+    font-size: 0.85rem;
+    color: #444;
+}
+#time-slots-section {
+    display: block !important;
+}
+.table-section {
+    background: #ffffff;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+}
+
 </style>
 @endsection

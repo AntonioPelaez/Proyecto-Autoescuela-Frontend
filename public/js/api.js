@@ -640,4 +640,13 @@ getWeeklyAvailabilities(params = {}) {
         credentials: 'include'
     }).then(handleResponse);
 },
+
+getTeacherStats(id) {
+    return fetch(`${API_BASE_URL}/teachers/${id}/stats`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pendingBox = document.getElementById('pending-classes');
     const confirmedBox = document.getElementById('bookings-container');
 
-    // Paso 3 — mismo estilo que Paso 2
     const teacherSection = document.createElement('div');
     teacherSection.id = 'teacher-selector-section';
     teacherSection.className = 'table-section';
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let student = null;
     window.allVehicles = [];
 
-    // OCULTAR PASO 2 AL INICIO
     slotsSection.style.display = 'none';
 
     // ============================
@@ -98,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const pending = classes.filter(c => c.status === 'pending');
             const confirmed = classes.filter(c => c.status === 'confirmed');
 
-            // PENDIENTES
             pendingBox.innerHTML = pending.length
                 ? pending.map(c => `
                     <div class="pending-item">
@@ -111,7 +108,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `).join('')
                 : `<p style="color:#999;">No tienes clases pendientes.</p>`;
 
-            // CONFIRMADAS
             confirmedBox.innerHTML = confirmed.length
                 ? confirmed.map(c => `
                     <div class="confirmed-item">
@@ -120,21 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `).join('')
                 : `<p style="color:#999;">No tienes clases confirmadas.</p>`;
-
-            // EVENTOS CONFIRMAR / CANCELAR
-            document.querySelectorAll('.btn-confirm-class').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await Api.confirmClassSession({ id: btn.dataset.id });
-                    await loadMyClasses();
-                });
-            });
-
-            document.querySelectorAll('.btn-cancel-class').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await Api.cancelClassSession({ id: btn.dataset.id });
-                    await loadMyClasses();
-                });
-            });
 
         } catch (err) {
             console.error(err);
@@ -151,7 +132,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Validar que se hayan seleccionado población y fecha
         if (!townSelect.value) {
             showState(messageBox, 'error', 'Por favor, selecciona una población.');
             return;
@@ -185,7 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             showState(messageBox, 'info', 'Buscando horarios...');
 
-            // MOSTRAR PASO 2 SOLO AHORA
             slotsSection.style.display = 'block';
 
             const jsDay = new Date(date).getDay();
@@ -197,26 +176,44 @@ document.addEventListener('DOMContentLoaded', async () => {
                 Api.getTeachers()
             ]);
 
-            let slots = [];
+            // ============================
+            // UNIFICAR HORAS (NO DUPLICADOS)
+            // ============================
+            let rawSlots = [];
+
             if (Array.isArray(slotsResult?.slots)) {
-                slots = slotsResult.slots[0]?.slots || [];
+                rawSlots = slotsResult.slots.flatMap(t => t.slots);
             } else if (Array.isArray(slotsResult?.slots?.slots)) {
-                slots = slotsResult.slots.slots;
+                rawSlots = slotsResult.slots.slots;
             } else if (Array.isArray(slotsResult)) {
-                slots = slotsResult;
+                rawSlots = slotsResult;
             }
+
+            const unique = {};
+            rawSlots.forEach(s => {
+                const key = s.start;
+                if (!unique[key]) unique[key] = s;
+            });
+
+            const slots = Object.values(unique);
+
+            // ============================
+            // CARGAR PROFESORES
+            // ============================
+            allTeachers = Array.isArray(teachersResult)
+                ? teachersResult
+                : (teachersResult.data || []);
+
+            // SOLO PROFESORES
+            allTeachers = allTeachers.filter(t => t.name && t.surname1);
+
+            teachersById = {};
+            allTeachers.forEach(t => { teachersById[t.id] = t; });
 
             weeklyAvailabilities =
                 Array.isArray(weeklyResult)
                     ? weeklyResult
                     : (weeklyResult.data || weeklyResult.weekly_availabilities || []);
-
-            allTeachers = Array.isArray(teachersResult)
-                ? teachersResult
-                : (teachersResult.data || []);
-
-            teachersById = {};
-            allTeachers.forEach(t => { teachersById[t.id] = t; });
 
             slotsGrid.innerHTML = '';
             teacherSection.style.display = 'none';
@@ -229,6 +226,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // ============================
+            // MOSTRAR HORAS
+            // ============================
             slots.forEach(slot => {
                 const hora = slot.start.slice(11, 16);
                 const startTime = slot.start.slice(11, 19);
@@ -354,8 +354,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hora = selectedSlot.start.slice(11, 16);
         const fecha = selectedSlot.start.slice(0, 10);
 
-        const vehicle = window.allVehicles.find(v => v.id === selectedSlot.vehicle_id);
-        const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : selectedSlot.vehicle_id;
+
+        // VEHÍCULO SEGÚN PROFESOR
+const vehicle = selectedTeacher.vehicles?.[0];
+const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Sin vehículo asignado';
+
 
         const townName = townSelect.options[townSelect.selectedIndex]?.textContent || '';
 
@@ -387,7 +390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 teacher_id: selectedTeacher.id,
                 student_id: student.profile_id,
                 town_id: parseInt(townSelect.value),
-                vehicle_id: selectedSlot.vehicle_id,
+                vehicle_id: selectedTeacher.vehicle_id,
                 date: selectedSlot.start.slice(0, 10),
                 start: selectedSlot.start,
                 end: selectedSlot.end

@@ -175,38 +175,49 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    async function loadHourGrid() {
-        if (
-            !slotTownInput.value ||
-            !slotDateInput.value ||
-            !slotProfessorInput.value
-        )
-            return;
+async function loadHourGrid() {
+  if (!slotTownInput.value || !slotDateInput.value || !slotProfessorInput.value)
+    return;
 
-        try {
-            const response = await Api.getAvailabilitySlots({
-                town_id: slotTownInput.value,
+  try {
+    const teacherId = slotProfessorInput.value;
 
-                date: slotDateInput.value,
-            });
+    const response = await Api.getAvailabilitySlots({
+      town_id: slotTownInput.value,
+      date: slotDateInput.value,
+      teacher_profile_id: teacherId, // 🔥 añadimos el profesor en el filtro
+    });
 
-            const teacherId = slotProfessorInput.value;
+    // 🔥 Normalizamos la respuesta
+    const payload = response.data || response;
+    const blocks = payload.slots || payload.blocks || payload; // por si viene plano
 
-            const teacherBlock = response.slots.find(
-                (block) => String(block.teacher_id) === String(teacherId),
-            );
-
-            if (!teacherBlock) {
-                renderHourGridFromSlots([]);
-
-                return;
-            }
-
-            renderHourGridFromSlots(teacherBlock.slots);
-        } catch (error) {
-            console.error("Error cargando cuadrícula de horas", error);
-        }
+    // Si la API ya devuelve solo un bloque para ese profesor:
+    if (Array.isArray(blocks) && blocks.length && blocks[0].slots) {
+      renderHourGridFromSlots(blocks[0].slots);
+      return;
     }
+
+    // Si viene agrupado por profesor, buscamos por teacher_id o teacher_profile_id
+    const teacherBlock = Array.isArray(blocks)
+      ? blocks.find(
+          (block) =>
+            String(block.teacher_id) === String(teacherId) ||
+            String(block.teacher_profile_id) === String(teacherId),
+        )
+      : null;
+
+    if (!teacherBlock || !Array.isArray(teacherBlock.slots)) {
+      renderHourGridFromSlots([]);
+      return;
+    }
+
+    renderHourGridFromSlots(teacherBlock.slots);
+  } catch (error) {
+    console.error("Error cargando cuadrícula de horas", error);
+    renderHourGridFromSlots([]);
+  }
+}
 
     // ─────────────────────────────────────────────
     // CARGAR DISPONIBILIDADES SEMANALES (LISTADO)

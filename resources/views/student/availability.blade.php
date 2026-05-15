@@ -8,8 +8,8 @@
 
     <h2>Reservar Clase</h2>
 
-    <!-- Message State -->
-    <div id="message-state" class="message-state" style="display: none;"></div>
+    <!-- Mensajes -->
+    <div id="message-state" class="message-state" style="display:none;"></div>
 
     <!-- Paso 1 -->
     <div class="filter-section">
@@ -18,14 +18,14 @@
         <form id="selection-form" class="filter-form">
             <div class="form-group">
                 <label for="town-select">Población *</label>
-                <select id="town-select" name="town" class="form-control" required>
+                <select id="town-select" class="form-control" required>
                     <option value="">Selecciona población</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="date-select">Fecha *</label>
-                <input type="date" id="date-select" name="date" class="form-control" required>
+                <input type="date" id="date-select" class="form-control" required>
             </div>
 
             <div class="table-actions">
@@ -35,227 +35,123 @@
     </div>
 
     <!-- Paso 2 -->
-    <div class="table-section" id="time-slots-section" style="display: none;">
+    <div id="time-slots-section" class="table-section" style="display:none;">
         <h3>⏰ Paso 2: Elige Hora Disponible</h3>
 
-        <div id="time-slots-grid" class="time-slots-grid">
-            <!-- Se pobla con JavaScript -->
-        </div>
+        <div id="time-slots-grid" class="time-slots-grid"></div>
 
-        <p id="time-slots-meta" style="margin-top: 10px; color: #666;">
-            Solo se muestran horas reservables. La autoescuela asignará automáticamente profesor y vehículo.
+        <p style="margin-top:10px;color:#666;">
+            Solo se muestran horas reservables según disponibilidad real.
         </p>
     </div>
 
-    <!-- Resumen -->
-    <div id="booking-summary" class="booking-summary"
-         style="display: none; margin-top: 20px; padding: 20px; background: #f0f4ff; border-radius: 4px; border-left: 4px solid var(--color-primary);">
+    <!-- Paso 3 (solo si hay más de un profesor) -->
+    <div id="teacher-selector-section" class="table-section" style="display:none;"></div>
 
+    <!-- Resumen -->
+    <div id="booking-summary" class="booking-summary" style="display:none;">
         <h4>📋 Resumen de tu Reserva</h4>
 
-        <div id="summary-details" style="margin: var(--space-m) 0;"></div>
+        <div id="summary-details" style="margin:15px 0;"></div>
 
         <form id="confirm-form" class="table-actions">
             <button type="submit" class="btn btn-success">Confirmar Reserva</button>
-            <button type="button" class="btn btn-secondary" id="cancel-booking">Cancelar</button>
+            <button type="button" id="cancel-booking" class="btn btn-secondary">Cancelar</button>
         </form>
     </div>
 
-    <!-- ========================= -->
-    <!-- CLASES PENDIENTES -->
-    <!-- ========================= -->
-    <div class="form-section" style="margin-top: 40px;">
-        <h3>🕒 Clases Pendientes</h3>
-        <div id="pending-classes">
-            <p style="color: #999;">Cargando...</p>
-        </div>
-    </div>
-
-    <!-- ========================= -->
-    <!-- CLASES CONFIRMADAS -->
-    <!-- ========================= -->
-    <div class="form-section" style="margin-top: 40px;">
+    <!-- Clases confirmadas -->
+    <div class="form-section" style="margin-top:40px;">
         <h3>✅ Mis Reservas Confirmadas</h3>
         <div id="bookings-container">
-            <p style="color: #999;">Cargando...</p>
+            <p style="color:#999;">Cargando...</p>
         </div>
     </div>
 
 </div>
+
+<!-- POPUP CONFIRMACIÓN -->
+<div id="confirm-popup" class="popup hidden">
+    <div class="popup-content">
+        <p>¿Quieres confirmar esta reserva?</p>
+        <button id="popup-yes" class="btn btn-success">Sí, confirmar</button>
+        <button id="popup-no" class="btn btn-secondary">No</button>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
 <script type="module" src="{{ asset('js/pages/student-availability.js') }}"></script>
 
 <style>
-/* ─────────────────────────────────────────────
-   BADGES DE ESTADO — Autoescuela AIBE
-───────────────────────────────────────────── */
-
-.badge-inline {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: capitalize;
+.popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
 }
-
-/* 🟡 Pendiente */
-.badge-pendiente,
-.badge-pending {
-    background-color: #f7c948;
-    color: #000;
+.popup.hidden { display:none; }
+.popup-content {
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    text-align:center;
+    width:300px;
 }
-
-/* 🔵 Confirmada */
-.badge-confirmada,
-.badge-confirmed {
-    background-color: #0275d8;
-    color: #fff;
+.time-slots-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:12px;
 }
-
-/* 🟣 En curso */
-.badge-en-curso,
-.badge-in_progress {
-    background-color: #6f42c1;
-    color: #fff;
+.time-slot-btn {
+    padding:12px 18px;
+    border-radius:8px;
+    border:2px solid #d0d7ff;
+    background:#f7f9ff;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
 }
-
-/* 🟢 Completada */
-.badge-completada,
-.badge-completed {
-    background-color: #5cb85c;
-    color: #fff;
+.time-slot-btn.selected {
+    background:#4c6fff;
+    color:white;
+    border-color:#4c6fff;
 }
-
-/* 🔴 Cancelada */
-.badge-cancelada,
-.badge-cancelled {
-    background-color: #d9534f;
-    color: #fff;
-}
-
-/* Gris por defecto */
-.badge-gray {
-    background-color: #777;
-    color: #fff;
+.time-slot-btn.reserved {
+    background:#f8d7da;
+    border-color:#f5c6cb;
+    color:#721c24;
+    cursor:not-allowed;
 }
 .teacher-option-btn {
-    padding: 12px 18px;
-    border-radius: 8px;
-    border: 2px solid #d0d7ff;
-    background: #f7f9ff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    padding:12px 18px;
+    border-radius:8px;
+    border:2px solid #d0d7ff;
+    background:#f7f9ff;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
 }
-
-.teacher-option-btn:hover {
-    background: #e8eeff;
-    border-color: #8aa2ff;
-}
-
 .teacher-option-btn.selected {
-    background: #4c6fff;
-    color: white;
-    border-color: #4c6fff;
+    background:#4c6fff;
+    color:white;
+    border-color:#4c6fff;
 }
-
-.teacher-stats {
-    font-size: 0.85rem;
-    color: #444;
+.booking-summary {
+    background:#f0f4ff;
+    border-left:4px solid var(--color-primary);
+    padding:20px;
+    border-radius:4px;
+    margin-top:20px;
 }
-
-.time-slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.time-slot-btn {
-    padding: 12px 18px;
-    border-radius: 8px;
-    border: 2px solid #d0d7ff;
-    background: #f7f9ff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.time-slot-btn:hover {
-    background: #e8eeff;
-    border-color: #8aa2ff;
-}
-
-.time-slot-btn.selected {
-    background: #4c6fff;
-    color: white;
-    border-color: #4c6fff;
-}
-
-.prof-count {
-    font-size: 0.85rem;
-    color: #444;
-}
-/* GRID DE HORAS — NECESARIO PARA QUE SE VEAN */
-.time-slots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
-}
-
-/* BOTONES DE HORA */
-.time-slot-btn {
-    padding: 12px 18px;
-    border-radius: 8px;
-    border: 2px solid #d0d7ff;
-    background: #f7f9ff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.time-slot-btn:hover {
-    background: #e8eeff;
-    border-color: #8aa2ff;
-}
-
-.time-slot-btn.selected {
-    background: #4c6fff;
-    color: white;
-    border-color: #4c6fff;
-}
-
-.prof-count {
-    font-size: 0.85rem;
-    color: #444;
-}
-#time-slots-section {
-    display: block;
-}
-.table-section {
-    background: #ffffff;
-    border-radius: 4px;
-    padding: 20px;
-    margin-top: 20px;
-    border: 1px solid #e0e0e0;
-}
-
 </style>
 @endsection

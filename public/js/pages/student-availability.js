@@ -11,19 +11,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const slotsSection = document.getElementById("time-slots-section");
     const slotsGrid = document.getElementById("time-slots-grid");
 
+    const teacherSection = document.getElementById("teacher-selector-section");
+
     const summaryBox = document.getElementById("booking-summary");
     const summaryDetails = document.getElementById("summary-details");
     const confirmForm = document.getElementById("confirm-form");
     const cancelBtn = document.getElementById("cancel-booking");
 
-    const pendingBox = document.getElementById("pending-classes");
     const confirmedBox = document.getElementById("bookings-container");
 
-    const teacherSection = document.createElement("div");
-    teacherSection.id = "teacher-selector-section";
-    teacherSection.className = "table-section";
-    teacherSection.style.display = "none";
-    slotsSection.insertAdjacentElement("afterend", teacherSection);
+    const popup = document.getElementById("confirm-popup");
+    const popupYes = document.getElementById("popup-yes");
+    const popupNo = document.getElementById("popup-no");
 
     let weeklyAvailabilities = [];
     let teachersById = {};
@@ -33,12 +32,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     let myClasses = [];
 
     let student = null;
-    window.allVehicles = [];
 
     slotsSection.style.display = "none";
+    teacherSection.style.display = "none";
+    summaryBox.style.display = "none";
 
     // ============================
-    // 0) Cargar alumno + vehículos
+    // 0) Cargar alumno
     // ============================
     try {
         const me = await Api.getMe();
@@ -46,11 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             full_name: `${me.name} ${me.surname1 ?? ""} ${me.surname2 ?? ""}`.trim(),
             profile_id: me.student_profile_id ?? me.studentProfile?.id ?? me.student_profile?.id,
         };
-
-        const vehiclesResult = await Api.getVehicles();
-        window.allVehicles = Array.isArray(vehiclesResult)
-            ? vehiclesResult
-            : vehiclesResult.data || vehiclesResult.vehicles || [];
     } catch (err) {
         console.error("Error cargando datos iniciales:", err);
     }
@@ -81,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ============================
-    // 2) Cargar clases pendientes/confirmadas
+    // 2) Cargar clases confirmadas
     // ============================
     async function loadMyClasses() {
         try {
@@ -89,26 +84,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             const classes = Array.isArray(result) ? result : result.data || [];
             myClasses = classes;
 
-            const pending = classes.filter((c) => c.status === "pending");
             const confirmed = classes.filter((c) => c.status === "confirmed");
 
-            // PENDIENTES
-            pendingBox.innerHTML = pending.length
-                ? pending
-                      .map(
-                          (c) => `
-                <div class="pending-item">
-                    <strong>${c.session_date}</strong> — ${c.start_time}<br>
-                    Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ""} ${c.teacher_surname2 ?? ""}<br>
-                    <button class="btn btn-success btn-sm btn-confirm-class" data-id="${c.id}">Confirmar</button>
-                    <button class="btn btn-danger btn-sm btn-cancel-class" data-id="${c.id}">Cancelar</button>
-                </div>
-            `,
-                      )
-                      .join("")
-                : `<p style="color:#999;">No tienes clases pendientes.</p>`;
-
-            // CONFIRMADAS
             confirmedBox.innerHTML = confirmed.length
                 ? confirmed
                       .map(
@@ -121,34 +98,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                       )
                       .join("")
                 : `<p style="color:#999;">No tienes clases confirmadas.</p>`;
-
-            // Eventos
-            document.querySelectorAll(".btn-confirm-class").forEach((btn) => {
-                btn.addEventListener("click", async () => {
-                    try {
-                        await Api.confirmClassSession(btn.dataset.id);
-                        await loadMyClasses();
-                    } catch (err) {
-                        console.error(err);
-                        showState(messageBox, "error", "Error al confirmar la clase.");
-                    }
-                });
-            });
-
-            document.querySelectorAll(".btn-cancel-class").forEach((btn) => {
-                btn.addEventListener("click", async () => {
-                    try {
-                        await Api.cancelClassSession(btn.dataset.id);
-                        await loadMyClasses();
-                    } catch (err) {
-                        console.error(err);
-                        showState(messageBox, "error", "Error al cancelar la clase.");
-                    }
-                });
-            });
         } catch (err) {
             console.error(err);
-            pendingBox.innerHTML = `<p style="color:red;">Error cargando clases.</p>`;
             confirmedBox.innerHTML = `<p style="color:red;">Error cargando clases.</p>`;
         }
     }
@@ -178,32 +129,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     // FUNCIÓN CLAVE: PROFESORES LIBRES POR SLOT
     // ============================
     function getFreeTeacherIdsForSlot(slot) {
-        const slotDate = slot.start.slice(0, 10);
-        const slotStartTime = slot.start.slice(11, 19);
-        const slotEndTime = slot.end.slice(11, 19);
+    const slotDate = slot.start.slice(0, 10);
+    const slotStartTime = slot.start.slice(11, 19); // HH:mm:ss
+    const slotEndTime = slot.end.slice(11, 19);
 
-        const busyTeacherIds = new Set(
-            myClasses
-                .filter(
-                    (c) =>
-                        ["pending", "confirmed", "completed"].includes(c.status) &&
-                        c.session_date === slotDate &&
-                        c.start_time < slotEndTime &&
-                        c.end_time > slotStartTime
-                )
-                .map((c) => c.teacher_profile_id)
-        );
-
-        const availableTeacherIds = weeklyAvailabilities
+    const busyTeacherIds = new Set(
+        myClasses
             .filter(
-                (w) =>
-                    w.starts_time <= slotStartTime &&
-                    w.end_time > slotStartTime
+                (c) =>
+                    ["pending", "confirmed", "completed"].includes(c.status) &&
+                    c.session_date === slotDate &&
+                    c.start_time < slotEndTime &&
+                    c.end_time > slotStartTime
             )
-            .map((w) => w.teacher_profile_id);
+            .map((c) => c.teacher_profile_id)
+    );
 
-        return availableTeacherIds.filter((id) => !busyTeacherIds.has(id));
-    }
+    return weeklyAvailabilities
+        .filter((w) => {
+            const wStart = w.starts_time.length === 5 ? w.starts_time + ":00" : w.starts_time;
+            const wEnd = w.end_time.length === 5 ? w.end_time + ":00" : w.end_time;
+
+            return wStart <= slotStartTime && wEnd > slotStartTime;
+        })
+        .map((w) => w.teacher_profile_id)
+        .filter((id) => !busyTeacherIds.has(id));
+}
+
 
     // ============================
     // 4) Cargar horarios + profesores
@@ -228,6 +180,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             ]);
 
             // ============================
+            // CARGAR DISPONIBILIDADES SEMANALES (ANTES DE USARLAS)
+            // ============================
+            weeklyAvailabilities = Array.isArray(weeklyResult)
+                ? weeklyResult
+                : weeklyResult.data || weeklyResult.weekly_availabilities || [];
+
+            // ============================
             // UNIFICAR HORAS + AÑADIR PROFESOR
             // ============================
             let rawSlots = [];
@@ -239,22 +198,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         teacher_profile_id: t.teacher_id,
                     }))
                 );
-            } else if (Array.isArray(slotsResult?.slots?.slots)) {
-                rawSlots = slotsResult.slots.slots.map((s) => ({
-                    ...s,
-                    teacher_profile_id: slotsResult.slots.teacher_id,
-                }));
-            } else if (Array.isArray(slotsResult)) {
-                rawSlots = slotsResult.map((s) => ({
-                    ...s,
-                    teacher_profile_id: s.teacher_id ?? null,
-                }));
             }
 
             const unique = {};
             rawSlots.forEach((s) => {
-                const key = s.start;
-                if (!unique[key]) unique[key] = s;
+                const key = s.start + "_" + s.teacher_profile_id;
+                unique[key] = s;
             });
 
             const slots = Object.values(unique);
@@ -272,14 +221,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             allTeachers = allTeachers.filter((t) => t.name && t.surname1);
 
             teachersById = {};
-            allTeachers.forEach((t) => {
-                teachersById[t.id] = t;
-            });
+       allTeachers.forEach((t) => {
+    teachersById[t.id] = {
+        id: t.id,
+        user_id: t.user_id,
+        name: t.name,
+        surname1: t.surname1,
+        surname2: t.surname2,
+        email: t.email,
+        dni: t.dni,
+        is_active_for_booking: t.is_active_for_booking,
+        license_number: t.license_number,
+        notes: t.notes,
+        vehicles: t.vehicles || [],
+        full_name: `${t.name} ${t.surname1 ?? ""} ${t.surname2 ?? ""}`.trim()
+    };
+});
 
-            weeklyAvailabilities = Array.isArray(weeklyResult)
-                ? weeklyResult
-                : weeklyResult.data || weeklyResult.weekly_availabilities || [];
 
+            // ============================
+            // RESET UI
+            // ============================
             slotsGrid.innerHTML = "";
             teacherSection.style.display = "none";
             summaryBox.style.display = "none";
@@ -292,13 +254,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             // ============================
-            // MOSTRAR HORAS (CORREGIDO)
+            // MOSTRAR HORAS
             // ============================
             slots.forEach((slot) => {
                 const hora = slot.start.slice(11, 16);
 
                 const freeTeacherIds = getFreeTeacherIdsForSlot(slot);
-
                 slot._availableTeacherIds = freeTeacherIds;
 
                 const btn = document.createElement("button");
@@ -314,11 +275,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                         document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
                         btn.classList.add("selected");
 
-                        selectedSlot = slot;
-                        selectedTeacher = null;
-
-                        renderTeacherSelector(slot);
                         clearSummary();
+
+                        selectedSlot = slot;
+
+                        if (freeTeacherIds.length === 1) {
+                            selectedTeacher = teachersById[freeTeacherIds[0]];
+                            teacherSection.style.display = "none";
+                            renderSummary();
+                        } else {
+                            selectedTeacher = null;
+                            renderTeacherSelector(slot);
+                            teacherSection.style.display = "block";
+                        }
                     });
                 }
 
@@ -341,18 +310,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         teacherSection.innerHTML = `
             <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
             <div class="teacher-select-box-inner">
-                <label for="teacher-select"><strong>Selecciona profesor:</strong></label>
-                <select id="teacher-select" class="form-control" style="max-width: 320px;">
-                    <option value="">Elige profesor</option>
-                </select>
-                <div id="teacher-stats" class="teacher-stats" style="margin-top:10px;"></div>
+                <label><strong>Selecciona profesor:</strong></label>
+                <div id="teacher-options"></div>
             </div>
         `;
 
-        const teacherSelect = document.getElementById("teacher-select");
-        const statsBox = document.getElementById("teacher-stats");
+        const container = document.getElementById("teacher-options");
 
         for (const t of allTeachers) {
+            if (!availableIds.has(t.id)) continue;
+
             let fullName = t.name;
             let statsData = { impartidas: 0 };
 
@@ -367,37 +334,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             teachersById[t.id].full_name = fullName;
             teachersById[t.id].stats = statsData;
 
-            const isAvailable = availableIds.has(t.id);
+            const btn = document.createElement("button");
+            btn.className = "teacher-option-btn";
+            btn.innerHTML = `
+                <span>${fullName}</span>
+                <span>${statsData.impartidas} clases</span>
+            `;
 
-            const option = document.createElement("option");
-            option.value = t.id;
-            option.disabled = !isAvailable;
-            option.textContent = isAvailable
-                ? `${fullName} (${statsData.impartidas} clases)`
-                : `${fullName} (no disponible en esta hora)`;
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".teacher-option-btn").forEach((b) => b.classList.remove("selected"));
+                btn.classList.add("selected");
 
-            teacherSelect.appendChild(option);
+                selectedTeacher = teachersById[t.id];
+                renderSummary();
+            });
+
+            container.appendChild(btn);
         }
 
         teacherSection.style.display = "block";
-
-        teacherSelect.addEventListener("change", () => {
-            const teacherId = parseInt(teacherSelect.value);
-            if (!teacherId) {
-                selectedTeacher = null;
-                statsBox.innerHTML = "";
-                clearSummary();
-                return;
-            }
-
-            selectedTeacher = teachersById[teacherId];
-
-            statsBox.innerHTML = `
-                <p><strong>Clases impartidas:</strong> ${selectedTeacher.stats.impartidas}</p>
-            `;
-
-            renderSummary();
-        });
     }
 
     // ============================
@@ -432,53 +387,67 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // ============================
-    // 7) Confirmar reserva
+    // 7) Confirmar reserva (POPUP)
     // ============================
-    confirmForm.addEventListener("submit", async (e) => {
+    confirmForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        if (!selectedSlot || !selectedTeacher || !student) {
+        if (!selectedSlot || !selectedTeacher) {
             showState(messageBox, "error", "Debes seleccionar hora y profesor.");
             return;
         }
 
+        popup.classList.remove("hidden");
+    });
+
+    popupYes.addEventListener("click", async () => {
+        const payload = {
+            teacher_id: selectedTeacher.id,
+            student_id: student.profile_id,
+            town_id: parseInt(townSelect.value),
+            vehicle_id: selectedTeacher.vehicles?.[0]?.id,
+            date: selectedSlot.start.slice(0, 10),
+            start: selectedSlot.start,
+            end: selectedSlot.end,
+            status: "confirmed"
+        };
+
         try {
-            const payload = {
-                teacher_id: selectedTeacher.id,
-                student_id: student.profile_id,
-                town_id: parseInt(townSelect.value),
-                vehicle_id: selectedTeacher.vehicles?.[0]?.id,
-                date: selectedSlot.start.slice(0, 10),
-                start: selectedSlot.start,
-                end: selectedSlot.end,
-            };
             await Api.createClassSession(payload);
 
-            showState(messageBox, "success", "Reserva creada correctamente.");
-            clearSummary();
+            popup.classList.add("hidden");
+
+            showState(messageBox, "success", "Clase confirmada correctamente.");
+
+            slotsSection.style.display = "none";
             teacherSection.style.display = "none";
-            selectedSlot = null;
-            selectedTeacher = null;
-            document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
+            summaryBox.style.display = "none";
 
             await loadMyClasses();
-            if (dateSelect.value && townSelect.value) {
-                await loadSlots(townSelect.value, dateSelect.value);
-            }
         } catch (err) {
             console.error(err);
-            showState(messageBox, "error", err.message || "Error al crear la reserva.");
+            showState(messageBox, "error", "Error al confirmar la clase.");
         }
+    });
+
+    popupNo.addEventListener("click", () => {
+        popup.classList.add("hidden");
+
+        selectedSlot = null;
+        selectedTeacher = null;
+        document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
+        teacherSection.style.display = "none";
+        summaryBox.style.display = "none";
     });
 
     // ============================
     // 8) Cancelar selección
     // ============================
     cancelBtn.addEventListener("click", () => {
-        clearSummary();
-        teacherSection.style.display = "none";
         selectedSlot = null;
         selectedTeacher = null;
+        teacherSection.style.display = "none";
+        summaryBox.style.display = "none";
         document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
     });
 });

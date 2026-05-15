@@ -85,7 +85,7 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/pages/student-availability.js') }}" defer></script>
+<script type="module" src="{{ asset('js/pages/student-availability.js') }}"></script>
 
 <style>
 /* ─────────────────────────────────────────────

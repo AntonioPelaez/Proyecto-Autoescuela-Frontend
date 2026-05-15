@@ -1,30 +1,49 @@
 /* profesor-panel.css — Estilos específicos del panel de profesor */
 
-/* Botón de hora en disponibilidad */
-.hour-btn {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #f9fafb;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  width: 100%;
-}
+/* === GRID DE HORAS (MISMO ESTILO QUE PANEL ADMIN) === */
 
-.hour-btn:hover {
-  background: #e5e7eb;
-}
-
-.hour-btn.selected {
-  background: #2563eb;
-  color: white;
-  border-color: #1d4ed8;
-}
-
+/* Contenedor del grid */
 .slot-time-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+    margin-top: 0.5rem;
+    display: flex;              /* ← Igual que admin */
+    flex-wrap: wrap;            /* ← Igual que admin */
+    gap: 0.4rem;                /* ← Igual que admin */
 }
 
-/* Puedes añadir aquí más estilos específicos de profesor si aparecen en otras páginas */
+/* Botón de hora */
+.slot-time-grid .hour-btn {
+    border: 1px solid #cfd6dd;  /* ← Igual que admin */
+    background: #ffffff;        /* ← Igual que admin */
+    color: #1f2937;             /* ← Igual que admin */
+    padding: 0.35rem 0.55rem;   /* ← Igual que admin */
+    border-radius: 4px;         /* ← Igual que admin */
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+    width: auto;                /* ← Importante: NO 100% */
+}
+
+/* Hover */
+.slot-time-grid .hour-btn:hover:not(:disabled) {
+    border-color: #b0b9c3;
+    background: #f5f7fa;
+}
+
+/* Estado seleccionado (rojo, igual que admin) */
+.slot-time-grid .hour-btn.selected,
+.slot-time-grid .hour-btn.selected:hover {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+/* Estado deshabilitado */
+.slot-time-grid .hour-btn.hour-booked,
+.slot-time-grid .hour-btn.hour-booked:hover {
+    background: #eceff3;
+    border-color: #d4dbe3;
+    color: #8a95a3;
+    cursor: not-allowed;
+}

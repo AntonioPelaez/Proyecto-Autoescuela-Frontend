@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const slotEndTime = slot.end.slice(11, 19);
 
         return myClasses.some(c =>
-            (c.status === 'pending' || c.status === 'confirmed') &&
+            ((c.status === 'pending' || c.status === 'confirmed' || c.status === 'completed')) &&
             c.session_date === slotDate &&
             c.start_time < slotEndTime &&
             c.end_time > slotStartTime

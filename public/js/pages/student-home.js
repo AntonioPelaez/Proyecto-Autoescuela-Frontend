@@ -39,17 +39,39 @@
 	}
 
 	function normalizeBookingRecord(booking) {
-		const teacherId = booking && (booking.teacher_id || booking.teacher_profile_id || booking.teacher && booking.teacher.id);
-		const vehicleId = booking && (booking.vehicle_id || booking.vehicle && booking.vehicle.id);
-		return {
-			...booking,
-			date: booking && (booking.date || booking.session_date || booking.scheduled_date) || '',
-			time: booking && (booking.time || formatBookingTime(booking.start_time || booking.slot_starts_at || booking.start)) || '00:00',
-			professorName: booking && (booking.professorName || booking.teacher_name || booking.teacherName || booking.teacher && booking.teacher.name) || (teacherId ? 'Profesor #' + teacherId : '-'),
-			vehicle: booking && (booking.vehicle_name || booking.vehicle_label || (booking.vehicle && booking.vehicle.name) || (booking.vehicle && booking.vehicle.label) || (booking.vehicle && booking.vehicle.brand && booking.vehicle.model ? `${booking.vehicle.brand} ${booking.vehicle.model}`.trim() : null) || (typeof booking.vehicle === 'string' ? booking.vehicle : null)) || (vehicleId ? 'Vehículo #' + vehicleId : 'Sin vehiculo asignado'),
-			status: _normalizeStatus(booking && booking.status),
-		};
-	}
+
+    const teacherId = booking && (booking.teacher_id || booking.teacher_profile_id || booking.teacher && booking.teacher.id);
+
+    return {
+        ...booking,
+
+        date: booking?.date || booking?.session_date || booking?.scheduled_date || '',
+        time: booking?.time || formatBookingTime(booking?.start_time || booking?.slot_starts_at || booking?.start),
+
+        professorName:
+            booking?.professorName
+            || booking?.teacher_name
+            || booking?.teacherName
+            || booking?.teacher?.name
+            || (teacherId ? `Profesor #${teacherId}` : '-'),
+
+        // ✔ VEHÍCULO — PRIORIDAD AL BACKEND
+        vehicle:
+            (booking?.vehicle_brand && booking?.vehicle_model
+                ? `${booking.vehicle_brand} ${booking.vehicle_model}`
+                : null)
+            || booking?.vehicle_name
+            || booking?.vehicle_label
+            || (booking?.vehicle && booking.vehicle.brand && booking.vehicle.model
+                ? `${booking.vehicle.brand} ${booking.vehicle.model}`
+                : null)
+            || (typeof booking?.vehicle === 'string' ? booking.vehicle : null)
+            || null,
+
+        status: _normalizeStatus(booking?.status),
+    };
+}
+
 
 	function getDateTimeValue(item) {
 		const date = item && item.date ? item.date : '';
@@ -401,11 +423,17 @@
 			const rawBookings = Array.isArray(response && response.data) ? response.data : (Array.isArray(response) ? response : []);
 			const teacherVehicleMap = await buildTeacherVehicleMap(rawBookings);
 			const bookings = rawBookings.map(b => {
-				const nb = normalizeBookingRecord(b);
-				const sid = b?.id ?? null;
-				if (sid && teacherVehicleMap[sid]) nb.vehicle = teacherVehicleMap[sid];
-				return nb;
-			});
+    const nb = normalizeBookingRecord(b);
+    const sid = b?.id ?? null;
+
+    // ✔ Solo usar el mapa si el backend NO envía vehículo
+    if (!nb.vehicle && sid && teacherVehicleMap[sid]) {
+        nb.vehicle = teacherVehicleMap[sid];
+    }
+
+    return nb;
+});
+
 			renderNextClass(bookings);
 			renderSummary(bookings);
 			renderHistory(bookings);

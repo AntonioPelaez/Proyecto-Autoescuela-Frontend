@@ -2,6 +2,8 @@
 // student-my-classes.js — Ver mis clases
 // ─────────────────────────────────────────────
 
+let teacherVehicleMap = {}; 
+
 document.addEventListener('DOMContentLoaded', async () => {
     Router.init();
 
@@ -12,10 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelForm = document.getElementById('cancel-form');
     const cancelFormCancel = document.getElementById('cancel-form-cancel');
 
-    // Cargar clases
     await loadMyClasses();
 
-    // Cancel form submit
     cancelForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const bookingId = document.getElementById('cancel-booking-id').value;
@@ -41,17 +41,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Funciones internas
     // ─────────────────────────────────────────────
 
-    // Devuelve mapa session_id → label de vehículo
     async function buildTeacherVehicleMap(rawBookings) {
         const map = {};
         let storedMap = {};
         let teacherCache = {};
+
         try { storedMap = JSON.parse(localStorage.getItem('session_vehicle_map') || '{}'); } catch (_) {}
         try { teacherCache = JSON.parse(localStorage.getItem('teacher_vehicle_cache') || '{}'); } catch (_) {}
 
         const teacherIds = [...new Set(
             rawBookings.map(b => b?.teacher_profile_id ?? b?.teacher_id ?? null).filter(Boolean)
         )];
+
         const teacherVehicles = {};
         await Promise.all(teacherIds.map(async tid => {
             try {
@@ -66,25 +67,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const vehicles = teacherVehicles[tid] || [];
             if (!tid || !sid) return;
 
-            const findLabel = vid => {
-                const v = vehicles.find(x => Number(x.id) === Number(vid));
-                return v ? `${v.brand || ''} ${v.model || ''}`.trim() || v.plate_number : null;
-            };
-
-            const savedVid = storedMap[sid];
-            if (savedVid) { const l = findLabel(savedVid); if (l) { map[sid] = l; return; } }
-
-            const cachedVid = teacherCache[tid];
-            if (cachedVid) { const l = findLabel(cachedVid); if (l) { map[sid] = l; return; } }
-
-            const active = vehicles.filter(v => v.is_active);
-            if (active.length === 1) {
-                map[sid] = `${active[0].brand || ''} ${active[0].model || ''}`.trim() || active[0].plate_number;
+            // Opción A: mostrar SIEMPRE el primer vehículo del profesor
+            if (vehicles.length > 0) {
+                const v = vehicles[0];
+                map[sid] = `${v.brand || ''} ${v.model || ''}`.trim() || v.plate_number;
                 return;
             }
 
             map[sid] = 'Ver con tu profesor';
         });
+
         return map;
     }
 
@@ -92,21 +84,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await Api.getMyClasses();
             const rawBookings = response?.data ?? response ?? [];
-            const teacherVehicleMap = await buildTeacherVehicleMap(Array.isArray(rawBookings) ? rawBookings : []);
+
+            teacherVehicleMap = await buildTeacherVehicleMap(Array.isArray(rawBookings) ? rawBookings : []);
+
             const bookings = Array.isArray(rawBookings) ? rawBookings.map(b => {
                 const nb = normalizeBookingRecord(b);
                 const sid = b?.id ?? null;
-                if (sid && teacherVehicleMap[sid]) nb.vehicle = teacherVehicleMap[sid];
+
+                // ✔ SOLO usar el mapa si el backend NO envía vehículo
+                if (!nb.vehicle && sid && teacherVehicleMap[sid]) {
+                    nb.vehicle = teacherVehicleMap[sid];
+                }
+
                 return nb;
             }) : [];
+
             const today = new Date().toISOString().split('T')[0];
 
-            // Separar próximas y pasadas
             const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelada');
             const past = bookings.filter(b => b.date < today || b.status === 'cancelada');
 
             renderUpcoming(upcoming);
             renderPast(past);
+
         } catch (error) {
             console.error('Error loading classes:', error);
             upcomingTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d32f2f;">Error al cargar clases</td></tr>';
@@ -116,18 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function formatBookingTime(value) {
         const raw = String(value || '').trim();
-        if (!raw) {
-            return '—';
-        }
-
-        if (raw.length >= 16 && /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(11, 16);
-        }
-
-        if (/^\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(0, 5);
-        }
-
+        if (!raw) return '—';
+        if (raw.length >= 16 && /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(raw)) return raw.slice(11, 16);
+        if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
         return raw;
     }
 
@@ -142,15 +133,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function normalizeBookingRecord(booking) {
-        const teacherId = booking?.teacher_id ?? booking?.teacher_profile_id ?? booking?.teacher?.id ?? null;
-        const vehicleId = booking?.vehicle_id ?? booking?.vehicle?.id ?? null;
+        const teacherId = booking?.teacher_profile_id 
+                       ?? booking?.teacher_id 
+                       ?? booking?.teacher?.id 
+                       ?? null;
 
         return {
             ...booking,
             date: booking?.date || booking?.session_date || booking?.scheduled_date || '—',
             time: booking?.time || formatBookingTime(booking?.start_time || booking?.slot_starts_at || booking?.start),
-            professorName: booking?.professorName || booking?.teacher_name || booking?.teacherName || booking?.teacher?.name || (teacherId ? `Profesor #${teacherId}` : 'Profesor'),
-            vehicle: booking?.vehicle_name || booking?.vehicle_label || booking?.vehicle?.name || booking?.vehicle?.label || (booking?.vehicle?.brand && booking?.vehicle?.model ? `${booking.vehicle.brand} ${booking.vehicle.model}`.trim() : null) || (typeof booking?.vehicle === 'string' ? booking.vehicle : null) || (vehicleId ? `Vehículo #${vehicleId}` : '(sin especificar)'),
+            professorName: booking?.professorName 
+                        || booking?.teacher_name 
+                        || booking?.teacherName 
+                        || booking?.teacher?.name 
+                        || (teacherId ? `Profesor #${teacherId}` : 'Profesor'),
+
+            // ✔ VEHÍCULO — PRIORIDAD AL BACKEND
+            vehicle:
+                (booking?.vehicle_brand && booking?.vehicle_model
+                    ? `${booking.vehicle_brand} ${booking.vehicle_model}`
+                    : null)
+                || booking?.vehicle_name
+                || booking?.vehicle_label
+                || booking?.vehicle
+                || null, // ← NO ponemos mapa aquí
+
             townName: booking?.townName || booking?.town_name || booking?.town?.name || (booking?.town_id ? `Población #${booking.town_id}` : 'N/A'),
             status: _normalizeStatus(booking?.status),
         };
@@ -180,7 +187,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             `;
 
-            // Event handler para cancelar
             const cancelBtn = row.querySelector('.btn-cancel');
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', (e) => {

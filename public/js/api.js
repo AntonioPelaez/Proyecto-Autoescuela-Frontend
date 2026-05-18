@@ -686,5 +686,32 @@ cancelPaymentIntent(paymentIntentId) {
         credentials: 'include'
     }).then(handleResponse);
 },
+// ─────────── WALLET (MONEDERO) ───────────
+payWithWallet(data) {
+    return fetch(`${API_BASE_URL}/payments/wallet`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+rechargeWallet(amount) {
+    return fetch(`${API_BASE_URL}/payments/recharge`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ amount }),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+withdrawWallet(amount) {
+    return fetch(`${API_BASE_URL}/payments/withdraw`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ amount }),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 
 };

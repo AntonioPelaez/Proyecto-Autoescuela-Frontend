@@ -450,8 +450,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Obtener saldo del estudiante
             const studentData = await Api.getMe();
-            const studentBalance = parseFloat(studentData.balance ?? studentData.wallet_balance ?? 0);
+            const studentBalance = parseFloat(studentData.student_profile?.wallet?.balance ?? 0);
             const classPrice = parseFloat(bookingData.price);
+
+
 
             // Guardar datos en sessionStorage
             sessionStorage.setItem("pendingBooking", JSON.stringify(bookingData));

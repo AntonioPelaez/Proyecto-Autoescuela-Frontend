@@ -5,24 +5,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const messageBox = document.getElementById("message-state");
     const balanceAmount = document.getElementById("balance-amount");
-    const startRechargeBtn = document.getElementById("start-recharge-btn");
 
-    // Cargar saldo del estudiante
     try {
         const student = await Api.getMe();
-        const balance = parseFloat(student.balance ?? student.wallet_balance ?? 0);
+
+        console.log("DEBUG /me:", student); // ← VERÁS EL WALLET AQUÍ
+
+        const balance = parseFloat(student.student_profile?.wallet?.balance ?? 0);
+
         if (balanceAmount) {
             balanceAmount.textContent = `€${balance.toFixed(2)}`;
+        } else {
+            console.warn("⚠ No existe el elemento #balance-amount en el DOM");
         }
+
     } catch (err) {
         console.error("Error cargando saldo:", err);
-        showState(messageBox, "error", "Error al cargar el saldo. Por favor intenta de nuevo.");
-    }
-
-    // Botón para comenzar recarga
-    if (startRechargeBtn) {
-        startRechargeBtn.addEventListener("click", () => {
-            window.location.href = "/student/recharge-form";
-        });
+        showState(messageBox, "error", "Error al cargar el saldo.");
     }
 });
+

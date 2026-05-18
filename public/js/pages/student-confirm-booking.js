@@ -15,6 +15,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     let studentBalance = 0;
 
     // ============================
+    // Convertir timestamp → Y-m-d H:i:s
+    // ============================
+    function toDateTimeString(ts) {
+        const d = new Date(ts);
+        const pad = n => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    // ============================
     // 1) Cargar datos de la reserva y saldo
     // ============================
     try {
@@ -30,46 +39,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Obtener saldo del estudiante
         const student = await Api.getMe();
-        studentBalance = parseFloat(student.balance ?? student.wallet_balance ?? 0);
+        studentBalance = parseFloat(student.student_profile?.wallet?.balance ?? 0);
 
         // Mostrar los datos de la clase
         const [year, month, day] = bookingData.date.split("-");
         const fecha = `${day}/${month}/${year}`;
-        const hora = bookingData.start.slice(11, 16);
+        const hora = toDateTimeString(bookingData.start).slice(11, 16);
         const price = parseFloat(bookingData.price);
 
         classInfo.innerHTML = `
-            <p>
-                <strong>Alumno:</strong> ${bookingData.studentName}
-            </p>
-            <p>
-                <strong>Profesor:</strong> ${bookingData.teacherName}
-            </p>
-            <p>
-                <strong>Población:</strong> ${bookingData.townName}
-            </p>
-            <p>
-                <strong>Fecha:</strong> ${fecha}
-            </p>
-            <p>
-                <strong>Hora:</strong> ${hora}
-            </p>
-            <p>
-                <strong>Vehículo:</strong> ${bookingData.vehicleName}
-            </p>
+            <p><strong>Alumno:</strong> ${bookingData.studentName}</p>
+            <p><strong>Profesor:</strong> ${bookingData.teacherName}</p>
+            <p><strong>Población:</strong> ${bookingData.townName}</p>
+            <p><strong>Fecha:</strong> ${fecha}</p>
+            <p><strong>Hora:</strong> ${hora}</p>
+            <p><strong>Vehículo:</strong> ${bookingData.vehicleName}</p>
         `;
 
         classPrice.textContent = `€${price.toFixed(2)}`;
         currentBalance.textContent = `€${studentBalance.toFixed(2)}`;
         balanceAfter.textContent = `€${(studentBalance - price).toFixed(2)}`;
 
-        // Verificar si hay saldo suficiente
         if (studentBalance < price) {
-            showState(
-                messageBox,
-                "warning",
-                "No tienes suficiente saldo. Por favor, recarga tu cuenta."
-            );
+            showState(messageBox, "warning", "No tienes suficiente saldo. Por favor, recarga tu cuenta.");
             confirmBtn.disabled = true;
         }
     } catch (err) {
@@ -97,36 +89,48 @@ document.addEventListener("DOMContentLoaded", async () => {
         confirmBtn.disabled = true;
 
         try {
-            // Crear la clase
+            // Convertir timestamps a formato válido
+            const startFormatted = toDateTimeString(bookingData.start);
+            const endFormatted = toDateTimeString(bookingData.end);
+
+            // Crear clase
             const classPayload = {
                 teacher_id: bookingData.teacherId,
                 student_id: bookingData.studentId,
                 town_id: bookingData.townId,
                 vehicle_id: bookingData.vehicleId,
                 date: bookingData.date,
-                start: bookingData.start,
-                end: bookingData.end,
-                status: "confirmed",
+                start: startFormatted,
+                end: endFormatted
             };
 
+            console.log("Payload enviado:", classPayload);
+
             const classResponse = await Api.createClassSession(classPayload);
-            const classSessionId = classResponse.id || classResponse.class_session_id;
+            const classSessionId = classResponse.session?.id;
 
             if (!classSessionId) {
                 throw new Error("No se pudo crear la clase");
             }
 
-            // Deducir el saldo
-            // (Esta parte dependerá de tu API backend)
-            console.log(`Saldo deducido: €${price.toFixed(2)}`);
+            // ============================
+            // 🔥 3) PAGAR CON MONEDERO
+            // ============================
+            const payment = await Api.payWithWallet({
+                class_session_id: classSessionId
+            });
 
+            console.log("Pago realizado:", payment);
+
+            // Limpiar reserva temporal
             sessionStorage.removeItem("pendingBooking");
 
-            showState(messageBox, "success", "¡Reserva confirmada! Tu clase ha sido reservada.");
+            showState(messageBox, "success", "¡Reserva confirmada y pagada con éxito!");
 
             setTimeout(() => {
                 window.location.href = "/student/availability";
             }, 2000);
+
         } catch (err) {
             console.error("Error al confirmar la reserva:", err);
             showState(messageBox, "error", err.message || "Error al confirmar la reserva.");

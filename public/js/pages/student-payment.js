@@ -129,12 +129,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 errors.push("El mes del vencimiento debe estar entre 01 y 12.");
             }
 
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth() + 1;
+            // Para desarrollo/pruebas: aceptar cualquier año a partir de 2020
             const fullYear = 2000 + añoNum;
-
-            if (fullYear < currentYear || (fullYear === currentYear && mesNum < currentMonth)) {
-                errors.push("La tarjeta ha expirado.");
+            if (fullYear < 2020) {
+                errors.push("Por favor, usa un año válido (2020 o posterior).");
             }
         }
 

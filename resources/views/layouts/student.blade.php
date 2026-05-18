@@ -18,6 +18,7 @@
                 <nav class="role-menu" aria-label="Menu alumno">
                     <a href="/student/home" class="role-menu-link {{ request()->is('student/home') ? 'is-active' : '' }}">Panel</a>
                     <a href="/student/availability" class="role-menu-link {{ request()->is('student/availability') ? 'is-active' : '' }}">Reservar</a>
+                    <a href="/student/recharge" class="role-menu-link {{ request()->is('student/recharge') ? 'is-active' : '' }}">Recargar Saldo</a>
                     <a href="/student/my-classes" class="role-menu-link {{ request()->is('student/my-classes') ? 'is-active' : '' }}">Mis clases</a>
                     <a href="/student/profile" class="role-menu-link {{ request()->is('student/profile') ? 'is-active' : '' }}">Mi perfil</a>
                 </nav>

@@ -445,12 +445,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
         try {
-            // Guardar datos en sessionStorage para la página de pago
+            popup.classList.add("hidden");
+            showState(messageBox, "info", "Verificando saldo...");
+
+            // Obtener saldo del estudiante
+            const studentData = await Api.getMe();
+            const studentBalance = parseFloat(studentData.balance ?? studentData.wallet_balance ?? 0);
+            const classPrice = parseFloat(bookingData.price);
+
+            // Guardar datos en sessionStorage
             sessionStorage.setItem("pendingBooking", JSON.stringify(bookingData));
 
-            // Redirigir a la página de pago
-            popup.classList.add("hidden");
-            window.location.href = "/student/payment";
+            // Verificar saldo
+            if (studentBalance >= classPrice) {
+                // Hay saldo suficiente, ir a confirmación
+                window.location.href = "/student/confirm-booking";
+            } else {
+                // No hay saldo suficiente, ir a recarga
+                sessionStorage.setItem("redirectAfterRecharge", "/student/confirm-booking");
+                window.location.href = "/student/recharge";
+            }
         } catch (err) {
             console.error(err);
             showState(messageBox, "error", "Error al procesar la reserva.");

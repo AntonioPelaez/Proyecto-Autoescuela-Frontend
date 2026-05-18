@@ -422,31 +422,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     popupYes.addEventListener("click", async () => {
-        const payload = {
+        const bookingData = {
             teacher_id: selectedTeacher.id,
+            teacherId: selectedTeacher.id,
             student_id: student.profile_id,
+            studentId: student.profile_id,
+            studentName: student.full_name,
             town_id: parseInt(townSelect.value),
+            townId: parseInt(townSelect.value),
+            townName: townSelect.options[townSelect.selectedIndex]?.textContent || "",
             vehicle_id: selectedTeacher.vehicles?.[0]?.id,
+            vehicleId: selectedTeacher.vehicles?.[0]?.id,
             date: selectedSlot.start.slice(0, 10),
             start: selectedSlot.start,
             end: selectedSlot.end,
-            status: "confirmed",
+            status: "pending",
+            teacherName: selectedTeacher.full_name,
+            vehicleName: selectedTeacher.vehicles?.[0]
+                ? `${selectedTeacher.vehicles[0].brand} ${selectedTeacher.vehicles[0].model}`
+                : "Sin vehículo asignado",
+            price: window.AUTOESCUELA_PRICE ?? "25.00",
         };
 
         try {
-            await Api.createClassSession(payload);
+            // Guardar datos en sessionStorage para la página de pago
+            sessionStorage.setItem("pendingBooking", JSON.stringify(bookingData));
 
+            // Redirigir a la página de pago
             popup.classList.add("hidden");
-            showState(messageBox, "success", "Clase confirmada correctamente.");
-
-            slotsSection.style.display = "none";
-            teacherSection.style.display = "none";
-            summaryBox.style.display = "none";
-
-            await loadMyClasses();
+            window.location.href = "/student/payment";
         } catch (err) {
             console.error(err);
-            showState(messageBox, "error", "Error al confirmar la clase.");
+            showState(messageBox, "error", "Error al procesar la reserva.");
         }
     });
 

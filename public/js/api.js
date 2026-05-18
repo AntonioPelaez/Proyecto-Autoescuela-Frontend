@@ -659,4 +659,32 @@ createWeeklyAvailability(data) {
     }).then(handleResponse);
 },
 
+// ─────────── PAYMENT INTENTS ───────────
+createPaymentIntent(data) {
+    return fetch(`${API_BASE_URL}/payments`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+confirmPaymentIntent(paymentIntentId) {
+    return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/confirm`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({}),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+cancelPaymentIntent(paymentIntentId) {
+    return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/cancel`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({}),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

@@ -55,7 +55,7 @@
         <div id="summary-details" style="margin:15px 0;"></div>
 
         <form id="confirm-form" class="table-actions">
-            <button type="submit" class="btn btn-success">Confirmar Reserva</button>
+            <button type="submit" class="btn btn-success">Proceder con el Pago</button>
             <button type="button" id="cancel-booking" class="btn btn-secondary">Cancelar</button>
         </form>
     </div>
@@ -73,8 +73,8 @@
 <!-- POPUP CONFIRMACIÓN -->
 <div id="confirm-popup" class="popup hidden">
     <div class="popup-content">
-        <p>¿Quieres confirmar esta reserva?</p>
-        <button id="popup-yes" class="btn btn-success">Sí, confirmar</button>
+        <p>¿Quieres proceder con el pago?</p>
+        <button id="popup-yes" class="btn btn-success">Sí, proceder con el pago</button>
         <button id="popup-no" class="btn btn-secondary">No</button>
     </div>
 </div>

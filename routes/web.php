@@ -19,6 +19,7 @@ Route::view('/admin/vehicles', 'admin.vehicles');
 Route::view('/admin/slots', 'admin.slots');
 Route::view('/admin/bookings', 'admin.bookings');
 Route::view('/student/availability', 'student.availability');
+Route::view('/student/payment', 'student.payment');
 Route::view('/student/my-classes', 'student.my-classes');
 Route::view('/teacher/bookings', 'teacher.bookings');
 Route::view('/teacher/classes', 'teacher.classes');

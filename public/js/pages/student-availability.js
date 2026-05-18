@@ -30,8 +30,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let selectedSlot = null;
     let selectedTeacher = null;
     let myClasses = [];
-
     let student = null;
+
+    const teacherStatsCache = new Map();
 
     slotsSection.style.display = "none";
     teacherSection.style.display = "none";
@@ -60,15 +61,22 @@ document.addEventListener("DOMContentLoaded", async () => {
             const result = await Api.getTowns();
             const towns = Array.isArray(result) ? result : result.data || result.towns || [];
 
-            townSelect.innerHTML = '<option value="">Selecciona población</option>';
+            const fragment = document.createDocumentFragment();
+            const defaultOpt = document.createElement("option");
+            defaultOpt.value = "";
+            defaultOpt.textContent = "Selecciona población";
+            fragment.appendChild(defaultOpt);
 
-            towns.forEach((town) => {
-                if (!town.is_active) return;
+            for (const town of towns) {
+                if (!town.is_active) continue;
                 const opt = document.createElement("option");
                 opt.value = town.id;
                 opt.textContent = town.name;
-                townSelect.appendChild(opt);
-            });
+                fragment.appendChild(opt);
+            }
+
+            townSelect.innerHTML = "";
+            townSelect.appendChild(fragment);
         } catch (err) {
             console.error(err);
             showState(messageBox, "error", "No se pudieron cargar las poblaciones.");
@@ -86,18 +94,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const confirmed = classes.filter((c) => c.status === "confirmed");
 
-            confirmedBox.innerHTML = confirmed.length
-                ? confirmed
-                      .map(
-                          (c) => `
-                <div class="confirmed-item">
+            if (!confirmed.length) {
+                confirmedBox.innerHTML = `<p style="color:#999;">No tienes clases confirmadas.</p>`;
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            confirmedBox.innerHTML = "";
+
+            for (const c of confirmed) {
+                const div = document.createElement("div");
+                div.className = "confirmed-item";
+                div.innerHTML = `
                     <strong>${c.session_date}</strong> — ${c.start_time}<br>
                     Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ""} ${c.teacher_surname2 ?? ""}
-                </div>
-            `,
-                      )
-                      .join("")
-                : `<p style="color:#999;">No tienes clases confirmadas.</p>`;
+                `;
+                fragment.appendChild(div);
+            }
+
+            confirmedBox.appendChild(fragment);
         } catch (err) {
             console.error(err);
             confirmedBox.innerHTML = `<p style="color:red;">Error cargando clases.</p>`;
@@ -129,33 +144,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     // FUNCIÓN CLAVE: PROFESORES LIBRES POR SLOT
     // ============================
     function getFreeTeacherIdsForSlot(slot) {
-    const slotDate = slot.start.slice(0, 10);
-    const slotStartTime = slot.start.slice(11, 19); // HH:mm:ss
-    const slotEndTime = slot.end.slice(11, 19);
+        const slotDate = slot.start.slice(0, 10);
+        const slotStartTime = slot.start.slice(11, 19); // HH:mm:ss
+        const slotEndTime = slot.end.slice(11, 19);
 
-    const busyTeacherIds = new Set(
-        myClasses
-            .filter(
-                (c) =>
-                    ["pending", "confirmed", "completed"].includes(c.status) &&
-                    c.session_date === slotDate &&
-                    c.start_time < slotEndTime &&
-                    c.end_time > slotStartTime
-            )
-            .map((c) => c.teacher_profile_id)
-    );
+        const busyTeacherIds = new Set(
+            myClasses
+                .filter(
+                    (c) =>
+                        ["pending", "confirmed", "completed"].includes(c.status) &&
+                        c.session_date === slotDate &&
+                        c.start_time < slotEndTime &&
+                        c.end_time > slotStartTime
+                )
+                .map((c) => c.teacher_profile_id)
+        );
 
-    return weeklyAvailabilities
-        .filter((w) => {
-            const wStart = w.starts_time.length === 5 ? w.starts_time + ":00" : w.starts_time;
-            const wEnd = w.end_time.length === 5 ? w.end_time + ":00" : w.end_time;
-
-            return wStart <= slotStartTime && wEnd > slotStartTime;
-        })
-        .map((w) => w.teacher_profile_id)
-        .filter((id) => !busyTeacherIds.has(id));
-}
-
+        return weeklyAvailabilities
+            .filter((w) => {
+                const wStart = w.starts_time.length === 5 ? w.starts_time + ":00" : w.starts_time;
+                const wEnd = w.end_time.length === 5 ? w.end_time + ":00" : w.end_time;
+                return wStart <= slotStartTime && wEnd > slotStartTime;
+            })
+            .map((w) => w.teacher_profile_id)
+            .filter((id) => !busyTeacherIds.has(id));
+    }
 
     // ============================
     // 4) Cargar horarios + profesores
@@ -163,7 +176,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function loadSlots(townId, date) {
         try {
             showState(messageBox, "info", "Buscando horarios...");
-
             slotsSection.style.display = "block";
 
             const jsDay = new Date(date).getDay();
@@ -171,26 +183,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const [slotsResult, weeklyResult, teachersResult] = await Promise.all([
                 Api.getAvailabilitySlots({ town_id: townId, date }),
-                Api.getWeeklyAvailabilities({
-                    town_id: townId,
-                    day_of_week,
-                    is_active: 1,
-                }),
+                Api.getWeeklyAvailabilities({ town_id: townId, day_of_week, is_active: 1 }),
                 Api.getTeachers(),
             ]);
 
-            // ============================
-            // CARGAR DISPONIBILIDADES SEMANALES (ANTES DE USARLAS)
-            // ============================
             weeklyAvailabilities = Array.isArray(weeklyResult)
                 ? weeklyResult
                 : weeklyResult.data || weeklyResult.weekly_availabilities || [];
 
-            // ============================
-            // UNIFICAR HORAS + AÑADIR PROFESOR
-            // ============================
             let rawSlots = [];
-
             if (Array.isArray(slotsResult?.slots)) {
                 rawSlots = slotsResult.slots.flatMap((t) =>
                     t.slots.map((s) => ({
@@ -201,19 +202,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             const unique = {};
-            rawSlots.forEach((s) => {
-                const key = s.start + "_" + s.teacher_profile_id;
-                unique[key] = s;
-            });
+            for (const s of rawSlots) {
+                unique[s.start + "_" + s.teacher_profile_id] = s;
+            }
+            const slots = Object.values(unique).sort((a, b) => a.start.localeCompare(b.start));
 
-            const slots = Object.values(unique);
-
-            // ORDENAR HORAS
-            slots.sort((a, b) => a.start.localeCompare(b.start));
-
-            // ============================
-            // CARGAR PROFESORES
-            // ============================
             allTeachers = Array.isArray(teachersResult)
                 ? teachersResult
                 : teachersResult.data || [];
@@ -221,27 +214,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             allTeachers = allTeachers.filter((t) => t.name && t.surname1);
 
             teachersById = {};
-       allTeachers.forEach((t) => {
-    teachersById[t.id] = {
-        id: t.id,
-        user_id: t.user_id,
-        name: t.name,
-        surname1: t.surname1,
-        surname2: t.surname2,
-        email: t.email,
-        dni: t.dni,
-        is_active_for_booking: t.is_active_for_booking,
-        license_number: t.license_number,
-        notes: t.notes,
-        vehicles: t.vehicles || [],
-        full_name: `${t.name} ${t.surname1 ?? ""} ${t.surname2 ?? ""}`.trim()
-    };
-});
+            for (const t of allTeachers) {
+                teachersById[t.id] = {
+                    id: t.id,
+                    user_id: t.user_id,
+                    name: t.name,
+                    surname1: t.surname1,
+                    surname2: t.surname2,
+                    email: t.email,
+                    dni: t.dni,
+                    is_active_for_booking: t.is_active_for_booking,
+                    license_number: t.license_number,
+                    notes: t.notes,
+                    vehicles: t.vehicles || [],
+                    full_name: `${t.name} ${t.surname1 ?? ""} ${t.surname2 ?? ""}`.trim(),
+                };
+            }
 
-
-            // ============================
-            // RESET UI
-            // ============================
             slotsGrid.innerHTML = "";
             teacherSection.style.display = "none";
             summaryBox.style.display = "none";
@@ -250,15 +239,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (!slots.length) {
                 slotsGrid.innerHTML = `<p style="color:#999;">No hay horarios disponibles.</p>`;
+                showState(messageBox, "success", "Horarios cargados correctamente.");
                 return;
             }
 
-            // ============================
-            // MOSTRAR HORAS
-            // ============================
-            slots.forEach((slot) => {
-                const hora = slot.start.slice(11, 16);
+            const fragment = document.createDocumentFragment();
 
+            for (const slot of slots) {
+                const hora = slot.start.slice(11, 16);
                 const freeTeacherIds = getFreeTeacherIdsForSlot(slot);
                 slot._availableTeacherIds = freeTeacherIds;
 
@@ -271,29 +259,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                     btn.innerHTML = `<span>${hora}</span><span class="prof-count" style="color:#d9534f;">Ocupada</span>`;
                 } else {
                     btn.innerHTML = `<span>${hora}</span><span class="prof-count">${freeTeacherIds.length} prof.</span>`;
-                    btn.addEventListener("click", () => {
-                        document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
-                        btn.classList.add("selected");
-
-                        clearSummary();
-
-                        selectedSlot = slot;
-
-                        if (freeTeacherIds.length === 1) {
-                            selectedTeacher = teachersById[freeTeacherIds[0]];
-                            teacherSection.style.display = "none";
-                            renderSummary();
-                        } else {
-                            selectedTeacher = null;
-                            renderTeacherSelector(slot);
-                            teacherSection.style.display = "block";
-                        }
-                    });
+                    btn.addEventListener("click", () => handleSlotClick(btn, slot));
                 }
 
-                slotsGrid.appendChild(btn);
-            });
+                fragment.appendChild(btn);
+            }
 
+            slotsGrid.appendChild(fragment);
             showState(messageBox, "success", "Horarios cargados correctamente.");
         } catch (err) {
             console.error(err);
@@ -301,59 +273,102 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    function handleSlotClick(btn, slot) {
+        document.querySelectorAll(".time-slot-btn").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+
+        clearSummary();
+        selectedSlot = slot;
+
+        const freeTeacherIds = slot._availableTeacherIds || [];
+
+        if (freeTeacherIds.length === 1) {
+            selectedTeacher = teachersById[freeTeacherIds[0]];
+            teacherSection.style.display = "none";
+            renderSummary();
+        } else {
+            selectedTeacher = null;
+            renderTeacherSelector(slot);
+        }
+    }
+
     // ============================
     // 5) Paso 3 — SELECT de profesor
     // ============================
-    async function renderTeacherSelector(slot) {
-        const availableIds = new Set(slot._availableTeacherIds || []);
-
-        teacherSection.innerHTML = `
-            <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
-            <div class="teacher-select-box-inner">
-                <label><strong>Selecciona profesor:</strong></label>
-                <div id="teacher-options"></div>
-            </div>
-        `;
-
-        const container = document.getElementById("teacher-options");
-
-        for (const t of allTeachers) {
-            if (!availableIds.has(t.id)) continue;
-
-            let fullName = t.name;
-            let statsData = { impartidas: 0 };
-
-            try {
-                const stats = await Api.getTeacherStats(t.id);
-                fullName = stats.full_name || fullName;
-                statsData = stats.stats || statsData;
-            } catch (e) {
-                console.error("Error stats profesor", t.id, e);
-            }
-
-            teachersById[t.id].full_name = fullName;
-            teachersById[t.id].stats = statsData;
-
-            const btn = document.createElement("button");
-            btn.className = "teacher-option-btn";
-            btn.innerHTML = `
-                <span>${fullName}</span>
-                <span>${statsData.impartidas} clases</span>
-            `;
-
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".teacher-option-btn").forEach((b) => b.classList.remove("selected"));
-                btn.classList.add("selected");
-
-                selectedTeacher = teachersById[t.id];
-                renderSummary();
-            });
-
-            container.appendChild(btn);
+    async function getTeacherStatsCached(teacherId) {
+        if (teacherStatsCache.has(teacherId)) {
+            return teacherStatsCache.get(teacherId);
         }
-
-        teacherSection.style.display = "block";
+        try {
+            const stats = await Api.getTeacherStats(teacherId);
+            teacherStatsCache.set(teacherId, stats);
+            return stats;
+        } catch (e) {
+            console.error("Error stats profesor", teacherId, e);
+            const fallback = { full_name: "", stats: { impartidas: 0 } };
+            teacherStatsCache.set(teacherId, fallback);
+            return fallback;
+        }
     }
+
+    async function renderTeacherSelector(slot) {
+    const availableIds = new Set(slot._availableTeacherIds || []);
+
+    teacherSection.innerHTML = `
+        <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
+        <div class="teacher-select-box-inner">
+            <label><strong>Selecciona profesor:</strong></label>
+            <select id="teacher-select" class="form-select">
+                <option value="">Selecciona un profesor</option>
+            </select>
+        </div>
+    `;
+
+    const select = document.getElementById("teacher-select");
+
+    // Cargar stats en paralelo
+    const idsArray = [...availableIds];
+    const statsPromises = idsArray.map((id) => getTeacherStatsCached(id));
+    const statsResults = await Promise.all(statsPromises);
+
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < idsArray.length; i++) {
+        const id = idsArray[i];
+        const t = teachersById[id];
+        if (!t) continue;
+
+        const stats = statsResults[i] || {};
+        const fullName = stats.full_name || t.full_name;
+        const impartidas = stats.stats?.impartidas ?? 0;
+
+        t.full_name = fullName;
+        t.stats = stats.stats || { impartidas: 0 };
+
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = `${fullName} (${impartidas} clases)`;
+
+        fragment.appendChild(opt);
+    }
+
+    select.appendChild(fragment);
+
+    // Evento de selección
+    select.addEventListener("change", () => {
+        const id = parseInt(select.value);
+        selectedTeacher = teachersById[id] || null;
+
+        if (selectedTeacher) {
+            renderSummary();
+        } else {
+            summaryBox.style.display = "none";
+        }
+    });
+
+    teacherSection.style.display = "block";
+}
+
 
     // ============================
     // 6) Resumen
@@ -409,14 +424,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             date: selectedSlot.start.slice(0, 10),
             start: selectedSlot.start,
             end: selectedSlot.end,
-            status: "confirmed"
+            status: "confirmed",
         };
 
         try {
             await Api.createClassSession(payload);
 
             popup.classList.add("hidden");
-
             showState(messageBox, "success", "Clase confirmada correctamente.");
 
             slotsSection.style.display = "none";

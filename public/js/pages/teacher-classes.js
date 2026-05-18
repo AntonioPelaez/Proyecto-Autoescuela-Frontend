@@ -13,7 +13,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pastTbody = document.getElementById('past-classes-tbody');
     const messageBox = document.getElementById('message-state');
 
-    // Set default dates (last 30 days to next 60 days)
+    // ─────────────────────────────────────────────
+    // Normalizar estado (evita errores y no oculta clases)
+    // ─────────────────────────────────────────────
+    function normalizeStatus(value) {
+        if (!value || value === "Todos los estados") return null;
+        return value;
+    }
+
+    // Construir filtros seguros (solo campos válidos)
+    function buildFilters() {
+        const status = normalizeStatus(filterClassStatus.value);
+
+        const filters = {
+            dateFrom: filterDateFrom.value,
+            dateTo: filterDateTo.value
+        };
+
+        // Solo enviamos status si es válido
+        if (status) filters.status = status;
+
+        return filters;
+    }
+
+    // ─────────────────────────────────────────────
+    // Fechas por defecto
+    // ─────────────────────────────────────────────
     const today = new Date();
     const lastMonth = new Date(today);
     lastMonth.setDate(lastMonth.getDate() - 30);
@@ -23,20 +48,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterDateFrom.value = lastMonth.toISOString().split('T')[0];
     filterDateTo.value = nextTwoMonths.toISOString().split('T')[0];
 
-    await loadClasses({
-        dateFrom: filterDateFrom.value,
-        dateTo: filterDateTo.value,
-        status: filterClassStatus.value
-    });
+    await loadClasses(buildFilters());
 
+    // ─────────────────────────────────────────────
     // Filtrar
+    // ─────────────────────────────────────────────
     filterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await loadClasses({
-            dateFrom: filterDateFrom.value,
-            dateTo: filterDateTo.value,
-            status: filterClassStatus.value
-        });
+        await loadClasses(buildFilters());
     });
 
     // ─────────────────────────────────────────────
@@ -49,7 +68,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         pastTbody.innerHTML = '';
 
         try {
-            let bookings = await Api.getTeacherBookings(filters);
+            // 🔥 Enviar SOLO los filtros válidos
+            const safeFilters = {
+                dateFrom: filters.dateFrom,
+                dateTo: filters.dateTo,
+                ...(filters.status ? { status: filters.status } : {})
+            };
+
+            let bookings = await Api.getTeacherBookings(safeFilters);
 
             if (!Array.isArray(bookings)) {
                 if (Array.isArray(bookings?.reservas)) bookings = bookings.reservas;
@@ -128,13 +154,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 confirmBtn.addEventListener('click', async () => {
                     UI.setLoading(true);
                     try {
-                        await Api.confirmClassSession({ id: booking.id });
+                        await Api.confirmClassSession(parseInt(booking.id, 10));
                         showMessage('success', 'Clase confirmada correctamente.');
-                        await loadClasses({
-                            dateFrom: filterDateFrom.value,
-                            dateTo: filterDateTo.value,
-                            status: filterClassStatus.value
-                        });
+                        await loadClasses(buildFilters());
                     } catch (error) {
                         showMessage('error', error.message || 'No se pudo confirmar la clase.');
                     } finally {
@@ -149,13 +171,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 completeBtn.addEventListener('click', async () => {
                     UI.setLoading(true);
                     try {
-                        await Api.completeClassSession({ id: booking.id });
+                        await Api.completeClassSession(parseInt(booking.id, 10));
                         showMessage('success', 'Clase completada correctamente.');
-                        await loadClasses({
-                            dateFrom: filterDateFrom.value,
-                            dateTo: filterDateTo.value,
-                            status: filterClassStatus.value
-                        });
+                        await loadClasses(buildFilters());
                     } catch (error) {
                         showMessage('error', error.message || 'No se pudo completar la clase.');
                     } finally {
@@ -170,13 +188,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 cancelBtn.addEventListener('click', async () => {
                     UI.setLoading(true);
                     try {
-                        await Api.cancelClassSession({ id: booking.id });
+                        await Api.cancelClassSession({ id: parseInt(booking.id, 10) });
                         showMessage('success', 'Clase cancelada correctamente.');
-                        await loadClasses({
-                            dateFrom: filterDateFrom.value,
-                            dateTo: filterDateTo.value,
-                            status: filterClassStatus.value
-                        });
+                        await loadClasses(buildFilters());
                     } catch (error) {
                         showMessage('error', error.message || 'No se pudo cancelar la clase.');
                     } finally {

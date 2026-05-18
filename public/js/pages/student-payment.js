@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             const classResponse = await Api.createClassSession(classPayload);
-            const classSessionId = classResponse.id || classResponse.class_session_id;
+            const classSessionId = classResponse.session?.id;
 
             if (!classSessionId) {
                 throw new Error("No se pudo crear la clase");
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             const paymentResponse = await Api.createPaymentIntent(paymentPayload);
-            const paymentIntentId = paymentResponse.id;
+            const paymentIntentId = paymentResponse.intent.id;
 
             if (!paymentIntentId) {
                 throw new Error("No se pudo crear el payment intent");

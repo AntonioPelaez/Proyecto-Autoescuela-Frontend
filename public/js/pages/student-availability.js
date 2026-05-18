@@ -103,10 +103,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             confirmedBox.innerHTML = "";
 
             for (const c of confirmed) {
+                const [y, m, d] = c.session_date.split("-");
+                const fecha = `${d}/${m}/${y}`;
+
                 const div = document.createElement("div");
                 div.className = "confirmed-item";
                 div.innerHTML = `
-                    <strong>${c.session_date}</strong> — ${c.start_time}<br>
+                    <strong>${fecha}</strong> — ${c.start_time}<br>
                     Profesor: ${c.teacher_name} ${c.teacher_surname1 ?? ""} ${c.teacher_surname2 ?? ""}
                 `;
                 fragment.appendChild(div);
@@ -145,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ============================
     function getFreeTeacherIdsForSlot(slot) {
         const slotDate = slot.start.slice(0, 10);
-        const slotStartTime = slot.start.slice(11, 19); // HH:mm:ss
+        const slotStartTime = slot.start.slice(11, 19);
         const slotEndTime = slot.end.slice(11, 19);
 
         const busyTeacherIds = new Set(
@@ -312,63 +315,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function renderTeacherSelector(slot) {
-    const availableIds = new Set(slot._availableTeacherIds || []);
+        const availableIds = new Set(slot._availableTeacherIds || []);
 
-    teacherSection.innerHTML = `
-        <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
-        <div class="teacher-select-box-inner">
-            <label><strong>Selecciona profesor:</strong></label>
-            <select id="teacher-select" class="form-select">
-                <option value="">Selecciona un profesor</option>
-            </select>
-        </div>
-    `;
+        teacherSection.innerHTML = `
+            <h3>👨‍🏫 Paso 3: Elige Profesor</h3>
+            <div class="teacher-select-box-inner">
+                <label><strong>Selecciona profesor:</strong></label>
+                <select id="teacher-select" class="form-select">
+                    <option value="">Selecciona un profesor</option>
+                </select>
+            </div>
+        `;
 
-    const select = document.getElementById("teacher-select");
+        const select = document.getElementById("teacher-select");
 
-    // Cargar stats en paralelo
-    const idsArray = [...availableIds];
-    const statsPromises = idsArray.map((id) => getTeacherStatsCached(id));
-    const statsResults = await Promise.all(statsPromises);
+        const idsArray = [...availableIds];
+        const statsPromises = idsArray.map((id) => getTeacherStatsCached(id));
+        const statsResults = await Promise.all(statsPromises);
 
-    const fragment = document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
 
-    for (let i = 0; i < idsArray.length; i++) {
-        const id = idsArray[i];
-        const t = teachersById[id];
-        if (!t) continue;
+        for (let i = 0; i < idsArray.length; i++) {
+            const id = idsArray[i];
+            const t = teachersById[id];
+            if (!t) continue;
 
-        const stats = statsResults[i] || {};
-        const fullName = stats.full_name || t.full_name;
-        const impartidas = stats.stats?.impartidas ?? 0;
+            const stats = statsResults[i] || {};
+            const fullName = stats.full_name || t.full_name;
+            const impartidas = stats.stats?.impartidas ?? 0;
 
-        t.full_name = fullName;
-        t.stats = stats.stats || { impartidas: 0 };
+            t.full_name = fullName;
+            t.stats = stats.stats || { impartidas: 0 };
 
-        const opt = document.createElement("option");
-        opt.value = id;
-        opt.textContent = `${fullName} (${impartidas} clases)`;
+            const opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = `${fullName} (${impartidas} clases)`;
 
-        fragment.appendChild(opt);
-    }
-
-    select.appendChild(fragment);
-
-    // Evento de selección
-    select.addEventListener("change", () => {
-        const id = parseInt(select.value);
-        selectedTeacher = teachersById[id] || null;
-
-        if (selectedTeacher) {
-            renderSummary();
-        } else {
-            summaryBox.style.display = "none";
+            fragment.appendChild(opt);
         }
-    });
 
-    teacherSection.style.display = "block";
-}
+        select.appendChild(fragment);
 
+        select.addEventListener("change", () => {
+            const id = parseInt(select.value);
+            selectedTeacher = teachersById[id] || null;
+
+            if (selectedTeacher) {
+                renderSummary();
+            } else {
+                summaryBox.style.display = "none";
+            }
+        });
+
+        teacherSection.style.display = "block";
+    }
 
     // ============================
     // 6) Resumen
@@ -382,12 +382,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!selectedSlot || !selectedTeacher || !student) return;
 
         const hora = selectedSlot.start.slice(11, 16);
-        const fecha = selectedSlot.start.slice(0, 10);
+
+        const rawDate = selectedSlot.start.slice(0, 10);
+        const [year, month, day] = rawDate.split("-");
+        const fecha = `${day}/${month}/${year}`;
 
         const vehicle = selectedTeacher.vehicles?.[0];
         const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : "Sin vehículo asignado";
 
         const townName = townSelect.options[townSelect.selectedIndex]?.textContent || "";
+
+        const price = window.AUTOESCUELA_PRICE ?? "25.00";
 
         summaryDetails.innerHTML = `
             <p><strong>Alumno:</strong> ${student.full_name}</p>
@@ -396,13 +401,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             <p><strong>Fecha:</strong> ${fecha}</p>
             <p><strong>Hora:</strong> ${hora}</p>
             <p><strong>Vehículo:</strong> ${vehicleName}</p>
+            <p><strong>Precio:</strong> ${price} €</p>
         `;
 
         summaryBox.style.display = "block";
     }
 
     // ============================
-    // 7) Confirmar reserva (POPUP)
+    // 7) Confirmar reserva
     // ============================
     confirmForm.addEventListener("submit", (e) => {
         e.preventDefault();

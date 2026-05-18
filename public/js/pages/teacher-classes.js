@@ -13,15 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pastTbody = document.getElementById('past-classes-tbody');
     const messageBox = document.getElementById('message-state');
 
+    // 🔥 Función para formatear fechas a dd/mm/yyyy
+    function formatDateDMY(dateStr) {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
     // ─────────────────────────────────────────────
-    // Normalizar estado (evita errores y no oculta clases)
+    // Normalizar estado
     // ─────────────────────────────────────────────
     function normalizeStatus(value) {
         if (!value || value === "Todos los estados") return null;
         return value;
     }
 
-    // Construir filtros seguros (solo campos válidos)
     function buildFilters() {
         const status = normalizeStatus(filterClassStatus.value);
 
@@ -30,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateTo: filterDateTo.value
         };
 
-        // Solo enviamos status si es válido
         if (status) filters.status = status;
 
         return filters;
@@ -61,14 +66,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Cargar clases
     // ─────────────────────────────────────────────
-
     async function loadClasses(filters) {
         UI.setLoading(true);
         upcomingTbody.innerHTML = '';
         pastTbody.innerHTML = '';
 
         try {
-            // 🔥 Enviar SOLO los filtros válidos
             const safeFilters = {
                 dateFrom: filters.dateFrom,
                 dateTo: filters.dateTo,
@@ -104,7 +107,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Render Próximas Clases
     // ─────────────────────────────────────────────
-
     function renderUpcomingClasses(bookings) {
         upcomingTbody.innerHTML = '';
 
@@ -117,8 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const row = document.createElement('tr');
             const statusColor = _getStatusColor(booking.status);
 
+            const fecha = formatDateDMY(booking.date);
+
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${fecha}</td>
                 <td>${booking.time}</td>
                 <td><strong>${booking.studentName}</strong></td>
                 <td>Nivel A</td>
@@ -206,7 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Render Historial
     // ─────────────────────────────────────────────
-
     function renderPastClasses(bookings) {
         pastTbody.innerHTML = '';
 
@@ -219,8 +222,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const row = document.createElement('tr');
             const statusColor = _getStatusColor(booking.status);
 
+            const fecha = formatDateDMY(booking.date);
+
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${fecha}</td>
                 <td>${booking.time}</td>
                 <td><strong>${booking.studentName}</strong></td>
                 <td>Nivel A</td>
@@ -236,7 +241,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Mensajes
     // ─────────────────────────────────────────────
-
     function showMessage(type, message) {
         messageBox.className = `message-state ${type}`;
         messageBox.textContent = message;
@@ -253,7 +257,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─────────────────────────────────────────────
     // Estados y colores
     // ─────────────────────────────────────────────
-
     function _formatStatus(status) {
         const statusMap = {
             'pending': 'Pendiente',

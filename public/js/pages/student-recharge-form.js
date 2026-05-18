@@ -158,54 +158,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ============================
     // 10) Confirmar recarga
     // ============================
-    rechargeForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+   rechargeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-        const errors = validatePaymentForm();
+    const errors = validatePaymentForm();
 
-        if (errors.length > 0) {
-            showState(messageBox, "error", errors.join(" "));
-            return;
-        }
+    if (errors.length > 0) {
+        showState(messageBox, "error", errors.join(" "));
+        return;
+    }
 
-        showState(messageBox, "info", "Procesando recarga...");
-        rechargeForm.querySelector("button[type='submit']").disabled = true;
+    showState(messageBox, "info", "Procesando recarga...");
+    rechargeForm.querySelector("button[type='submit']").disabled = true;
 
-        try {
-            // Simular procesamiento de pago
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+        // 1) Simular procesamiento de tarjeta (solo visual)
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-            // Aquí iría la llamada a API para registrar la recarga
-            // Por ahora, simularemos que funciona
-            console.log("Recarga completada:", {
-                amount: selectedAmount,
-                cardHolder: cardHolder.value,
-            });
+        // 2) Llamada REAL a la API
+        const result = await Api.rechargeWallet(selectedAmount);
 
-            // Guardar saldo en sessionStorage para la siguiente página
-            sessionStorage.setItem("rechargeAmount", selectedAmount.toString());
+        console.log("Recarga completada:", result);
 
-            showState(messageBox, "success", "¡Recarga completada! Redirigiendo...");
+        // 3) Guardar saldo recargado para mostrarlo en la siguiente pantalla
+        sessionStorage.setItem("rechargeAmount", selectedAmount.toString());
 
-            // Redirigir a la página de confirmación de reserva o al panel
-            setTimeout(() => {
-                const redirectUrl = sessionStorage.getItem("redirectAfterRecharge");
-                if (redirectUrl) {
-                    sessionStorage.removeItem("redirectAfterRecharge");
-                    window.location.href = redirectUrl;
-                } else {
-                    window.location.href = "/student/recharge";
-                }
-            }, 2000);
-        } catch (err) {
-            console.error("Error al procesar la recarga:", err);
-            showState(
-                messageBox,
-                "error",
-                err.message || "Error al procesar la recarga. Por favor, intenta de nuevo."
-            );
-        } finally {
-            rechargeForm.querySelector("button[type='submit']").disabled = false;
-        }
-    });
+        showState(messageBox, "success", "¡Recarga completada! Redirigiendo...");
+
+        // 4) Redirigir
+        setTimeout(() => {
+            const redirectUrl = sessionStorage.getItem("redirectAfterRecharge");
+            if (redirectUrl) {
+                sessionStorage.removeItem("redirectAfterRecharge");
+                window.location.href = redirectUrl;
+            } else {
+                window.location.href = "/student/recharge";
+            }
+        }, 2000);
+
+    } catch (err) {
+        console.error("Error al procesar la recarga:", err);
+        showState(
+            messageBox,
+            "error",
+            err.message || "Error al procesar la recarga. Por favor, intenta de nuevo."
+        );
+    } finally {
+        rechargeForm.querySelector("button[type='submit']").disabled = false;
+    }
+});
 });

@@ -21,18 +21,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let timeSlots = [];
 
+    // 🔥 Convertir YYYY-MM-DD → DD/MM/YYYY
+    function formatDateDMY(dateStr) {
+        if (!dateStr) return "";
+        const [y, m, d] = dateStr.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
     // Set default date filter to today
     const today = new Date().toISOString().split('T')[0];
     filterDate.value = today;
     availabilityDate.value = today;
     availabilityDate.min = today;
 
-    // Cargar solo los horarios disponibles, pero NO las clases ni historial hasta que el usuario filtre
     await loadTimeSlots();
-
     await loadBookings({ date: today });
 
-    // Form submit para filtrar
+    // Filtrar
     filterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const filters = {
@@ -83,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadTimeSlots() {
         try {
-            // Usar la fecha seleccionada en el filtro de disponibilidad
             const date = availabilityDate.value;
             timeSlots = await Api.getTimeSlots({ date });
         } catch (error) {
@@ -98,31 +102,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             let bookings = await Api.getTeacherBookings(filters);
-            console.log("API devuelve:", bookings);
-            // Robustez: aceptar array directo o {data: array}
+
             if (!Array.isArray(bookings)) {
-    if (Array.isArray(bookings?.reservas)) {
-        bookings = bookings.reservas;
-    } else if (Array.isArray(bookings?.data)) {
-        bookings = bookings.data;
-    } else {
-        bookings = [];
-    }
-}
+                if (Array.isArray(bookings?.reservas)) bookings = bookings.reservas;
+                else if (Array.isArray(bookings?.data)) bookings = bookings.data;
+                else bookings = [];
+            }
 
             const today = new Date().toISOString().split('T')[0];
 
-      const upcoming = bookings.filter(b =>
-    b.date >= today &&
-    ['pending', 'confirmed', 'completed'].includes(b.status)
-);
+            const upcoming = bookings.filter(b =>
+                b.date >= today &&
+                ['pending', 'confirmed', 'completed'].includes(b.status)
+            );
 
-const past = bookings.filter(b =>
-    b.date < today ||
-    b.status === 'cancelled'
-);
-
-
+            const past = bookings.filter(b =>
+                b.date < today ||
+                b.status === 'cancelled'
+            );
 
             renderUpcoming(upcoming);
             renderPast(past);
@@ -144,25 +141,24 @@ const past = bookings.filter(b =>
         availabilityGrid.innerHTML = '';
 
         try {
-            // Cargar los horarios disponibles para la fecha seleccionada
             timeSlots = await Api.getTimeSlots({ date });
-            // Obtener mis reservas para esa fecha
+
             let bookings = await Api.getTeacherBookings({ date });
             if (!Array.isArray(bookings)) {
                 bookings = Array.isArray(bookings?.data) ? bookings.data : [];
             }
+
             const bookedTimes = bookings.map(b => b.time);
 
-            // Renderear todos los horarios disponibles
             availabilityGrid.innerHTML = timeSlots.map(slot => {
                 const isBooked = bookedTimes.includes(slot.time);
                 const booking = bookings.find(b => b.time === slot.time);
-                
+
                 return `
                     <div class="time-slot-card ${isBooked ? 'booked' : 'available'}">
                         <div class="time-slot-time">${slot.display}</div>
                         <div class="time-slot-status">
-                            ${isBooked ? 
+                            ${isBooked ?
                                 `<span class="badge-inline badge-blue">Con ${booking.studentName}</span>` :
                                 `<span class="badge-inline badge-green">Disponible</span>`
                             }
@@ -192,15 +188,21 @@ const past = bookings.filter(b =>
             const row = document.createElement('tr');
             const statusColor = _getStatusColor(booking.status);
 
+            const fecha = formatDateDMY(booking.date);
+
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${fecha}</td>
                 <td>${booking.time}</td>
                 <td>${booking.studentName}</td>
                 <td>${booking.townName || 'N/A'}</td>
                 <td>${booking.vehicle || 'Sin especificar'}</td>
                 <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-status" data-booking-id="${booking.id}" data-date="${booking.date}" data-time="${booking.time}" data-student="${booking.studentName}">
+                    <button class="btn btn-sm btn-status"
+                        data-booking-id="${booking.id}"
+                        data-date="${fecha}"
+                        data-time="${booking.time}"
+                        data-student="${booking.studentName}">
                         Cambiar Estado
                     </button>
                 </td>
@@ -215,7 +217,8 @@ const past = bookings.filter(b =>
                 const student = statusBtn.dataset.student;
 
                 document.getElementById('status-booking-id').value = bookingId;
-                document.getElementById('status-booking-info').textContent = `Clase de ${student} el ${date} a las ${time}`;
+                document.getElementById('status-booking-info').textContent =
+                    `Clase de ${student} el ${date} a las ${time}`;
                 statusFormContainer.style.display = 'block';
                 statusFormContainer.scrollIntoView({ behavior: 'smooth' });
             });
@@ -236,8 +239,10 @@ const past = bookings.filter(b =>
             const row = document.createElement('tr');
             const statusColor = _getStatusColor(booking.status);
 
+            const fecha = formatDateDMY(booking.date);
+
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${fecha}</td>
                 <td>${booking.time}</td>
                 <td>${booking.studentName}</td>
                 <td>${booking.townName || 'N/A'}</td>
@@ -261,32 +266,34 @@ const past = bookings.filter(b =>
             }, 3000);
         }
     }
+
     function _getStatusColor(status) {
-    switch (status) {
-        case 'pending':
-        case 'pendiente':
-            return 'badge-yellow';
-        case 'confirmed':
-        case 'confirmada':
-            return 'badge-green';
-        case 'completed':
-        case 'completada':
-            return 'badge-blue';
-        case 'cancelled':
-        case 'cancelada':
-            return 'badge-red';
-        default:
-            return 'badge-gray';
+        switch (status) {
+            case 'pending':
+            case 'pendiente':
+                return 'badge-yellow';
+            case 'confirmed':
+            case 'confirmada':
+                return 'badge-green';
+            case 'completed':
+            case 'completada':
+                return 'badge-blue';
+            case 'cancelled':
+            case 'cancelada':
+                return 'badge-red';
+            default:
+                return 'badge-gray';
+        }
     }
-}
-function _formatStatus(status) {
-    switch (status) {
-        case 'pending': return 'Pendiente';
-        case 'confirmed': return 'Confirmada';
-        case 'completed': return 'Completada';
-        case 'cancelled': return 'Cancelada';
-        default: return status;
+
+    function _formatStatus(status) {
+        switch (status) {
+            case 'pending': return 'Pendiente';
+            case 'confirmed': return 'Confirmada';
+            case 'completed': return 'Completada';
+            case 'cancelled': return 'Cancelada';
+            default: return status;
+        }
     }
-}
 
 });

@@ -109,16 +109,15 @@
 
 
 
-			<!-- Cuadrícula de horas -->
+			<!-- Horario de inicio y fin -->
 			<div class="input-group">
-				<label class="input-label">Horario</label>
+				<label class="input-label" for="availability-start-time">Hora de inicio *</label>
+				<input type="time" id="availability-start-time" name="start" class="input" required>
+			</div>
 
-				<div class="slot-time-wrapper">
-					<div id="availability-time-grid" class="slot-time-grid"></div>
-				</div>
-
-				<input type="hidden" id="availability-start">
-				<input type="hidden" id="availability-end">
+			<div class="input-group">
+				<label class="input-label" for="availability-end-time">Hora de fin *</label>
+				<input type="time" id="availability-end-time" name="end" class="input" required>
 			</div>
 
             <!-- Tipo -->

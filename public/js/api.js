@@ -650,4 +650,13 @@ getTeacherStats(id) {
     }).then(handleResponse);
 },
 
+createWeeklyAvailability(data) {
+    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

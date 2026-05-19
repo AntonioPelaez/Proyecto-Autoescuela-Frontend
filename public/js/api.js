@@ -714,4 +714,8 @@ withdrawWallet(amount) {
     }).then(handleResponse);
 },
 
+withdrawBalance(amount) {
+    return this.withdrawWallet(amount);
+},
+
 };

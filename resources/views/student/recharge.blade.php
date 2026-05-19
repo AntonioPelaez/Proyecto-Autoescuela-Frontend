@@ -21,9 +21,14 @@
                     <p style="margin: 0; font-size: 14px; color: #666;">Saldo disponible</p>
                     <p style="margin: 5px 0 0 0; font-size: 32px; font-weight: bold; color: #28a745;" id="balance-amount">€0.00</p>
                 </div>
-                <button id="start-recharge-btn" class="btn btn-primary" style="height: fit-content; padding: 15px 30px; font-size: 16px;">
-                    Comenzar Recarga
-                </button>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button id="start-recharge-btn" class="btn btn-primary" style="padding: 12px 24px; font-size: 14px; white-space: nowrap;">
+                        Recarga
+                    </button>
+                    <button id="withdraw-balance-btn" class="btn btn-danger" style="padding: 12px 24px; font-size: 14px; white-space: nowrap;">
+                        Retirar Saldo
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -52,6 +57,15 @@
 
 .btn-primary:hover:not(:disabled) {
     background: #0056b3;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c82333;
 }
 
 .btn:disabled {

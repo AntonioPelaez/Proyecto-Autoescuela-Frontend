@@ -89,6 +89,12 @@
         </select>
       </div>
 
+      <!-- Duración del bloque (minutos) -->
+      <div class="input-group">
+        <label class="input-label" for="availability-slot-minutes">Duración de cada bloque (minutos)</label>
+        <input type="number" id="availability-slot-minutes" class="input" min="10" max="240" step="5" value="60" required>
+      </div>
+
       <div class="table-actions">
         <button type="button" id="availability-create" class="btn btn-success">Crear disponibilidad</button>
       </div>

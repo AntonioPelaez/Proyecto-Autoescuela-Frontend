@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reasonWrapper = document.getElementById('availability-reason-wrapper');
     const reasonInput = document.getElementById('availability-reason');
     const blockTypeSelect = document.getElementById('availability-block-type');
+    const slotMinutesInput = document.getElementById('availability-slot-minutes');
     const createBtn = document.getElementById('availability-create');
     const messageBox = document.getElementById('availability-message');
     const weeklyBody = document.getElementById('teacher-availability-body');
@@ -209,9 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const end = endTimeInput.value;
         const type = typeSelect.value;
         const blockType = blockTypeSelect.value;
+        const slotMinutes = parseInt(slotMinutesInput.value, 10) || 60;
 
         // Validación básica
-        if (!teacherId || !type || !start || !end || !blockType) {
+        if (!teacherId || !type || !start || !end || !blockType || !slotMinutes) {
             showMessage('error', 'Completa los campos obligatorios.');
             return;
         }
@@ -244,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             town_id: townId,
             starts_time: start + ':00',
             end_time: end + ':00',
-            slot_minutes: 60,
+            slot_minutes: slotMinutes,
             is_active: true,
             type: type,
             block_type: blockType

@@ -13,10 +13,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             const student = await Api.getMe();
 
             const balance =
-                parseFloat(student.student_profile?.wallet?.balance) ??
-                parseFloat(student.wallet_balance) ??
-                parseFloat(student.balance) ??
-                0;
+    parseFloat(student.student_profile?.wallet?.balance) ||
+    parseFloat(student.wallet_balance) ||
+    parseFloat(student.balance) ||
+    0;
+
 
             balanceAmount.textContent = `€${balance.toFixed(2)}`;
             return balance;

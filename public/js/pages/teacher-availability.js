@@ -8,10 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const professorSelect = document.getElementById('availability-professor');
     const townGroup = document.getElementById('availability-town-group');
     const townSelect = document.getElementById('availability-town');
+    const dayWrapper = document.getElementById('availability-day-wrapper');
     const daySelect = document.getElementById('availability-day');
     const startTimeInput = document.getElementById('availability-start-time');
     const endTimeInput = document.getElementById('availability-end-time');
     const typeSelect = document.getElementById('availability-type');
+    const dateWrapper = document.getElementById('availability-date-wrapper');
+    const dateInput = document.getElementById('availability-date');
     const reasonWrapper = document.getElementById('availability-reason-wrapper');
     const reasonInput = document.getElementById('availability-reason');
     const blockTypeSelect = document.getElementById('availability-block-type');
@@ -134,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             slots.forEach(slot => {
                 const row = document.createElement('tr');
+                const toggleStatus = slot.is_active ? 'Desactivar' : 'Activar';
                 row.innerHTML = `
                     <td>${PROFESSOR_NAMES[slot.teacher_profile_id] || slot.teacher_profile_id}</td>
                     <td>${TOWN_NAMES[slot.town_id] || slot.town_id || '-'}</td>
@@ -142,8 +146,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${slot.end_time}</td>
                     <td>${slot.slot_minutes}</td>
                     <td>${slot.is_active ? 'Sí' : 'No'}</td>
+                    <td>
+                        <button class="btn btn-sm toggle-availability-btn" data-id="${slot.id}" data-active="${slot.is_active}">
+                            ${toggleStatus}
+                        </button>
+                    </td>
                 `;
                 weeklyBody.appendChild(row);
+
+                // Agregar evento al botón de toggle
+                const toggleBtn = row.querySelector('.toggle-availability-btn');
+                toggleBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const slotId = toggleBtn.dataset.id;
+                    const isCurrentlyActive = toggleBtn.dataset.active === 'true';
+                    
+                    try {
+                        UI.setLoading(true);
+                        await Api.updateWeeklyAvailability(slotId, { is_active: !isCurrentlyActive });
+                        showMessage('success', 'Estado actualizado correctamente.');
+                        await loadWeeklyAvailabilities();
+                    } catch (error) {
+                        console.error('Error actualizando disponibilidad:', error);
+                        showMessage('error', 'No se pudo actualizar el estado de la disponibilidad.');
+                    } finally {
+                        UI.setLoading(false);
+                    }
+                });
             });
 
         } catch (error) {
@@ -152,9 +181,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     typeSelect.addEventListener('change', () => {
-        if (typeSelect.value === 'especial') {
+        if (typeSelect.value === 'normal') {
+            // Mostrar día, ocultar fecha y razón
+            dayWrapper.classList.remove('hidden');
+            dateWrapper.classList.add('hidden');
+            reasonWrapper.classList.add('hidden');
+            dateInput.value = '';
+            reasonInput.value = '';
+        } else if (typeSelect.value === 'especial') {
+            // Mostrar fecha y razón, ocultar día
+            dayWrapper.classList.add('hidden');
+            dateWrapper.classList.remove('hidden');
             reasonWrapper.classList.remove('hidden');
+            daySelect.value = '';
         } else {
+            // Si está vacío, ocultar todo
+            dayWrapper.classList.add('hidden');
+            dateWrapper.classList.add('hidden');
             reasonWrapper.classList.add('hidden');
         }
     });
@@ -162,15 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
     createBtn.addEventListener('click', async () => {
         const teacherId = currentTeacherId;
         const townId = townSelect.value || null;
-        const day = daySelect.value;
         const start = startTimeInput.value;
         const end = endTimeInput.value;
         const type = typeSelect.value;
-        const reason = reasonInput.value;
         const blockType = blockTypeSelect.value;
 
-        if (!teacherId || !day || !start || !end || !blockType) {
-            showMessage('error', 'Completa los campos obligatorios: día, horario y tipo de bloque.');
+        // Validación básica
+        if (!teacherId || !type || !start || !end || !blockType) {
+            showMessage('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -179,10 +221,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Validación según tipo
+        let day, date, reason;
+
+        if (type === 'normal') {
+            day = daySelect.value;
+            if (!day) {
+                showMessage('error', 'Debes seleccionar un día de la semana para disponibilidades normales.');
+                return;
+            }
+        } else if (type === 'especial') {
+            date = dateInput.value;
+            reason = reasonInput.value;
+            if (!date) {
+                showMessage('error', 'Debes seleccionar una fecha para disponibilidades especiales.');
+                return;
+            }
+        }
+
         const payload = {
             teacher_profile_id: teacherId,
             town_id: townId,
-            day_of_week: Number(day),
             starts_time: start + ':00',
             end_time: end + ':00',
             slot_minutes: 60,
@@ -191,8 +250,15 @@ document.addEventListener('DOMContentLoaded', () => {
             block_type: blockType
         };
 
-        if (type === 'especial' && reason) {
-            payload.reason = reason;
+        // Agregar día si es normal
+        if (type === 'normal' && day) {
+            payload.day_of_week = Number(day);
+        }
+
+        // Agregar fecha y razón si es especial
+        if (type === 'especial') {
+            if (date) payload.date = date;
+            if (reason) payload.reason = reason;
         }
 
         try {
@@ -203,15 +269,21 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage('success', 'Disponibilidad creada correctamente.');
 
             // Limpiar formulario
+            typeSelect.value = '';
+            daySelect.value = '';
+            dateInput.value = '';
+            reasonInput.value = '';
             startTimeInput.value = '';
             endTimeInput.value = '';
-            daySelect.value = '';
+            dayWrapper.classList.add('hidden');
+            dateWrapper.classList.add('hidden');
+            reasonWrapper.classList.add('hidden');
 
             await loadWeeklyAvailabilities();
 
         } catch (error) {
             console.error('Error creando disponibilidad:', error);
-            showMessage('error', 'No se pudo crear la disponibilidad.');
+            showMessage('error', error.message || 'No se pudo crear la disponibilidad.');
         } finally {
             UI.setLoading(false);
         }

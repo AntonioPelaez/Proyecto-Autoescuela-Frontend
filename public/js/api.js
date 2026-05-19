@@ -659,6 +659,15 @@ createWeeklyAvailability(data) {
     }).then(handleResponse);
 },
 
+updateWeeklyAvailability(id, data) {
+    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 // ─────────── PAYMENT INTENTS ───────────
 createPaymentIntent(data) {
     return fetch(`${API_BASE_URL}/payments`, {

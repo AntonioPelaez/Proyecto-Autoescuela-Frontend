@@ -34,10 +34,20 @@
         </select>
       </div>
 
-      <!-- Día de la semana -->
+      <!-- Tipo (Normal/Especial) -->
       <div class="input-group">
+        <label class="input-label" for="availability-type">Tipo de disponibilidad</label>
+        <select id="availability-type" class="input" required>
+          <option value="">Selecciona un tipo</option>
+          <option value="normal">Normal</option>
+          <option value="especial">Especial</option>
+        </select>
+      </div>
+
+      <!-- Día de la semana (solo si es Normal) -->
+      <div class="input-group hidden" id="availability-day-wrapper">
         <label class="input-label" for="availability-day">Día de la semana</label>
-        <select id="availability-day" class="input" required>
+        <select id="availability-day" class="input">
           <option value="">Selecciona un día</option>
           <option value="1">Lunes</option>
           <option value="2">Martes</option>
@@ -45,6 +55,18 @@
           <option value="4">Jueves</option>
           <option value="5">Viernes</option>
         </select>
+      </div>
+
+      <!-- Fecha (solo si es Especial) -->
+      <div class="input-group hidden" id="availability-date-wrapper">
+        <label class="input-label" for="availability-date">Fecha de la disponibilidad especial *</label>
+        <input type="date" id="availability-date" class="input">
+      </div>
+
+      <!-- Razón (solo si es Especial) -->
+      <div class="input-group hidden" id="availability-reason-wrapper">
+        <label class="input-label" for="availability-reason">Razón de la excepcionalidad</label>
+        <input type="text" id="availability-reason" class="input" placeholder="Motivo...">
       </div>
 
       <!-- Horario de inicio y fin -->
@@ -58,26 +80,10 @@
         <input type="time" id="availability-end-time" name="end" class="input" required>
       </div>
 
-      <!-- Tipo (front) -->
-      <div class="input-group">
-        <label class="input-label" for="availability-type">Tipo</label>
-        <select id="availability-type" class="input" required>
-          <option value="normal">Normal</option>
-          <option value="especial">Especial</option>
-        </select>
-      </div>
-
-      <!-- Razón (solo si es especial) -->
-      <div class="input-group hidden" id="availability-reason-wrapper">
-        <label class="input-label" for="availability-reason">Razón de la excepcionalidad</label>
-        <input type="text" id="availability-reason" class="input" placeholder="Motivo...">
-      </div>
-
       <!-- Tipo de bloque (back) -->
       <div class="input-group">
         <label class="input-label" for="availability-block-type">Tipo de bloque</label>
         <select id="availability-block-type" class="input" required>
-          <option value="">Selecciona tipo</option>
           <option value="block">Bloque (recurrente)</option>
           <option value="extra">Extra (puntual)</option>
         </select>
@@ -106,6 +112,7 @@
             <th>Fin</th>
             <th>Minutos</th>
             <th>Activo</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="teacher-availability-body"></tbody>

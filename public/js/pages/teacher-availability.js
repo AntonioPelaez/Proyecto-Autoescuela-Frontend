@@ -1,26 +1,27 @@
 // teacher-availability.js — Gestión de disponibilidades para profesor
 
-document.addEventListener('DOMContentLoaded', () => {
-
+document.addEventListener("DOMContentLoaded", () => {
     Router.init();
 
-    const availabilityForm = document.getElementById('availability-form');
-    const professorSelect = document.getElementById('availability-professor');
-    const townGroup = document.getElementById('availability-town-group');
-    const townSelect = document.getElementById('availability-town');
-    const dayWrapper = document.getElementById('availability-day-wrapper');
-    const daySelect = document.getElementById('availability-day');
-    const startTimeInput = document.getElementById('availability-start-time');
-    const endTimeInput = document.getElementById('availability-end-time');
-    const typeSelect = document.getElementById('availability-type');
-    const dateWrapper = document.getElementById('availability-date-wrapper');
-    const dateInput = document.getElementById('availability-date');
-    const reasonWrapper = document.getElementById('availability-reason-wrapper');
-    const reasonInput = document.getElementById('availability-reason');
-    const blockTypeSelect = document.getElementById('availability-block-type');
-    const createBtn = document.getElementById('availability-create');
-    const messageBox = document.getElementById('availability-message');
-    const weeklyBody = document.getElementById('teacher-availability-body');
+    const availabilityForm = document.getElementById("availability-form");
+    const professorSelect = document.getElementById("availability-professor");
+    const townGroup = document.getElementById("availability-town-group");
+    const townSelect = document.getElementById("availability-town");
+    const dayWrapper = document.getElementById("availability-day-wrapper");
+    const daySelect = document.getElementById("availability-day");
+    const startTimeInput = document.getElementById("availability-start-time");
+    const endTimeInput = document.getElementById("availability-end-time");
+    const typeSelect = document.getElementById("availability-type");
+    const dateWrapper = document.getElementById("availability-date-wrapper");
+    const dateInput = document.getElementById("availability-date");
+    const reasonWrapper = document.getElementById(
+        "availability-reason-wrapper",
+    );
+    const reasonInput = document.getElementById("availability-reason");
+    const blockTypeSelect = document.getElementById("availability-block-type");
+    const createBtn = document.getElementById("availability-create");
+    const messageBox = document.getElementById("availability-message");
+    const weeklyBody = document.getElementById("teacher-availability-body");
 
     let currentTeacherId = null;
     let teacherTowns = [];
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         3: "Miércoles",
         4: "Jueves",
         5: "Viernes",
-        6: "Sábado"
+        6: "Sábado",
     };
 
     let PROFESSOR_NAMES = {};
@@ -42,27 +43,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!messageBox) return;
 
         if (!text) {
-            messageBox.textContent = '';
-            messageBox.className = 'hidden';
+            messageBox.textContent = "";
+            messageBox.className = "hidden";
             return;
         }
 
         messageBox.textContent = text;
-        messageBox.className = type === 'error'
-            ? 'card card-body input-error'
-            : 'card card-body state-message state-success';
+        messageBox.className =
+            type === "error"
+                ? "card card-body input-error"
+                : "card card-body state-message state-success";
 
-        messageBox.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        messageBox.setAttribute("role", type === "error" ? "alert" : "status");
 
         messageBox.style.opacity = 0;
-        setTimeout(() => messageBox.style.opacity = 1, 10);
+        setTimeout(() => (messageBox.style.opacity = 1), 10);
 
-        if (type !== 'error') {
+        if (type !== "error") {
             setTimeout(() => {
                 messageBox.style.opacity = 0;
                 setTimeout(() => {
-                    messageBox.textContent = '';
-                    messageBox.className = 'hidden';
+                    messageBox.textContent = "";
+                    messageBox.className = "hidden";
                 }, 350);
             }, 3000);
         }
@@ -74,28 +76,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const me = meResp.data || meResp;
 
             currentTeacherId = me.teacher_profile?.id || me.teacher_profile_id;
-            const teacherName = me.name || me.teacher_profile?.name || 'Profesor';
+            const teacherName =
+                me.name || me.teacher_profile?.name || "Profesor";
 
             professorSelect.replaceChildren();
-            const opt = document.createElement('option');
-            opt.value = currentTeacherId || '';
+            const opt = document.createElement("option");
+            opt.value = currentTeacherId || "";
             opt.textContent = teacherName;
             professorSelect.appendChild(opt);
 
             const townsResp = await Api.getTowns();
-            const towns = Array.isArray(townsResp) ? townsResp : (townsResp.data || townsResp);
+            const towns = Array.isArray(townsResp)
+                ? townsResp
+                : townsResp.data || townsResp;
 
             teacherTowns = me.teacher_profile?.towns || me.towns || [];
             const useTowns = teacherTowns.length ? teacherTowns : towns;
 
             townSelect.replaceChildren();
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = '';
-            defaultOpt.textContent = 'Selecciona una población';
+            const defaultOpt = document.createElement("option");
+            defaultOpt.value = "";
+            defaultOpt.textContent = "Selecciona una población";
             townSelect.appendChild(defaultOpt);
 
-            useTowns.forEach(t => {
-                const option = document.createElement('option');
+            useTowns.forEach((t) => {
+                const option = document.createElement("option");
                 option.value = String(t.id || t);
                 option.textContent = t.name || t;
                 townSelect.appendChild(option);
@@ -104,48 +109,50 @@ document.addEventListener('DOMContentLoaded', () => {
             PROFESSOR_NAMES[currentTeacherId] = teacherName;
 
             TOWN_NAMES = {};
-            townSelect.querySelectorAll("option").forEach(opt => {
+            townSelect.querySelectorAll("option").forEach((opt) => {
                 if (opt.value) TOWN_NAMES[opt.value] = opt.textContent;
             });
 
             if (useTowns.length === 1) {
                 townSelect.value = String(useTowns[0].id || useTowns[0]);
-                townGroup.style.display = 'none';
+                townGroup.style.display = "none";
             }
 
             await loadWeeklyAvailabilities();
-
         } catch (error) {
-            console.error('Error inicializando disponibilidad:', error);
-            showMessage('error', 'No se pudo cargar datos iniciales.');
+            console.error("Error inicializando disponibilidad:", error);
+            showMessage("error", "No se pudo cargar datos iniciales.");
         }
     }
 
     async function loadWeeklyAvailabilities() {
         try {
-            const resp = await Api.getWeeklyAvailabilities({ teacher_profile_id: currentTeacherId });
+            const resp = await Api.getWeeklyAvailabilities({
+                teacher_profile_id: currentTeacherId,
+            });
             const slots = resp.data || resp || [];
 
             weeklyBody.replaceChildren();
 
             if (!slots.length) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td colspan="7" style="text-align:center; color:#6b7280;">No hay disponibilidades registradas.</td>';
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                    '<td colspan="7" style="text-align:center; color:#6b7280;">No hay disponibilidades registradas.</td>';
                 weeklyBody.appendChild(tr);
                 return;
             }
 
-            slots.forEach(slot => {
-                const row = document.createElement('tr');
-                const toggleStatus = slot.is_active ? 'Desactivar' : 'Activar';
+            slots.forEach((slot) => {
+                const row = document.createElement("tr");
+                const toggleStatus = slot.is_active ? "Desactivar" : "Activar";
                 row.innerHTML = `
                     <td>${PROFESSOR_NAMES[slot.teacher_profile_id] || slot.teacher_profile_id}</td>
-                    <td>${TOWN_NAMES[slot.town_id] || slot.town_id || '-'}</td>
+                    <td>${TOWN_NAMES[slot.town_id] || slot.town_id || "-"}</td>
                     <td>${DAY_NAMES[slot.day_of_week] || slot.day_of_week}</td>
                     <td>${slot.starts_time}</td>
                     <td>${slot.end_time}</td>
                     <td>${slot.slot_minutes}</td>
-                    <td>${slot.is_active ? 'Sí' : 'No'}</td>
+                    <td>${slot.is_active ? "Sí" : "No"}</td>
                     <td>
                         <button class="btn btn-sm toggle-availability-btn" data-id="${slot.id}" data-active="${slot.is_active}">
                             ${toggleStatus}
@@ -155,54 +162,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 weeklyBody.appendChild(row);
 
                 // Agregar evento al botón de toggle
-                const toggleBtn = row.querySelector('.toggle-availability-btn');
-                toggleBtn.addEventListener('click', async (e) => {
+                const toggleBtn = row.querySelector(".toggle-availability-btn");
+                toggleBtn.addEventListener("click", async (e) => {
                     e.preventDefault();
                     const slotId = toggleBtn.dataset.id;
-                    const isCurrentlyActive = toggleBtn.dataset.active === 'true';
-                    
+                    const isCurrentlyActive =
+                        toggleBtn.dataset.active === "true";
+
                     try {
                         UI.setLoading(true);
-                        await Api.updateWeeklyAvailability(slotId, { is_active: !isCurrentlyActive });
-                        showMessage('success', 'Estado actualizado correctamente.');
+                        await Api.toggleWeeklyAvailability(slotId, !isCurrentlyActive);
+                        showMessage(
+                            "success",
+                            "Estado actualizado correctamente.",
+                        );
                         await loadWeeklyAvailabilities();
                     } catch (error) {
-                        console.error('Error actualizando disponibilidad:', error);
-                        showMessage('error', 'No se pudo actualizar el estado de la disponibilidad.');
+                        console.error(
+                            "Error actualizando disponibilidad:",
+                            error,
+                        );
+                        showMessage(
+                            "error",
+                            "No se pudo actualizar el estado de la disponibilidad.",
+                        );
                     } finally {
                         UI.setLoading(false);
                     }
                 });
             });
-
         } catch (error) {
-            console.error('Error cargando disponibilidades semanales:', error);
+            console.error("Error cargando disponibilidades semanales:", error);
         }
     }
 
-    typeSelect.addEventListener('change', () => {
-        if (typeSelect.value === 'normal') {
+    typeSelect.addEventListener("change", () => {
+        if (typeSelect.value === "normal") {
             // Mostrar día, ocultar fecha y razón
-            dayWrapper.classList.remove('hidden');
-            dateWrapper.classList.add('hidden');
-            reasonWrapper.classList.add('hidden');
-            dateInput.value = '';
-            reasonInput.value = '';
-        } else if (typeSelect.value === 'especial') {
+            dayWrapper.classList.remove("hidden");
+            dateWrapper.classList.add("hidden");
+            reasonWrapper.classList.add("hidden");
+            dateInput.value = "";
+            reasonInput.value = "";
+        } else if (typeSelect.value === "especial") {
             // Mostrar fecha y razón, ocultar día
-            dayWrapper.classList.add('hidden');
-            dateWrapper.classList.remove('hidden');
-            reasonWrapper.classList.remove('hidden');
-            daySelect.value = '';
+            dayWrapper.classList.add("hidden");
+            dateWrapper.classList.remove("hidden");
+            reasonWrapper.classList.remove("hidden");
+            daySelect.value = "";
         } else {
             // Si está vacío, ocultar todo
-            dayWrapper.classList.add('hidden');
-            dateWrapper.classList.add('hidden');
-            reasonWrapper.classList.add('hidden');
+            dayWrapper.classList.add("hidden");
+            dateWrapper.classList.add("hidden");
+            reasonWrapper.classList.add("hidden");
         }
     });
 
-    createBtn.addEventListener('click', async () => {
+    createBtn.addEventListener("click", async () => {
         const teacherId = currentTeacherId;
         const townId = townSelect.value || null;
         const start = startTimeInput.value;
@@ -212,29 +228,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Validación básica
         if (!teacherId || !type || !start || !end || !blockType) {
-            showMessage('error', 'Completa los campos obligatorios.');
+            showMessage("error", "Completa los campos obligatorios.");
             return;
         }
 
         if (start >= end) {
-            showMessage('error', 'La hora de inicio debe ser menor que la hora de fin.');
+            showMessage(
+                "error",
+                "La hora de inicio debe ser menor que la hora de fin.",
+            );
             return;
         }
 
         // Validación según tipo
         let day, date, reason;
 
-        if (type === 'normal') {
+        if (type === "normal") {
             day = daySelect.value;
             if (!day) {
-                showMessage('error', 'Debes seleccionar un día de la semana para disponibilidades normales.');
+                showMessage(
+                    "error",
+                    "Debes seleccionar un día de la semana para disponibilidades normales.",
+                );
                 return;
             }
-        } else if (type === 'especial') {
+        } else if (type === "especial") {
             date = dateInput.value;
             reason = reasonInput.value;
             if (!date) {
-                showMessage('error', 'Debes seleccionar una fecha para disponibilidades especiales.');
+                showMessage(
+                    "error",
+                    "Debes seleccionar una fecha para disponibilidades especiales.",
+                );
                 return;
             }
         }
@@ -242,22 +267,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
             teacher_profile_id: teacherId,
             town_id: townId,
-            starts_time: start + ':00',
-            end_time: end + ':00',
+            starts_time: start + ":00",
+            end_time: end + ":00",
             slot_minutes: 60,
             is_active: true,
             type: type,
-            block_type: blockType
+            block_type: blockType,
         };
 
         // Agregar día si es normal
-        if (type === 'normal' && day) {
+        if (type === "normal" && day) {
             payload.day_of_week = Number(day);
         }
 
         // Agregar fecha y razón si es especial
-        if (type === 'especial') {
-            if (date) payload.date = date;
+        if (type === "especial") {
+            if (date) payload.exception_date = date;
             if (reason) payload.reason = reason;
         }
 
@@ -266,24 +291,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await Api.createWeeklyAvailability(payload);
 
-            showMessage('success', 'Disponibilidad creada correctamente.');
+            showMessage("success", "Disponibilidad creada correctamente.");
 
             // Limpiar formulario
-            typeSelect.value = '';
-            daySelect.value = '';
-            dateInput.value = '';
-            reasonInput.value = '';
-            startTimeInput.value = '';
-            endTimeInput.value = '';
-            dayWrapper.classList.add('hidden');
-            dateWrapper.classList.add('hidden');
-            reasonWrapper.classList.add('hidden');
+            typeSelect.value = "";
+            daySelect.value = "";
+            dateInput.value = "";
+            reasonInput.value = "";
+            startTimeInput.value = "";
+            endTimeInput.value = "";
+            dayWrapper.classList.add("hidden");
+            dateWrapper.classList.add("hidden");
+            reasonWrapper.classList.add("hidden");
 
             await loadWeeklyAvailabilities();
-
         } catch (error) {
-            console.error('Error creando disponibilidad:', error);
-            showMessage('error', error.message || 'No se pudo crear la disponibilidad.');
+            console.error("Error creando disponibilidad:", error);
+            showMessage(
+                "error",
+                error.message || "No se pudo crear la disponibilidad.",
+            );
         } finally {
             UI.setLoading(false);
         }

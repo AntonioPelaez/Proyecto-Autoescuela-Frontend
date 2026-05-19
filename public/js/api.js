@@ -667,6 +667,13 @@ updateWeeklyAvailability(id, data) {
         credentials: 'include'
     }).then(handleResponse);
 },
+toggleWeeklyAvailability(id) {
+    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}/toggle`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 
 // ─────────── PAYMENT INTENTS ───────────
 createPaymentIntent(data) {

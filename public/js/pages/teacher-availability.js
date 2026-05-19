@@ -22,6 +22,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const createBtn = document.getElementById("availability-create");
     const messageBox = document.getElementById("availability-message");
     const weeklyBody = document.getElementById("teacher-availability-body");
+    const availabilityForm = document.getElementById('availability-form');
+    const professorSelect = document.getElementById('availability-professor');
+    const townGroup = document.getElementById('availability-town-group');
+    const townSelect = document.getElementById('availability-town');
+    const dayWrapper = document.getElementById('availability-day-wrapper');
+    const daySelect = document.getElementById('availability-day');
+    const startTimeInput = document.getElementById('availability-start-time');
+    const endTimeInput = document.getElementById('availability-end-time');
+    const typeSelect = document.getElementById('availability-type');
+    const dateWrapper = document.getElementById('availability-date-wrapper');
+    const dateInput = document.getElementById('availability-date');
+    const reasonWrapper = document.getElementById('availability-reason-wrapper');
+    const reasonInput = document.getElementById('availability-reason');
+    const blockTypeSelect = document.getElementById('availability-block-type');
+    const slotMinutesInput = document.getElementById('availability-slot-minutes');
+    const createBtn = document.getElementById('availability-create');
+    const messageBox = document.getElementById('availability-message');
+    const weeklyBody = document.getElementById('teacher-availability-body');
 
     let currentTeacherId = null;
     let teacherTowns = [];
@@ -225,10 +243,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const end = endTimeInput.value;
         const type = typeSelect.value;
         const blockType = blockTypeSelect.value;
+        const slotMinutes = parseInt(slotMinutesInput.value, 10) || 60;
 
         // Validación básica
         if (!teacherId || !type || !start || !end || !blockType) {
             showMessage("error", "Completa los campos obligatorios.");
+        if (!teacherId || !type || !start || !end || !blockType || !slotMinutes) {
+            showMessage('error', 'Completa los campos obligatorios.');
             return;
         }
 
@@ -270,6 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
             starts_time: start + ":00",
             end_time: end + ":00",
             slot_minutes: 60,
+            starts_time: start + ':00',
+            end_time: end + ':00',
+            slot_minutes: slotMinutes,
             is_active: true,
             type: type,
             block_type: blockType,

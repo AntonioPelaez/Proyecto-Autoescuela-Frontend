@@ -71,12 +71,12 @@
 
       <!-- Horario de inicio y fin -->
       <div class="input-group">
-        <label class="input-label" for="availability-start-time">Hora de inicio *</label>
+        <label class="input-label" for="availability-start-time">Hora de inicio (Hora a la que das la primera clase)</label>
         <input type="time" id="availability-start-time" name="start" class="input" required>
       </div>
 
       <div class="input-group">
-        <label class="input-label" for="availability-end-time">Hora de fin *</label>
+        <label class="input-label" for="availability-end-time">Hora de fin (Hora a la que das la última clase)</label>
         <input type="time" id="availability-end-time" name="end" class="input" required>
       </div>
 
@@ -130,4 +130,24 @@
 
 @section('scripts')
 <script src="{{ asset('js/pages/teacher-availability.js') }}" defer></script>
+<style>
+ /* Contenedor de botones de acciones en la tabla de disponibilidades */
+#teacher-availability-table td .availability-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;          /* separación uniforme entre botones */
+    flex-wrap: nowrap;     /* que no salten de línea si cabe */
+}
+
+#teacher-availability-table td .availability-actions .btn {
+    padding-inline: 0.5rem;
+    white-space: nowrap;   /* que no se rompa el texto del botón */
+    font-size: 0.78rem;
+}
+ #teacher-availability-table td .d-flex.gap-1 > .btn {
+    margin: 0 2px;
+}
+
+</style>
 @endsection

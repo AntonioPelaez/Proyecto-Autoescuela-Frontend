@@ -71,12 +71,12 @@
 
       <!-- Horario de inicio y fin -->
       <div class="input-group">
-        <label class="input-label" for="availability-start-time">Hora de inicio *</label>
+        <label class="input-label" for="availability-start-time">Hora de inicio (Hora a la que das la primera clase)</label>
         <input type="time" id="availability-start-time" name="start" class="input" required>
       </div>
 
       <div class="input-group">
-        <label class="input-label" for="availability-end-time">Hora de fin *</label>
+        <label class="input-label" for="availability-end-time">Hora de fin (Hora a la que das la última clase)</label>
         <input type="time" id="availability-end-time" name="end" class="input" required>
       </div>
 

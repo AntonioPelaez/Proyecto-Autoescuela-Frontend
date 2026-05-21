@@ -34,6 +34,11 @@
                         Clases
                     </a>
 
+                    <a href="/teacher/student-evaluations"
+                    class="role-menu-link {{ request()->is('teacher/student-evaluations') ? 'is-active' : '' }}">
+                        Evaluación alumnos
+                    </a>
+
                     {{-- ⭐ NUEVA OPCIÓN AÑADIDA --}}
                     <a href="/teacher/availability"
                        class="role-menu-link {{ request()->is('teacher/availability') ? 'is-active' : '' }}">

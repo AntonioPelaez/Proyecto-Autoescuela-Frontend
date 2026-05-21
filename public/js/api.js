@@ -741,4 +741,44 @@ withdrawBalance(amount) {
     return this.withdrawWallet(amount);
 },
 
+// ─────────── STUDENT SKILL EVALUATIONS ───────────
+getStudentSkillEvaluations() {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getStudentSkillEvaluationHistory(studentProfileId) {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/history/${studentProfileId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getStudentSkillEvaluationProgress(studentProfileId) {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/progress/${studentProfileId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getStudentSkillEvaluationReport(studentId) {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/report/${studentId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getStudentSkillEvaluationSummary(studentId) {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/summary/${studentId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

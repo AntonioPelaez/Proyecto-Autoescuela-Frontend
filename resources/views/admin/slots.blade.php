@@ -69,7 +69,6 @@
 
 	
 	<!-- Crear disponiblidad -->
-<!-- Crear disponibilidad -->
 <section class="card" style="margin-top: 1.5rem;">
     <div class="card-header">
         <h2>Crear disponibilidad</h2>
@@ -78,47 +77,59 @@
     <div class="card-body">
         <form id="availability-form">
 
-            <!-- Día de la semana -->
-            <div class="input-group">
+            <!-- Día de la semana (solo normal) -->
+            <div class="input-group" id="availability-day-wrapper">
                 <label class="input-label" for="availability-day">Día de la semana</label>
                 <select id="availability-day" class="input" required>
                     <option value="">Selecciona un día</option>
+                    <option value="0">Domingo</option>
                     <option value="1">Lunes</option>
                     <option value="2">Martes</option>
                     <option value="3">Miércoles</option>
                     <option value="4">Jueves</option>
                     <option value="5">Viernes</option>
+                    <option value="6">Sábado</option>
                 </select>
             </div>
 
-			<!-- Profesor -->
-			<div class="input-group">
-				<label class="input-label" for="availability-professor">Profesor</label>
-				<select id="availability-professor" class="input" required>
-					<option value="">Selecciona un profesor</option>
-				</select>
-			</div>
+            <!-- Fecha (solo especial) -->
+            <div class="input-group hidden" id="availability-date-wrapper">
+                <label class="input-label" for="availability-date">Fecha de la disponibilidad especial</label>
+                <input type="date" id="availability-date" class="input">
+            </div>
 
-      <!-- Población (solo para disponibilidad) -->
-      <div class="input-group">
-          <label class="input-label" for="availability-town">Población</label>
-          <select id="availability-town" class="input" required>
-              <option value="">Selecciona una población</option>
-          </select>
-      </div>
+            <!-- Razón (solo especial) -->
+            <div class="input-group hidden" id="availability-reason-wrapper">
+                <label class="input-label" for="availability-reason">Razón de la excepcionalidad</label>
+                <input type="text" id="availability-reason" class="input" placeholder="Motivo...">
+            </div>
 
+            <!-- Profesor -->
+            <div class="input-group">
+                <label class="input-label" for="availability-professor">Profesor</label>
+                <select id="availability-professor" class="input" required>
+                    <option value="">Selecciona un profesor</option>
+                </select>
+            </div>
 
+            <!-- Población -->
+            <div class="input-group">
+                <label class="input-label" for="availability-town">Población</label>
+                <select id="availability-town" class="input" required>
+                    <option value="">Selecciona una población</option>
+                </select>
+            </div>
 
-			<!-- Horario de inicio y fin -->
-			<div class="input-group">
-				<label class="input-label" for="availability-start-time">Hora de inicio *</label>
-				<input type="time" id="availability-start-time" name="start" class="input" required>
-			</div>
+            <!-- Horario -->
+            <div class="input-group">
+                <label class="input-label" for="availability-start-time">Hora de inicio *</label>
+                <input type="time" id="availability-start-time" class="input" required>
+            </div>
 
-			<div class="input-group">
-				<label class="input-label" for="availability-end-time">Hora de fin *</label>
-				<input type="time" id="availability-end-time" name="end" class="input" required>
-			</div>
+            <div class="input-group">
+                <label class="input-label" for="availability-end-time">Hora de fin *</label>
+                <input type="time" id="availability-end-time" class="input" required>
+            </div>
 
             <!-- Tipo -->
             <div class="input-group">
@@ -127,12 +138,6 @@
                     <option value="normal">Normal</option>
                     <option value="especial">Especial</option>
                 </select>
-            </div>
-
-            <!-- Razón (solo si es especial) -->
-            <div class="input-group hidden" id="availability-reason-wrapper">
-                <label class="input-label" for="availability-reason">Razón de la excepcionalidad</label>
-                <input type="text" id="availability-reason" class="input" placeholder="Motivo...">
             </div>
 
             <!-- Tipo de bloque -->
@@ -155,6 +160,7 @@
 
 
 
+
 	<!-- Listado de huecos -->
 			<section class="card">
 				<div class="card-header">
@@ -164,17 +170,19 @@
 				<div class="card-body table-wrapper">
 					<table id="slots-table" class="table table-striped table-hover" role="table" aria-label="Listado de huecos ofertados">
 						<thead>
-							<tr>
-								<th scope="col">Profesor</th>
-								<th scope="col">Población</th>
-								<th scope="col">Día</th>
-								<th scope="col">Hora inicio</th>
-								<th scope="col">Hora fin</th>
-								<!-- <th scope="col">Duración (min)</th> -->
-								<th scope="col">Minutos</th>
-								<th>Activo</th>
-							</tr>
-						</thead>
+    <tr>
+        <th scope="col">Profesor</th>
+        <th scope="col">Población</th>
+        <th scope="col">Día / Fecha</th>
+        <th scope="col">Hora inicio</th>
+        <th scope="col">Hora fin</th>
+        <th scope="col">Minutos</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Activo</th>
+        <th scope="col">Acciones</th>
+    </tr>
+</thead>
+
 						<tbody id="slots-table-body"></tbody>
 					</table>
 				</div>

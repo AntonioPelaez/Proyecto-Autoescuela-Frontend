@@ -1,673 +1,558 @@
 console.log("admin-slots.js cargado");
 
 document.addEventListener("DOMContentLoaded", () => {
-    Router.init();
 
-    const TABLE_BODY_ID = "slots-table-body";
-
-    const form = document.getElementById("slot-form");
-
-    const slotIdInput = document.getElementById("slot-id");
-
-    const slotTownInput = document.getElementById("slot-town");
-
-    const slotDateInput = document.getElementById("slot-date");
-
-    const slotTimeInput = document.getElementById("slot-time");
-
-    const slotProfessorInput = document.getElementById("slot-professor");
-
-    const slotVehicleInput = document.getElementById("slot-vehicle");
-
-    const formTitle = document.getElementById("slot-form-title");
-
-    const cancelButton = document.getElementById("slot-cancel");
-
-    const createButton = document.getElementById("slot-create");
-
-    const apiStatusBox = document.getElementById("slots-api-status");
-
-    const tableBody = document.getElementById(TABLE_BODY_ID);
-
-    const messageBox = document.getElementById("slots-message");
-
-    const selectedTimes = new Set();
-
-    let slotsCache = [];
-
-    const slotsCanCreate = true;
-
-    const slotsCanMutateRows = false;
-
-    if (!form || !tableBody) return;
-
-    // 🔥 Mapa de días
-    const DAY_NAMES = {
-        0: "Domingo",
-        1: "Lunes",
-        2: "Martes",
-        3: "Miércoles",
-        4: "Jueves",
-        5: "Viernes",
-        6: "Sábado",
-    };
-
-    // 🔥 Se rellenan al cargar selectores
-    let PROFESSOR_NAMES = {};
-    let TOWN_NAMES = {};
-
-    // ─────────────────────────────────────────────
-    // UTILIDADES
-    // ─────────────────────────────────────────────
-
-    function syncSelectedTimesInput() {
-        slotTimeInput.value = Array.from(selectedTimes)
-
-            .sort((a, b) => a.localeCompare(b))
-
-            .join(",");
-    }
-
-    function clearSelectedTimes() {
-        selectedTimes.clear();
-
-        syncSelectedTimesInput();
-    }
-
-    function setApiSyncState(state, details = "") {
-        if (!apiStatusBox) return;
-
-        apiStatusBox.classList.remove("is-ok", "is-error");
-
-        const now = new Date();
-
-        const hh = String(now.getHours()).padStart(2, "0");
-
-        const mm = String(now.getMinutes()).padStart(2, "0");
-
-        const timeLabel = `${hh}:${mm}`;
-
-        if (state === "ok") {
-            apiStatusBox.classList.add("is-ok");
-
-            apiStatusBox.textContent = `Conectado a API. Última sincronización ${timeLabel}. ${details}`;
-
-            return;
-        }
-
-        if (state === "error") {
-            apiStatusBox.classList.add("is-error");
-
-            apiStatusBox.textContent = `Error de API ${timeLabel}. ${details}`;
-
-            return;
-        }
-
-        if (state === "idle") {
-            apiStatusBox.textContent =
-                details || "Selecciona población y fecha para consultar.";
-
-            return;
-        }
-
-        apiStatusBox.textContent = "Sincronizando con API...";
-    }
-
-    // ─────────────────────────────────────────────
-    // CUADRÍCULA DE HORAS BASADA EN availability-slots (FILTRO)
-    // ─────────────────────────────────────────────
-
-    function renderHourGridFromSlots(slots) {
-        const grid = document.getElementById("slot-time-grid");
-
-        if (!grid) return;
-
-        grid.replaceChildren();
-
-        // 🔥 Extraer horas únicas desde los slots reales
-
-        const hours = [...new Set(slots.map((s) => s.start.slice(11, 16)))];
-
-        // 🔥 Ordenar horas
-
-        hours.sort((a, b) => a.localeCompare(b));
-
-        hours.forEach((hour) => {
-            const slot = slots.find((s) => s.start.slice(11, 16) === hour);
-
-            const btn = document.createElement("button");
-
-            btn.className = "hour-btn";
-
-            btn.textContent = hour;
-
-            if (slot.reserved) {
-                btn.classList.add("hour-booked");
-
-                btn.disabled = true;
-
-                btn.title = "Hora ocupada";
-            }
-
-            btn.addEventListener("click", () => {
-                if (selectedTimes.has(hour)) {
-                    selectedTimes.delete(hour);
-                } else {
-                    selectedTimes.add(hour);
-                }
-
-                syncSelectedTimesInput();
-
-                updateSelectedHourUI(grid);
-            });
-
-            grid.appendChild(btn);
-        });
-
-        updateSelectedHourUI(grid);
-    }
-
-    function updateSelectedHourUI(grid) {
-        grid.querySelectorAll(".hour-btn").forEach((btn) => {
-            const hour = btn.textContent.trim();
-
-            btn.classList.toggle("selected", selectedTimes.has(hour));
-        });
-    }
-
-async function loadHourGrid() {
-  if (!slotTownInput.value || !slotDateInput.value || !slotProfessorInput.value)
-    return;
-
-  try {
-    const teacherId = slotProfessorInput.value;
-
-    const response = await Api.getAvailabilitySlots({
-      town_id: slotTownInput.value,
-      date: slotDateInput.value,
-      teacher_profile_id: teacherId, // 🔥 añadimos el profesor en el filtro
-    });
-
-    // 🔥 Normalizamos la respuesta
-    const payload = response.data || response;
-    const blocks = payload.slots || payload.blocks || payload; // por si viene plano
-
-    // Si la API ya devuelve solo un bloque para ese profesor:
-    if (Array.isArray(blocks) && blocks.length && blocks[0].slots) {
-      renderHourGridFromSlots(blocks[0].slots);
-      return;
-    }
-
-    // Si viene agrupado por profesor, buscamos por teacher_id o teacher_profile_id
-    const teacherBlock = Array.isArray(blocks)
-      ? blocks.find(
-          (block) =>
-            String(block.teacher_id) === String(teacherId) ||
-            String(block.teacher_profile_id) === String(teacherId),
-        )
-      : null;
-
-    if (!teacherBlock || !Array.isArray(teacherBlock.slots)) {
-      renderHourGridFromSlots([]);
-      return;
-    }
-
-    renderHourGridFromSlots(teacherBlock.slots);
-  } catch (error) {
-    console.error("Error cargando cuadrícula de horas", error);
-    renderHourGridFromSlots([]);
-  }
+Router.init();
+
+const TABLE_BODY_ID = "slots-table-body";
+const tableBody = document.getElementById(TABLE_BODY_ID);
+
+const slotTownInput = document.getElementById("slot-town");
+const slotDateInput = document.getElementById("slot-date");
+const slotProfessorInput = document.getElementById("slot-professor");
+
+const messageBox = document.getElementById("slots-message");
+const apiStatusBox = document.getElementById("slots-api-status");
+
+// FORMULARIO DE CREACIÓN / EDICIÓN
+const availabilityForm = document.getElementById("availability-form");
+const availabilityProfessor = document.getElementById("availability-professor");
+const availabilityTown = document.getElementById("availability-town");
+const availabilityDay = document.getElementById("availability-day");
+const availabilityStart = document.getElementById("availability-start-time");
+const availabilityEnd = document.getElementById("availability-end-time");
+const availabilityType = document.getElementById("availability-type");
+const availabilityReason = document.getElementById("availability-reason");
+const availabilityReasonWrapper = document.getElementById("availability-reason-wrapper");
+const availabilityBlockType = document.getElementById("availability-block-type");
+const availabilityDate = document.getElementById("availability-date");
+const availabilityDateWrapper = document.getElementById("availability-date-wrapper");
+const availabilityDayWrapper = document.getElementById("availability-day-wrapper");
+const availabilityCreateBtn = document.getElementById("availability-create");
+
+let PROFESSOR_NAMES = {};
+let TOWN_NAMES = {};
+
+const DAY_NAMES = {
+    0: "Domingo",
+    1: "Lunes",
+    2: "Martes",
+    3: "Miércoles",
+    4: "Jueves",
+    5: "Viernes",
+    6: "Sábado",
+};
+
+// ------------------------------------------------------------
+// UTILIDADES
+// ------------------------------------------------------------
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
-    // ─────────────────────────────────────────────
-    // CARGAR DISPONIBILIDADES SEMANALES (LISTADO)
-    // ─────────────────────────────────────────────
+function formatDate(dateStr) {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("es-ES");
+}
 
-    async function loadSlots() {
-        setApiSyncState("loading");
+function setApiSyncState(state, details = "") {
+    if (!apiStatusBox) return;
 
-        try {
-            const filters = {};
+    apiStatusBox.classList.remove("is-ok", "is-error");
 
-            if (slotProfessorInput.value) {
-                filters.teacher_profile_id = slotProfessorInput.value;
-            }
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const timeLabel = `${hh}:${mm}`;
 
-            if (slotTownInput.value) {
-                filters.town_id = slotTownInput.value;
-            }
-
-            if (slotDateInput.value) {
-                const date = new Date(slotDateInput.value);
-
-                filters.day_of_week = date.getDay(); // 0-6
-            }
-
-            const response = await Api.getWeeklyAvailabilities(filters);
-
-            const slots = response.data || [];
-
-            renderWeeklyAvailabilities(slots);
-
-            setApiSyncState("ok", `Registros: ${slots.length}.`);
-        } catch (error) {
-            setApiSyncState("error", "No se pudo leer el listado.");
-
-            renderEmptyRow("Error cargando disponibilidades.");
-        }
+    if (state === "ok") {
+        apiStatusBox.classList.add("is-ok");
+        apiStatusBox.textContent = `Conectado a API. Última sincronización ${timeLabel}. ${details}`;
+        return;
     }
 
-    // ─────────────────────────────────────────────
-    // RENDERIZAR DISPONIBILIDADES SEMANALES
-    // ─────────────────────────────────────────────
-
-    function renderWeeklyAvailabilities(slots) {
-        tableBody.replaceChildren();
-
-        if (slots.length === 0) {
-            renderEmptyRow(
-                "No hay disponibilidades para los filtros seleccionados.",
-            );
-
-            return;
-        }
-
-        slots.forEach((slot) => {
-            const row = document.createElement("tr");
-
-            row.innerHTML = `
-
-<td>${PROFESSOR_NAMES[slot.teacher_profile_id] || slot.teacher_profile_id}</td>
-
-<td>${TOWN_NAMES[slot.town_id] || slot.town_id}</td>
-
-<td>${DAY_NAMES[slot.day_of_week] || slot.day_of_week}</td>
-
-<td>${slot.starts_time}</td>
-
-<td>${slot.end_time}</td>
-
-<td>${slot.slot_minutes}</td>
-
-<td>${slot.is_active ? "Sí" : "No"}</td>
-
-`;
-
-            tableBody.appendChild(row);
-        });
+    if (state === "error") {
+        apiStatusBox.classList.add("is-error");
+        apiStatusBox.textContent = `Error de API ${timeLabel}. ${details}`;
+        return;
     }
 
-    function renderEmptyRow(message) {
-        tableBody.replaceChildren();
-
-        const emptyRow = document.createElement("tr");
-
-        emptyRow.innerHTML = `<td colspan="7" style="text-align:center; color:#6b7280;">${escapeHtml(
-            message,
-        )}</td>`;
-
-        tableBody.appendChild(emptyRow);
+    if (state === "idle") {
+        apiStatusBox.textContent = details || "Selecciona población y fecha para consultar.";
+        return;
     }
 
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replaceAll("&", "&amp;")
+    apiStatusBox.textContent = "Sincronizando con API...";
+}
+// ------------------------------------------------------------
+// CARGAR SELECTORES
+// ------------------------------------------------------------
 
-            .replaceAll("<", "&lt;")
+async function loadSelectors() {
+    try {
+        const [towns, professors] = await Promise.all([
+            Api.getTowns(),
+            Api.getTeachers(),
+        ]);
 
-            .replaceAll(">", "&gt;")
+        PROFESSOR_NAMES = {};
+        professors.forEach((p) => (PROFESSOR_NAMES[p.id] = p.name));
 
-            .replaceAll('"', "&quot;")
+        TOWN_NAMES = {};
+        towns.forEach((t) => (TOWN_NAMES[t.id] = t.name));
 
-            .replaceAll("'", "&#039;");
-    }
-
-    // ─────────────────────────────────────────────
-    // SELECTORES
-    // ─────────────────────────────────────────────
-
-    let professorsList = [];
-
-    async function loadSelectors() {
-        try {
-            const [towns, professors] = await Promise.all([
-                Api.getTowns(),
-                Api.getTeachers(),
-            ]);
-
-            renderTownOptions(towns);
-
-            // 🔥 Mapas de nombres
-
-            PROFESSOR_NAMES = {};
-
-            professors.forEach((p) => {
-                PROFESSOR_NAMES[p.id] = p.name;
-            });
-
-            TOWN_NAMES = {};
-
-            towns.forEach((t) => {
-                TOWN_NAMES[t.id] = t.name;
-            });
-
-            // Selector de población para disponibilidad
-
-            const availabilityTownSelect =
-                document.getElementById("availability-town");
-
-            if (availabilityTownSelect) {
-                availabilityTownSelect.replaceChildren();
-
-                const defaultOption2 = document.createElement("option");
-
-                defaultOption2.value = "";
-
-                defaultOption2.textContent = "Selecciona una población";
-
-                availabilityTownSelect.appendChild(defaultOption2);
-
-                towns.forEach((town) => {
-                    const option = document.createElement("option");
-
-                    option.value = String(town.id);
-
-                    option.textContent = town.name;
-
-                    availabilityTownSelect.appendChild(option);
-                });
-            }
-
-            renderProfessorOptions(professors);
-        } catch (error) {
-            showState(
-                "error",
-                error.message || "No se pudieron cargar los selectores.",
-            );
-        }
-    }
-
-    function renderTownOptions(towns) {
-        slotTownInput.replaceChildren();
-
-        const defaultOption = document.createElement("option");
-
-        defaultOption.value = "";
-
-        defaultOption.textContent = "Selecciona una población";
-
-        slotTownInput.appendChild(defaultOption);
-
-        towns.forEach((town) => {
-            const option = document.createElement("option");
-
-            option.value = String(town.id);
-
-            option.textContent = town.name;
-
-            slotTownInput.appendChild(option);
-        });
-    }
-
-    function renderProfessorOptions(professors) {
-        professorsList = professors;
-
-        // Selector del filtro
-
+        // Poblar select de profesores (filtro)
         slotProfessorInput.replaceChildren();
+        const defProf = document.createElement("option");
+        defProf.value = "";
+        defProf.textContent = "Selecciona un profesor";
+        slotProfessorInput.appendChild(defProf);
 
-        const defaultOption = document.createElement("option");
-
-        defaultOption.value = "";
-
-        defaultOption.textContent = "Selecciona un profesor";
-
-        slotProfessorInput.appendChild(defaultOption);
-
-        professors.forEach((professor) => {
-            const option = document.createElement("option");
-
-            option.value = String(professor.id);
-
-            option.textContent = professor.name;
-
-            slotProfessorInput.appendChild(option);
+        professors.forEach((p) => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.name;
+            slotProfessorInput.appendChild(opt);
         });
 
-        // Selector de disponibilidad
+        // Poblar select de poblaciones (filtro)
+        slotTownInput.replaceChildren();
+        const defTown = document.createElement("option");
+        defTown.value = "";
+        defTown.textContent = "Selecciona una población";
+        slotTownInput.appendChild(defTown);
 
-        const availabilityProfessorSelect = document.getElementById(
-            "availability-professor",
-        );
+        towns.forEach((t) => {
+            const opt = document.createElement("option");
+            opt.value = t.id;
+            opt.textContent = t.name;
+            slotTownInput.appendChild(opt);
+        });
 
-        if (availabilityProfessorSelect) {
-            availabilityProfessorSelect.replaceChildren();
+        // Poblar select de creación
+        availabilityProfessor.replaceChildren();
+        const defProf2 = document.createElement("option");
+        defProf2.value = "";
+        defProf2.textContent = "Selecciona un profesor";
+        availabilityProfessor.appendChild(defProf2);
 
-            const defaultOption2 = document.createElement("option");
+        professors.forEach((p) => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.name;
+            availabilityProfessor.appendChild(opt);
+        });
 
-            defaultOption2.value = "";
+        availabilityTown.replaceChildren();
+        const defTown2 = document.createElement("option");
+        defTown2.value = "";
+        defTown2.textContent = "Selecciona una población";
+        availabilityTown.appendChild(defTown2);
 
-            defaultOption2.textContent = "Selecciona un profesor";
+        towns.forEach((t) => {
+            const opt = document.createElement("option");
+            opt.value = t.id;
+            opt.textContent = t.name;
+            availabilityTown.appendChild(opt);
+        });
 
-            availabilityProfessorSelect.appendChild(defaultOption2);
+    } catch (error) {
+        console.error(error);
+        showState("error", "No se pudieron cargar los selectores.");
+    }
+}
 
-            professors.forEach((professor) => {
-                const option = document.createElement("option");
+// ------------------------------------------------------------
+// CARGAR DISPONIBILIDADES (NORMALES + ESPECIALES)
+// ------------------------------------------------------------
 
-                option.value = String(professor.id);
+async function autoCleanExpiredSpecials(specials) {
+    const now = new Date();
 
-                option.textContent = professor.name;
+    for (const slot of specials) {
+        const endDateTime = new Date(`${slot.exception_date}T${slot.end_time}`);
+        if (endDateTime < now) {
+            try {
+                await Api.deleteTeacherAvailabilityException(slot.id);
+            } catch (e) {
+                console.warn("No se pudo eliminar especial caducada:", slot.id);
+            }
+        }
+    }
+}
 
-                availabilityProfessorSelect.appendChild(option);
+async function loadSlots() {
+    setApiSyncState("loading");
+
+    try {
+        const filters = {};
+
+        if (slotProfessorInput.value) {
+            filters.teacher_profile_id = slotProfessorInput.value;
+        }
+
+        if (slotTownInput.value) {
+            filters.town_id = slotTownInput.value;
+        }
+
+        let dayOfWeek = null;
+        if (slotDateInput.value) {
+            const date = new Date(slotDateInput.value);
+            dayOfWeek = date.getDay();
+            filters.day_of_week = dayOfWeek;
+        }
+
+        // 1) Cargar normales
+        const respNormal = await Api.getWeeklyAvailabilities(filters);
+        const normals = respNormal.data || [];
+
+        // 2) Cargar especiales
+        const respSpecial = await Api.getTeacherAvailabilityExceptions();
+
+        let specials = [];
+
+        if (Array.isArray(respSpecial)) specials = respSpecial;
+        else if (Array.isArray(respSpecial.data)) specials = respSpecial.data;
+        else if (respSpecial.data) specials = [respSpecial.data];
+
+        // Filtrado normal
+        specials = specials.filter((s) => {
+            if (filters.teacher_profile_id && String(s.teacher_profile_id) !== String(filters.teacher_profile_id)) return false;
+            if (filters.town_id && String(s.town_id) !== String(filters.town_id)) return false;
+            if (slotDateInput.value && s.exception_date !== slotDateInput.value) return false;
+            return true;
+        });
+
+        // Eliminar caducadas
+        await autoCleanExpiredSpecials(specials);
+
+        // Recargar especiales tras limpieza
+        const respSpecial2 = await Api.getTeacherAvailabilityExceptions();
+        specials = [];
+
+        if (Array.isArray(respSpecial2)) specials = respSpecial2;
+        else if (Array.isArray(respSpecial2.data)) specials = respSpecial2.data;
+        else if (respSpecial2.data) specials = [respSpecial2.data];
+
+        specials = specials.filter((s) => {
+            if (filters.teacher_profile_id && String(s.teacher_profile_id) !== String(filters.teacher_profile_id)) return false;
+            if (filters.town_id && String(s.town_id) !== String(filters.town_id)) return false;
+            if (slotDateInput.value && s.exception_date !== slotDateInput.value) return false;
+            return true;
+        });
+
+        // Unir normales + especiales
+        const allSlots = [...normals, ...specials];
+
+        renderWeeklyAvailabilities(allSlots);
+
+        setApiSyncState("ok", `Registros: ${allSlots.length}.`);
+
+    } catch (error) {
+        console.error(error);
+        setApiSyncState("error", "No se pudo leer el listado.");
+        renderEmptyRow("Error cargando disponibilidades.");
+    }
+}
+
+// ------------------------------------------------------------
+// RENDERIZAR TABLA
+// ------------------------------------------------------------
+
+function renderWeeklyAvailabilities(slots) {
+    tableBody.replaceChildren();
+
+    if (!slots.length) {
+        renderEmptyRow("No hay disponibilidades para los filtros seleccionados.");
+        return;
+    }
+
+    slots.forEach((slot) => {
+        const row = document.createElement("tr");
+
+        const isSpecial = slot.type === "especial";
+
+        const dayOrDate = isSpecial
+            ? formatDate(slot.exception_date)
+            : DAY_NAMES[slot.day_of_week];
+
+        let minutes;
+        if (slot.slot_minutes) {
+            minutes = slot.slot_minutes;
+        } else {
+            const start = new Date(`2000-01-01T${slot.starts_time}`);
+            const end = new Date(`2000-01-01T${slot.end_time}`);
+            minutes = Math.round((end - start) / 60000);
+        }
+
+        const activeText = isSpecial ? "" : (slot.is_active ? "Sí" : "No");
+
+        const toggleBtn = isSpecial
+            ? ""
+            : `
+                <button class="btn btn-sm ${slot.is_active ? "btn-warning" : "btn-success"} toggle-btn"
+                    data-id="${slot.id}"
+                    data-type="normal"
+                    data-active="${slot.is_active}">
+                    ${slot.is_active ? "Desactivar" : "Activar"}
+                </button>
+            `;
+
+        row.innerHTML = `
+            <td>${PROFESSOR_NAMES[slot.teacher_profile_id] || slot.teacher_profile_id}</td>
+            <td>${TOWN_NAMES[slot.town_id] || slot.town_id}</td>
+            <td>${dayOrDate}</td>
+            <td>${slot.starts_time}</td>
+            <td>${slot.end_time}</td>
+            <td>${minutes}</td>
+            <td>${slot.type === "especial" ? "Especial" : "Normal"}</td>
+            <td>${activeText}</td>
+
+            <td class="text-center align-middle">
+                <div class="availability-actions">
+
+                    ${toggleBtn}
+
+                    <button class="btn btn-sm btn-primary edit-btn"
+                        data-id="${slot.id}"
+                        data-type="${slot.type}">
+                        Editar
+                    </button>
+
+                    <button class="btn btn-sm btn-danger delete-btn"
+                        data-id="${slot.id}"
+                        data-type="${slot.type}">
+                        Eliminar
+                    </button>
+
+                </div>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+
+        if (!isSpecial) {
+            row.querySelector(".toggle-btn").addEventListener("click", async () => {
+                await toggleAvailability(slot);
             });
         }
-    }
 
-    // ─────────────────────────────────────────────
-    // FORMULARIO DE FILTRO
-    // ─────────────────────────────────────────────
-
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        if (!slotTownInput.value || !slotDateInput.value) {
-            showState(
-                "error",
-                "Para filtrar debes seleccionar población y fecha.",
-            );
-
-            return;
-        }
-
-        try {
-            showState("", "");
-
-            await loadSlots();
-
-            showState("success", "Listado filtrado correctamente.");
-        } catch (error) {
-            showState(
-                "error",
-                error?.message || "No se pudo aplicar el filtro.",
-            );
-        }
-    });
-
-    // ─────────────────────────────────────────────
-    // GRID DE HORAS PARA CREAR DISPONIBILIDAD (ADMIN)
-    // ─────────────────────────────────────────────
-    // (Eliminado: ahora usamos inputs de tipo time en lugar de grilla)
-
-    // ─────────────────────────────────────────────
-    // MOSTRAR/OCULTAR RAZÓN SI ES ESPECIAL
-    // ─────────────────────────────────────────────
-
-    const availabilityType = document.getElementById("availability-type");
-
-    const availabilityReasonWrapper = document.getElementById(
-        "availability-reason-wrapper",
-    );
-
-    availabilityType.addEventListener("change", () => {
-        if (availabilityType.value === "especial") {
-            availabilityReasonWrapper.classList.remove("hidden");
-        } else {
-            availabilityReasonWrapper.classList.add("hidden");
-        }
-    });
-
-    // ─────────────────────────────────────────────
-    // CREAR DISPONIBILIDAD (POST al backend)
-    // ─────────────────────────────────────────────
-
-    document
-        .getElementById("availability-create")
-        .addEventListener("click", async () => {
-            const availabilityProfessorSelect = document.getElementById(
-                "availability-professor",
-            );
-
-            const teacherId = availabilityProfessorSelect.value;
-
-            const townId = document.getElementById("availability-town").value;
-
-            const day = document.getElementById("availability-day").value;
-
-            const start = document.getElementById("availability-start-time").value;
-
-            const end = document.getElementById("availability-end-time").value;
-
-            const type = document.getElementById("availability-type").value;
-
-            const reason = document.getElementById("availability-reason").value;
-
-            const blockType = document.getElementById(
-                "availability-block-type",
-            ).value;
-
-            if (!teacherId || !townId || !day || !start || !end || !blockType) {
-                showState(
-                    "error",
-                    "Todos los campos son obligatorios excepto la razón (solo en tipo especial).",
-                );
-                return;
-            }
-
-            if (start >= end) {
-                showState("error", "La hora de inicio debe ser menor que la hora de fin.");
-                return;
-            }
-
-            const payload = {
-                teacher_profile_id: teacherId,
-                town_id: townId,
-                day_of_week: Number(day),
-                starts_time: start + ":00",
-                end_time: end + ":00",
-                slot_minutes: 60,
-                is_active: true,
-                type: type,
-                block_type: blockType,
-            };
-
-            if (type === "especial" && reason) {
-                payload.reason = reason;
-            }
-
-            try {
-                UI.setLoading(true);
-
-                await Api.createWeeklyAvailability(payload);
-
-                showState(
-                    "success",
-                    `Disponibilidad creada: día ${day} de ${start} a ${end}.`,
-                );
-
-                // Limpiar formulario
-                document.getElementById("availability-start-time").value = "";
-                document.getElementById("availability-end-time").value = "";
-                document.getElementById("availability-day").value = "";
-
-                await loadSlots();
-            } catch (error) {
-                console.error(error);
-                showState("error", "No se pudo crear la disponibilidad.");
-            } finally {
-                UI.setLoading(false);
-            }
+        row.querySelector(".edit-btn").addEventListener("click", () => {
+            openEditModal(slot);
         });
 
-    // ─────────────────────────────────────────────
-    // EVENTOS PARA ACTUALIZAR CUADRÍCULA DE HORAS (FILTRO)
-    // ─────────────────────────────────────────────
+        row.querySelector(".delete-btn").addEventListener("click", async () => {
+            await deleteAvailability(slot.id, slot.type);
+        });
+    });
+}
 
-    slotTownInput.addEventListener("change", loadHourGrid);
+function renderEmptyRow(message) {
+    tableBody.replaceChildren();
+    const emptyRow = document.createElement("tr");
+    emptyRow.innerHTML = `<td colspan="9" style="text-align:center; color:#6b7280;">${escapeHtml(message)}</td>`;
+    tableBody.appendChild(emptyRow);
+}
+// ------------------------------------------------------------
+// ACCIONES
+// ------------------------------------------------------------
 
-    slotDateInput.addEventListener("change", loadHourGrid);
+async function toggleAvailability(slot) {
+    try {
+        await Api.toggleWeeklyAvailability(slot.id);
+        await loadSlots();
+    } catch (error) {
+        console.error(error);
+        showState("error", "No se pudo cambiar el estado.");
+    }
+}
 
-    slotProfessorInput.addEventListener("change", loadHourGrid);
+async function deleteAvailability(id, type) {
+    if (!confirm("¿Seguro que deseas eliminar esta disponibilidad?")) return;
 
-    // ─────────────────────────────────────────────
-    // SISTEMA DE MENSAJES
-    // ─────────────────────────────────────────────
-
-    function showState(type, message) {
-        if (!message) {
-            messageBox.textContent = "";
-
-            messageBox.className = "hidden";
-
-            messageBox.removeAttribute("role");
-
-            return;
-        }
-
-        messageBox.textContent = message;
-
-        if (type === "error") {
-            messageBox.className =
-                "card card-body input-error state-message state-error";
-
-            messageBox.setAttribute("role", "alert");
+    try {
+        if (type === "especial") {
+            await Api.deleteTeacherAvailabilityException(id);
         } else {
-            messageBox.className = "card card-body state-message state-success";
-
-            messageBox.setAttribute("role", "status");
+            await Api.deleteWeeklyAvailability(id);
         }
+        await loadSlots();
+    } catch (error) {
+        console.error(error);
+        showState("error", "No se pudo eliminar la disponibilidad.");
+    }
+}
 
-        messageBox.setAttribute("aria-live", "assertive");
+// ------------------------------------------------------------
+// EDITAR
+// ------------------------------------------------------------
 
-        messageBox.style.opacity = 0;
+function openEditModal(slot) {
+    availabilityProfessor.value = slot.teacher_profile_id;
+    availabilityTown.value = slot.town_id;
+    availabilityStart.value = slot.starts_time.substring(0, 5);
+    availabilityEnd.value = slot.end_time.substring(0, 5);
+    availabilityType.value = slot.type;
+    availabilityBlockType.value = slot.block_type || "block";
 
-        messageBox.style.transition = "opacity 0.3s";
+    availabilityCreateBtn.dataset.editId = slot.id;
+    availabilityCreateBtn.dataset.editType = slot.type;
+    availabilityCreateBtn.textContent = "Actualizar disponibilidad";
 
-        setTimeout(() => {
-            messageBox.style.opacity = 1;
-        }, 10);
+    if (slot.type === "normal") {
+        availabilityDayWrapper.classList.remove("hidden");
+        availabilityDateWrapper.classList.add("hidden");
+        availabilityReasonWrapper.classList.add("hidden");
 
-        if (type !== "error") {
-            setTimeout(() => {
-                messageBox.style.opacity = 0;
+        availabilityDay.value = slot.day_of_week;
+        availabilityDate.value = "";
+        availabilityReason.value = "";
+    } else {
+        availabilityDayWrapper.classList.add("hidden");
+        availabilityDateWrapper.classList.remove("hidden");
+        availabilityReasonWrapper.classList.remove("hidden");
 
-                setTimeout(() => {
-                    messageBox.textContent = "";
-
-                    messageBox.className = "hidden";
-
-                    messageBox.removeAttribute("role");
-                }, 350);
-            }, 3500);
-        }
+        availabilityDay.value = "";
+        availabilityDate.value = slot.exception_date;
+        availabilityReason.value = slot.reason || "";
     }
 
-    // ─────────────────────────────────────────────
-    // INICIALIZACIÓN
-    // ─────────────────────────────────────────────
+    availabilityForm.scrollIntoView({ behavior: "smooth" });
+}
 
-    (async function initializePage() {
-        await loadSelectors();
+// ------------------------------------------------------------
+// CREAR / ACTUALIZAR
+// ------------------------------------------------------------
+
+availabilityCreateBtn.addEventListener("click", async () => {
+    const editId = availabilityCreateBtn.dataset.editId || null;
+    const editType = availabilityCreateBtn.dataset.editType || null;
+
+    const teacherId = availabilityProfessor.value;
+    const townId = availabilityTown.value;
+    const start = availabilityStart.value;
+    const end = availabilityEnd.value;
+    const type = availabilityType.value;
+    const blockType = availabilityBlockType.value;
+
+    if (!teacherId || !townId || !start || !end || !blockType) {
+        showState("error", "Completa todos los campos obligatorios.");
+        return;
+    }
+
+    if (start >= end) {
+        showState("error", "La hora de inicio debe ser menor que la hora de fin.");
+        return;
+    }
+
+    const payload = {
+        teacher_profile_id: teacherId,
+        town_id: townId,
+        starts_time: start + ":00",
+        end_time: end + ":00",
+        slot_minutes: 60,
+        is_active: true,
+        type,
+        block_type: blockType,
+    };
+
+    if (type === "normal") {
+        payload.day_of_week = Number(availabilityDay.value);
+    } else {
+        payload.exception_date = availabilityDate.value;
+        payload.reason = availabilityReason.value;
+    }
+
+    try {
+        if (editId) {
+            if (editType === "especial") {
+                await Api.updateTeacherAvailabilityException(editId, payload);
+            } else {
+                await Api.updateWeeklyAvailability(editId, payload);
+            }
+            showState("success", "Disponibilidad actualizada correctamente.");
+        } else {
+            await Api.createWeeklyAvailability(payload);
+            showState("success", "Disponibilidad creada correctamente.");
+        }
+
+        delete availabilityCreateBtn.dataset.editId;
+        delete availabilityCreateBtn.dataset.editType;
+        availabilityCreateBtn.textContent = "Crear disponibilidad";
 
         await loadSlots();
-    })();
+
+    } catch (error) {
+        console.error(error);
+        showState("error", "No se pudo guardar la disponibilidad.");
+    }
+});
+// ------------------------------------------------------------
+// SISTEMA DE MENSAJES
+// ------------------------------------------------------------
+
+function showState(type, message) {
+    if (!message) {
+        messageBox.textContent = "";
+        messageBox.className = "hidden";
+        return;
+    }
+
+    messageBox.textContent = message;
+
+    if (type === "error") {
+        messageBox.className = "card card-body input-error state-message state-error";
+    } else {
+        messageBox.className = "card card-body state-message state-success";
+    }
+
+    messageBox.style.opacity = 0;
+    setTimeout(() => (messageBox.style.opacity = 1), 10);
+
+    if (type !== "error") {
+        setTimeout(() => {
+            messageBox.style.opacity = 0;
+            setTimeout(() => {
+                messageBox.textContent = "";
+                messageBox.className = "hidden";
+            }, 350);
+        }, 3500);
+    }
+}
+
+// ------------------------------------------------------------
+// EVENTOS
+// ------------------------------------------------------------
+
+slotTownInput.addEventListener("change", loadSlots);
+slotDateInput.addEventListener("change", loadSlots);
+slotProfessorInput.addEventListener("change", loadSlots);
+
+availabilityType.addEventListener("change", () => {
+    if (availabilityType.value === "especial") {
+        availabilityDayWrapper.classList.add("hidden");
+        availabilityDateWrapper.classList.remove("hidden");
+        availabilityReasonWrapper.classList.remove("hidden");
+    } else {
+        availabilityDayWrapper.classList.remove("hidden");
+        availabilityDateWrapper.classList.add("hidden");
+        availabilityReasonWrapper.classList.add("hidden");
+    }
+});
+
+// ------------------------------------------------------------
+// INICIALIZACIÓN
+// ------------------------------------------------------------
+
+(async function initializePage() {
+    await loadSelectors();
+    await loadSlots();
+})();
 });

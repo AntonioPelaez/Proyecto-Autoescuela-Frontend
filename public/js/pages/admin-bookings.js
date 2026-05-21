@@ -289,11 +289,25 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	function formatDate(dateStr) {
+		if (!dateStr) return '-';
+		try {
+			const date = new Date(dateStr);
+			const day = String(date.getDate()).padStart(2, '0');
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const year = date.getFullYear();
+			return `${day}/${month}/${year}`;
+		} catch (_) {
+			return dateStr;
+		}
+	}
+
 	function normalizeAdminBooking(b) {
 		const status = _normalizeStatus(b.status);
+		const rawDate = b.session_date || b.date || '';
 		return {
 			...b,
-			date: b.session_date || b.date || '',
+			date: formatDate(rawDate),
 			time: b.start_time ? b.start_time.slice(0, 5) : (b.time || ''),
 			studentName: [b.student_name, b.student_surname1, b.student_surname2].filter(Boolean).join(' ') || b.studentName || '-',
 			professorName: [b.teacher_name, b.teacher_surname1, b.teacher_surname2].filter(Boolean).join(' ') || b.professorName || '-',

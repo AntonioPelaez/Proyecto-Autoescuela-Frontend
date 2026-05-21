@@ -11,6 +11,26 @@
     const QUICK_DATE_ID = "quick-date";
     const QUICK_RESULTS_ID = "student-quick-results";
 
+    function formatDate(value) {
+        const raw = String(value || "").trim();
+        if (!raw) {
+            return "";
+        }
+
+        // Formato ISO: YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+            const parts = raw.slice(0, 10).split("-");
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        // Si ya está en formato DD/MM/YYYY, devolverlo como está
+        if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+            return raw.slice(0, 10);
+        }
+
+        return raw;
+    }
+
     function formatBookingTime(value) {
         const raw = String(value || "").trim();
         if (!raw) {
@@ -157,7 +177,7 @@
 
         const vehicle = upcoming.vehicle || "Sin vehiculo asignado";
 
-        appendLabelValue(container, "Fecha:", upcoming.date);
+        appendLabelValue(container, "Fecha:", formatDate(upcoming.date));
         appendLabelValue(container, "Hora:", upcoming.time);
         appendLabelValue(container, "Profesor:", upcoming.professorName);
         appendLabelValue(container, "Vehiculo:", vehicle);
@@ -219,7 +239,7 @@
         sorted.forEach(function (booking) {
             const row = document.createElement("tr");
             row.append(
-                createCell(booking.date),
+                createCell(formatDate(booking.date)),
                 createCell(booking.time),
                 createCell(booking.professorName || "-"),
                 createCell(booking.vehicle || "Sin vehiculo asignado"),

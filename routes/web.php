@@ -32,3 +32,9 @@ Route::view('/register', 'auth.register');
 Route::view('/student/profile', 'student.profile');
 Route::view('/teacher/profile', 'teacher.profile');
 Route::view('/teacher/availability', 'teacher.teacher-availability');
+Route::view('/teacher/student-evaluations', 'evaluacion.student-evaluations');
+Route::view('/teacher/student-evaluations/{id}', 'evaluacion.student-evaluation-show');
+Route::view('/teacher/student-evaluations/{id}/history', 'evaluacion.student-evaluation-history');
+Route::view('/teacher/student-evaluations/{id}/reports', 'evaluacion.student-reports');
+
+

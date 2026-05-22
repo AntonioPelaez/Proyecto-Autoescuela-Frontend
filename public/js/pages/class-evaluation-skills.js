@@ -7,7 +7,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         // 1. Obtener datos de la clase
-        const classData = await Api.getTeacherBookings(); 
+        let classData = await Api.getTeacherBookings();
+
+        // Normalizar SIEMPRE a array
+        if (Array.isArray(classData)) {
+            // ok
+        } else if (Array.isArray(classData?.reservas)) {
+            classData = classData.reservas;
+        } else if (Array.isArray(classData?.data)) {
+            classData = classData.data;
+        } else {
+            classData = [];
+        }
+
         const classInfo = classData.find(c => c.id == classId);
 
         if (!classInfo) {
@@ -21,8 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
 
         // 2. Cargar skills
-        const skillsData = await Api.getStudentSkillEvaluations();
-        const skills = skillsData.skills || skillsData;
+        const skills = await Api.getDrivingSkills();
 
         skillsContainer.innerHTML = skills.map(skill => `
             <div class="col-md-3">

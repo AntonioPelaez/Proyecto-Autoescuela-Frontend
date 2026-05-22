@@ -1,38 +1,49 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const studentId = window.STUDENT_ID;
-    const container = document.getElementById("reports-container");
+    const classId = window.CLASS_SESSION_ID;
+    const form = document.getElementById("report-form");
+    const reportTextEl = document.getElementById("report-text");
+    const readyCheckbox = document.getElementById("ready-checkbox");
 
-    try {
-        const reports = await Api.getStudentSkillEvaluationHistory(studentId);
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-        if (!reports.length) {
-            container.innerHTML = "<p>No hay reportes escritos.</p>";
+        const reportText = reportTextEl.value.trim();
+        if (!reportText) {
+            UI.showToast("El reporte no puede estar vacío", "error");
             return;
         }
 
-        container.innerHTML = reports.map(ev => {
+        const stored = sessionStorage.getItem(`class_eval_${classId}`);
+        if (!stored) {
+            UI.showToast("No se encontraron las puntuaciones de habilidades.", "error");
+            return;
+        }
 
-            const teacherName =
-                (ev.teacher_profile?.user?.name ?? "Desconocido") + " " +
-                ((ev.teacher_profile?.user?.surname1 ?? "") + " " +
-                (ev.teacher_profile?.user?.surname2 ?? "")).trim();
+        const { scores } = JSON.parse(stored);
 
-            // AHORA el reporte está en ev.notes, no en skill_evaluations
-            const reportText = ev.notes?.trim() || "Sin reporte";
+        const readyForExam = readyCheckbox.checked ? 1 : 0;
 
-            return `
-                <div class="card card-body mb-3">
-                    <h4>Clase del ${ev.class_session.session_date} — ${ev.class_session.start_time}</h4>
-                    <p><strong>Profesor:</strong> ${teacherName}</p>
-                    <p><strong>Reporte:</strong></p>
-                    <p>${reportText}</p>
-                </div>
-            `;
-        }).join("");
+        UI.setLoading(true);
 
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = "<p>Error cargando los reportes.</p>";
-    }
+        try {
+            await Api.createStudentSkillEvaluation({
+                class_session_id: classId,
+                report_text: reportText,
+                ready_for_exam: readyForExam,
+                evaluations: scores
+            });
+
+            sessionStorage.removeItem(`class_eval_${classId}`);
+
+            UI.showToast("Evaluación guardada correctamente", "info");
+            window.location.href = "/teacher/classes";
+
+        } catch (err) {
+            console.error(err);
+            UI.showToast(err.message || "Error guardando evaluación", "error");
+        } finally {
+            UI.setLoading(false);
+        }
+    });
 });

@@ -48,27 +48,22 @@
 </div>
 
 {{-- TABLA DE NOTAS POR CLASE Y POR HABILIDAD --}}
-<div class="card card-body shadow-sm">
-
-    <h3 class="mb-3">Notas por clase</h3>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered text-center align-middle" id="skills-table">
-            <thead id="skills-table-head">
-                <tr>
-                    <th>ID Clase</th>
-                    {{-- Las columnas de skills se generan dinámicamente --}}
-                </tr>
-            </thead>
-            <tbody id="skills-table-body">
-                <tr>
-                    <td colspan="20">Cargando datos...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
+<div class="table-responsive" style="overflow-x: auto; white-space: nowrap;">
+    <table class="table table-striped table-bordered text-center align-middle w-auto" id="skills-table">
+        <thead id="skills-table-head">
+            <tr>
+                <th>ID Clase</th>
+                {{-- columnas dinámicas --}}
+            </tr>
+        </thead>
+        <tbody id="skills-table-body">
+            <tr>
+                <td colspan="20">Cargando datos...</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
+
 
 @endsection
 

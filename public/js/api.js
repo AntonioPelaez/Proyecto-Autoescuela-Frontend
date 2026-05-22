@@ -781,4 +781,10 @@ getStudentSkillEvaluationSummary(studentId) {
         credentials: 'include'
     }).then(handleResponse);
 },
+getTeacherStudentEvaluations() {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/teacher/students/evaluations`, {
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         console.log("Cargando alumnos...");
-        const students = await Api.getStudents(); // ✔ ESTA FUNCIÓN SÍ EXISTE
+        const students = await Api.getTeacherStudentEvaluations(); // ✔ ESTA FUNCIÓN SÍ EXISTE
         console.log("Respuesta API:", students);
 
         if (!students || !students.length) {
@@ -23,22 +23,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                 (s.user?.surname ?? s.surname ?? "");
 
             return `
-                <tr>
-                    <td>${fullName}</td>
-                    <td>${s.total_classes ?? 0}</td>
-                    <td>
-                        <span class="badge ${s.ready_for_exam ? 'bg-success' : 'bg-danger'}">
-                            ${s.ready_for_exam ? 'Sí' : 'No'}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="/teacher/student-evaluations/${s.id}" class="btn btn-primary btn-sm">
-                            Ver progreso
-                        </a>
-                    </td>
-                </tr>
-            `;
-        }).join("");
+    <tr>
+        <td class="text-start">${fullName}</td>
+        <td class="text-center">${s.total_classes ?? 0}</td>
+        <td class="text-center">
+            <span class="badge ${s.ready_for_exam ? 'bg-success' : 'bg-danger'}">
+                ${s.ready_for_exam ? 'Sí' : 'No'}
+            </span>
+        </td>
+        <td class="text-center">
+            <a href="/teacher/student-evaluations/${s.id}" class="btn btn-primary btn-sm">
+                Ver progreso
+            </a>
+        </td>
+    </tr>
+`;
+      }).join("");
 
     } catch (err) {
         console.error("ERROR AL CARGAR ALUMNOS:", err);

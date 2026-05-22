@@ -794,5 +794,19 @@ getClassSession(id) {
         credentials: 'include'
     }).then(handleResponse);
 },
-
+getDrivingSkills() {
+    return fetch(`${API_BASE_URL}/driving-skills`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+createStudentSkillEvaluation(data) {
+    return fetch(`${API_BASE_URL}/class-sessions/complete`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

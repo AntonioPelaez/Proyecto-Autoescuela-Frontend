@@ -10,7 +10,7 @@
     </a>
 </div>
 
-<h1 class="page-title">Histórico de clases</h1>
+<h1 class="page-title">Histórial de clases</h1>
 
 <div id="history-container" class="card card-body">
     <p>Cargando histórico...</p>

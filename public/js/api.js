@@ -787,4 +787,12 @@ getTeacherStudentEvaluations() {
         credentials: 'include'
     }).then(handleResponse);
 },
+getClassSession(id) {
+    return fetch(`${API_BASE_URL}/class-sessions/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

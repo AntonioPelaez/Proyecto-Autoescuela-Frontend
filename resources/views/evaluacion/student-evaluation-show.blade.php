@@ -11,64 +11,61 @@
     </a>
 </div>
 
-{{-- CUADRO DE ESTADÍSTICAS --}}
+{{-- CUADRO SUPERIOR DE DATOS GENERALES --}}
+<div class="card card-body shadow-sm mb-4">
+
+    <h2 id="student-name" class="text-center mb-4">Cargando alumno...</h2>
+
+    <table class="table table-bordered text-center align-middle">
+        <tbody>
+            <tr>
+                <th>Media última clase</th>
+                <td id="latest-average">—</td>
+            </tr>
+            <tr>
+                <th>Media general</th>
+                <td id="global-average">—</td>
+            </tr>
+            <tr>
+                <th>Preparación</th>
+                <td id="ready-status">—</td>
+            </tr>
+            <tr>
+                <th>Reportes escritos</th>
+                <td>
+                    <a id="reports-button" href="#" class="btn btn-primary btn-sm">Ver reportes</a>
+                </td>
+            </tr>
+            <tr>
+                <th>Histórico de clases</th>
+                <td>
+                    <a id="history-button" href="#" class="btn btn-info btn-sm">Ver historial</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+{{-- TABLA DE NOTAS POR CLASE Y POR HABILIDAD --}}
 <div class="card card-body shadow-sm">
 
-    {{-- NOMBRE DEL ALUMNO --}}
-    <h2 id="student-name" class="text-center mb-4">
-        Cargando alumno...
-    </h2>
+    <h3 class="mb-3">Notas por clase</h3>
 
-    <div class="stats-grid">
-
-        <div class="stats-item">
-            <h4>Media clase más reciente</h4>
-            <p id="latest-average" class="fs-4 fw-bold">—</p>
-        </div>
-
-        <div class="stats-item">
-            <h4>Media general</h4>
-            <p id="global-average" class="fs-4 fw-bold">—</p>
-        </div>
-
-        <div class="stats-item">
-            <h4>Reportes escritos</h4>
-            <a id="reports-button" href="#" class="btn btn-primary btn-sm">
-                Ver reportes
-            </a>
-        </div>
-
-        <div class="stats-item">
-            <h4>Histórico de clases</h4>
-            <a id="history-button" href="#" class="btn btn-info btn-sm">
-                Ver historial
-            </a>
-        </div>
-
-    </div>
-
-    <hr>
-
-    {{-- RESUMEN DE HABILIDADES --}}
-    <h3>Resumen de habilidades</h3>
-    <div id="skills-summary" class="p-2">
-        <p>Cargando resumen...</p>
-    </div>
-
-    <hr>
-
-    {{-- ÁREAS DÉBILES --}}
-    <h3>Áreas débiles</h3>
-    <div id="weak-areas" class="p-2">
-        <p>Cargando áreas débiles...</p>
-    </div>
-
-    <hr>
-
-    {{-- ESTADO DE PREPARACIÓN --}}
-    <h3>Preparación para examen</h3>
-    <div id="ready-status" class="p-2">
-        <p>Cargando estado...</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered text-center align-middle" id="skills-table">
+            <thead id="skills-table-head">
+                <tr>
+                    <th>ID Clase</th>
+                    {{-- Las columnas de skills se generan dinámicamente --}}
+                </tr>
+            </thead>
+            <tbody id="skills-table-body">
+                <tr>
+                    <td colspan="20">Cargando datos...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
 </div>

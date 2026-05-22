@@ -462,7 +462,7 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
             } else {
                 // No hay saldo suficiente, ir a recarga
                 sessionStorage.setItem("redirectAfterRecharge", "/student/confirm-booking");
-                window.location.href = "/student/recharge";
+                window.location.href = "/student/recharge-form";
             }
         } catch (err) {
             console.error(err);

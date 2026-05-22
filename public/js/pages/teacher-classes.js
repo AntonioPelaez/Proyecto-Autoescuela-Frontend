@@ -73,10 +73,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else bookings = [];
             }
 
+
             const today = new Date().toISOString().split('T')[0];
 
-            const upcoming = bookings.filter(b => b.date >= today && b.status !== 'cancelled');
-            const past = bookings.filter(b => b.date < today || b.status === 'cancelled');
+const upcoming = bookings.filter(b =>
+    b.status !== 'completed' &&
+    b.status !== 'cancelled' &&
+    b.date >= today
+);
+
+const past = bookings.filter(b =>
+    b.status === 'completed' ||
+    b.status === 'cancelled' ||
+    b.date < today
+);
+
 
             renderUpcomingClasses(upcoming);
             renderPastClasses(past);

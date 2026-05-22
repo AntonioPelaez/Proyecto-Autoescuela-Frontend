@@ -14,16 +14,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         container.innerHTML = reports.map(ev => {
 
             const teacherName =
-                (ev.class_session?.teacher?.user?.name ?? ev.class_session?.teacher?.name ?? "Desconocido") +
-                " " +
-                (ev.class_session?.teacher?.user?.surname ?? ev.class_session?.teacher?.surname ?? "");
+                (ev.teacher_profile?.user?.name ?? "Desconocido") + " " +
+                ((ev.teacher_profile?.user?.surname1 ?? "") + " " +
+                (ev.teacher_profile?.user?.surname2 ?? "")).trim();
+
+            // AHORA el reporte está en ev.notes, no en skill_evaluations
+            const reportText = ev.notes?.trim() || "Sin reporte";
 
             return `
                 <div class="card card-body mb-3">
                     <h4>Clase del ${ev.class_session.session_date} — ${ev.class_session.start_time}</h4>
                     <p><strong>Profesor:</strong> ${teacherName}</p>
                     <p><strong>Reporte:</strong></p>
-                    <p>${ev.report_text ?? 'Sin reporte'}</p>
+                    <p>${reportText}</p>
                 </div>
             `;
         }).join("");

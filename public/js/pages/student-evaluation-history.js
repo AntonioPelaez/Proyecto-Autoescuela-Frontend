@@ -14,9 +14,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         container.innerHTML = history.map(ev => {
 
             const teacherName =
-                (ev.class_session?.teacher?.user?.name ?? ev.class_session?.teacher?.name ?? "Desconocido") +
-                " " +
-                (ev.class_session?.teacher?.user?.surname ?? ev.class_session?.teacher?.surname ?? "");
+    (ev.class_session?.teacher?.user?.name ?? "Desconocido") + " " +
+    ((ev.class_session?.teacher?.user?.surname1 ?? "") + " " +
+     (ev.class_session?.teacher?.user?.surname2 ?? "")).trim();
+
 
             return `
                 <div class="card card-body mb-3">

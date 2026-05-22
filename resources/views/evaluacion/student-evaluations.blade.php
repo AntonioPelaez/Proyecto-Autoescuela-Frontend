@@ -8,13 +8,13 @@
 
 <div class="card card-body shadow-sm">
 
-    <table class="table table-striped table-bordered text-center align-middle">
+    <table class="table table-striped table-bordered align-middle">
         <thead class="table-light">
             <tr>
-                <th>Alumno</th>
-                <th>Clases evaluadas</th>
-                <th>Preparado</th>
-                <th>Acciones</th>
+                <th class="text-start">Alumno</th>
+                <th class="text-center">Clases evaluadas</th>
+                <th class="text-center">Preparado</th>
+                <th class="text-center">Acciones</th>
             </tr>
         </thead>
 

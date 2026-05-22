@@ -17,8 +17,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const student = await Api.getStudent(studentId);
 
         const fullName =
-            (student.user?.name ?? student.name ?? "Sin nombre") + " " +
-            (student.user?.surname ?? student.surname ?? "");
+    (student.user?.name ?? student.name ?? "Sin nombre") + " " +
+    ((student.user?.surname1 ?? student.surname1 ?? "") + " " +
+     (student.user?.surname2 ?? student.surname2 ?? "")).trim();
+
 
         nameEl.innerHTML = fullName;
 

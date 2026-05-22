@@ -1,58 +1,52 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    const container = document.getElementById("students-list");
 
-    if (!container) return;
-
-    container.innerHTML = "<p>Cargando alumnos...</p>";
+    const tbody = document.getElementById("students-table-body");
 
     try {
-        // 1. Obtener todos los alumnos
-        const students = await Api.getStudents();
+        console.log("Cargando alumnos...");
+        const students = await Api.getStudents(); // ✔ ESTA FUNCIÓN SÍ EXISTE
+        console.log("Respuesta API:", students);
 
-        container.innerHTML = "";
-
-        for (const student of students) {
-
-            // 2. Obtener resumen del alumno
-            const summary = await Api.getStudentSkillEvaluationSummary(student.id);
-
-            const totalClasses = summary.skills_summary.reduce(
-                (acc, s) => acc + s.times_evaluated,
-                0
-            );
-
-            const ready = summary.ready_for_exam;
-
-            // 3. Crear elemento visual
-            const item = document.createElement("div");
-            item.classList.add("student-item");
-
-            item.innerHTML = `
-                <div class="student-info">
-                    <h3>${student.user.name} ${student.user.surname}</h3>
-
-                    <p><strong>Clases evaluadas:</strong> ${totalClasses}</p>
-
-                    <p>
-                        <strong>Preparado para examen:</strong>
-                        <span class="badge ${ready ? 'badge-success' : 'badge-danger'}">
-                            ${ready ? 'Sí' : 'No'}
-                        </span>
-                    </p>
-                </div>
-
-                <div class="student-actions">
-                    <a href="/teacher/student-evaluations/${student.id}" class="btn btn-primary">
-                        Ver progreso
-                    </a>
-                </div>
+        if (!students || !students.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4">No hay alumnos registrados.</td>
+                </tr>
             `;
-
-            container.appendChild(item);
+            return;
         }
 
-    } catch (error) {
-        console.error(error);
-        container.innerHTML = "<p>Error cargando alumnos.</p>";
+        tbody.innerHTML = students.map(s => {
+
+            const fullName =
+                (s.user?.name ?? s.name ?? "Sin nombre") + " " +
+                (s.user?.surname ?? s.surname ?? "");
+
+            return `
+                <tr>
+                    <td>${fullName}</td>
+                    <td>${s.total_classes ?? 0}</td>
+                    <td>
+                        <span class="badge ${s.ready_for_exam ? 'bg-success' : 'bg-danger'}">
+                            ${s.ready_for_exam ? 'Sí' : 'No'}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/teacher/student-evaluations/${s.id}" class="btn btn-primary btn-sm">
+                            Ver progreso
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+    } catch (err) {
+        console.error("ERROR AL CARGAR ALUMNOS:", err);
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4">Error cargando alumnos.</td>
+            </tr>
+        `;
     }
 });

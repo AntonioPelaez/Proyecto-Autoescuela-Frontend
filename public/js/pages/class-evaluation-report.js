@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const classId = window.CLASS_SESSION_ID;
     const form = document.getElementById("report-form");
     const reportTextEl = document.getElementById("report-text");
+    const readyCheckbox = document.getElementById("ready-checkbox");
 
     form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -21,12 +22,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { scores } = JSON.parse(stored);
 
+    const readyForExam = readyCheckbox.checked ? true : false;
+
     UI.setLoading(true);
 
     try {
         await Api.createStudentSkillEvaluation({
             id: classId,
-            ready_for_exam: false,
+            ready_for_exam: readyForExam,
             notes: reportText,
             skills: scores.map(s => ({
                 driving_skill_id: s.skill_id,

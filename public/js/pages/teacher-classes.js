@@ -13,16 +13,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pastTbody = document.getElementById('past-classes-tbody');
     const messageBox = document.getElementById('message-state');
 
-    // 🔥 Función para formatear fechas a dd/mm/yyyy
     function formatDateDMY(dateStr) {
         if (!dateStr) return "";
         const [y, m, d] = dateStr.split("-");
         return `${d}/${m}/${y}`;
     }
 
-    // ─────────────────────────────────────────────
-    // Normalizar estado
-    // ─────────────────────────────────────────────
     function normalizeStatus(value) {
         if (!value || value === "Todos los estados") return null;
         return value;
@@ -41,9 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return filters;
     }
 
-    // ─────────────────────────────────────────────
-    // Fechas por defecto
-    // ─────────────────────────────────────────────
     const today = new Date();
     const lastMonth = new Date(today);
     lastMonth.setDate(lastMonth.getDate() - 30);
@@ -55,17 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadClasses(buildFilters());
 
-    // ─────────────────────────────────────────────
-    // Filtrar
-    // ─────────────────────────────────────────────
     filterForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         await loadClasses(buildFilters());
     });
 
-    // ─────────────────────────────────────────────
-    // Cargar clases
-    // ─────────────────────────────────────────────
     async function loadClasses(filters) {
         UI.setLoading(true);
         upcomingTbody.innerHTML = '';
@@ -104,9 +91,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Render Próximas Clases
-    // ─────────────────────────────────────────────
     function renderUpcomingClasses(bookings) {
         upcomingTbody.innerHTML = '';
 
@@ -152,7 +136,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             `;
 
-            // Confirmar clase
             const confirmBtn = row.querySelector('.btn-confirm');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', async () => {
@@ -169,24 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            // Completar clase
             const completeBtn = row.querySelector('.btn-complete');
             if (completeBtn) {
                 completeBtn.addEventListener('click', async () => {
-                    UI.setLoading(true);
-                    try {
-                        await Api.completeClassSession(parseInt(booking.id, 10));
-                        showMessage('success', 'Clase completada correctamente.');
-                        await loadClasses(buildFilters());
-                    } catch (error) {
-                        showMessage('error', error.message || 'No se pudo completar la clase.');
-                    } finally {
-                        UI.setLoading(false);
-                    }
+                    // 👉 Redirigimos a la página de evaluación de skills
+                    window.location.href = `/teacher/classes/${booking.id}/evaluate-skills`;
                 });
             }
 
-            // Cancelar clase
             const cancelBtn = row.querySelector('.btn-cancel');
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', async () => {
@@ -207,9 +180,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ─────────────────────────────────────────────
-    // Render Historial
-    // ─────────────────────────────────────────────
     function renderPastClasses(bookings) {
         pastTbody.innerHTML = '';
 
@@ -238,9 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ─────────────────────────────────────────────
-    // Mensajes
-    // ─────────────────────────────────────────────
     function showMessage(type, message) {
         messageBox.className = `message-state ${type}`;
         messageBox.textContent = message;
@@ -254,9 +221,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Estados y colores
-    // ─────────────────────────────────────────────
     function _formatStatus(status) {
         const statusMap = {
             'pending': 'Pendiente',

@@ -36,5 +36,7 @@ Route::view('/teacher/student-evaluations', 'evaluacion.student-evaluations');
 Route::view('/teacher/student-evaluations/{id}', 'evaluacion.student-evaluation-show');
 Route::view('/teacher/student-evaluations/{id}/history', 'evaluacion.student-evaluation-history');
 Route::view('/teacher/student-evaluations/{id}/reports', 'evaluacion.student-reports');
+Route::get('/teacher/classes/{classSession}/evaluate-skills', function ($classSession) { return view('teacher.class-evaluation-skills');})->name('teacher.classes.evaluate-skills');
+Route::get('/teacher/classes/{classSession}/evaluate-report', function ($classSession) {return view('teacher.class-evaluation-report');})->name('teacher.classes.evaluate-report');
 
 

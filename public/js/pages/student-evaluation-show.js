@@ -62,16 +62,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             <tr>
                 <th>ID Clase</th>
                 ${allSkills.map(skill => `<th>${skill}</th>`).join("")}
+                <th>Áreas débiles</th>
             </tr>
         `;
 
         // Construir filas
-        tableBody.innerHTML = history.map(ev => `
-            <tr>
-                <td>${ev.class_session.id}</td>
-                ${ev.skill_evaluations.map(s => `<td>${s.score}</td>`).join("")}
-            </tr>
-        `).join("");
+        tableBody.innerHTML = history.map(ev => {
+            const weakAreas = ev.skill_evaluations
+                .filter(s => (s.score ?? 0) <= 2)
+                .map(s => s.driving_skill.name)
+                .join(", ") || "No hay áreas débiles";
+            
+            return `
+                <tr>
+                    <td>${ev.class_session.id}</td>
+                    ${ev.skill_evaluations.map(s => `<td>${s.score}</td>`).join("")}
+                    <td>${weakAreas}</td>
+                </tr>
+            `;
+        }).join("");
 
         // 4. Media última clase
         const last = history[0];

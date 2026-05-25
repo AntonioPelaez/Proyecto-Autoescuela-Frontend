@@ -229,7 +229,7 @@
             const row = document.createElement("tr");
             row.className = "table-empty";
             const cell = document.createElement("td");
-            cell.colSpan = 5;
+            cell.colSpan = 6;
             cell.textContent = "No hay clases para mostrar.";
             row.appendChild(cell);
             tbody.appendChild(row);
@@ -238,12 +238,30 @@
 
         sorted.forEach(function (booking) {
             const row = document.createElement("tr");
+            
+            // Crear celda de acciones
+            const actionCell = document.createElement("td");
+            const isCompleted = booking.status === "completada";
+
+if (isCompleted) {
+    actionCell.innerHTML = `
+        <button 
+            class="btn btn-info btn-sm view-report-btn"
+            data-session-id="${booking.id}">
+            Ver informe
+        </button>`;
+} else {
+    actionCell.innerHTML = '<span class="badge bg-secondary">Pendiente</span>';
+}
+
+            
             row.append(
                 createCell(formatDate(booking.date)),
                 createCell(booking.time),
                 createCell(booking.professorName || "-"),
                 createCell(booking.vehicle || "Sin vehiculo asignado"),
                 createCell(_formatStatus(booking.status)),
+                actionCell,
             );
             tbody.appendChild(row);
         });
@@ -604,3 +622,101 @@
 
     document.addEventListener("DOMContentLoaded", init);
 })();
+// ─────────────────────────────────────────────
+// MODAL PURO JS (sin Bootstrap)
+// ─────────────────────────────────────────────
+
+const modalOverlay = document.getElementById("report-modal");
+const modalContent = document.getElementById("report-modal-content");
+const modalClose = document.getElementById("report-modal-close");
+
+// Cerrar modal
+modalClose.addEventListener("click", () => {
+    modalOverlay.classList.add("hidden");
+});
+modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) {
+        modalOverlay.classList.add("hidden");
+    }
+});
+
+// Abrir modal con contenido dinámico
+function openReportModal(html) {
+    modalContent.innerHTML = html;
+    modalOverlay.classList.remove("hidden");
+}
+
+function formatDateDMY(dateString) {
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+}
+
+
+// ─────────────────────────────────────────────
+// BOTÓN "VER INFORME"
+// ─────────────────────────────────────────────
+
+document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("view-report-btn")) return;
+
+    const sessionId = Number(e.target.dataset.sessionId);
+
+    openReportModal("<p>Cargando informe...</p>");
+
+    try {
+        const report = await Api.getStudentSkillEvaluationReport(sessionId);
+
+        let evaluation = null;
+
+        // ✔ Caso 1: informe global (tiene evaluations[])
+        if (Array.isArray(report.evaluations)) {
+            evaluation = report.evaluations.find(ev =>
+                Number(ev.class_session.id) === sessionId
+            );
+        }
+
+        // ✔ Caso 2: informe por clase (tiene class_session)
+        if (!evaluation && report.class_session) {
+            evaluation = {
+                class_session: report.class_session,
+                skill_evaluations: report.skills,
+                report_text: report.report_text
+            };
+        }
+
+        if (!evaluation) {
+            openReportModal("<p>No se encontró el informe de esta clase.</p>");
+            return;
+        }
+
+        const teacherName =
+            evaluation.class_session?.teacher?.user?.name ??
+            evaluation.class_session?.teacher?.name ??
+            report.teacher ??
+            "Profesor";
+
+        const reportText = evaluation.report_text ?? "Sin informe";
+
+        const skillsHtml = evaluation.skill_evaluations.map(s => `
+            <p><strong>${s.driving_skill.name}:</strong> ${s.score}</p>
+        `).join("");
+
+        openReportModal(`
+            <p><strong>Fecha:</strong> ${formatDateDMY(evaluation.class_session.session_date)}</p>
+            <p><strong>Hora:</strong> ${evaluation.class_session.start_time}</p>
+            <p><strong>Profesor:</strong> ${teacherName}</p>
+
+            <hr>
+            <h4>Evaluación de habilidades</h4>
+            ${skillsHtml}
+
+            <hr>
+            <h4>Informe del profesor</h4>
+            <p>${reportText}</p>
+        `);
+
+    } catch (err) {
+        console.error(err);
+        openReportModal("<p>Error cargando el informe.</p>");
+    }
+});

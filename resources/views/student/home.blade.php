@@ -73,6 +73,7 @@
 								<th>Profesor</th>
 								<th>Vehiculo</th>
 								<th>Estado</th>
+								<th>Acciones</th>
 							</tr>
 						</thead>
 						<tbody id="student-history-body"></tbody>
@@ -81,6 +82,48 @@
 			</div>
 			</section>
 			</div>
+			<div id="report-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <button class="modal-close" id="report-modal-close">&times;</button>
+        <div id="report-modal-content">
+            <p>Cargando informe...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.modal-overlay.hidden {
+    display: none;
+}
+.modal-box {
+    background: #fff;
+    padding: 20px;
+    width: 95%;
+    max-width: 600px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+}
+</style>
+
 @endsection
 
 @section('scripts')

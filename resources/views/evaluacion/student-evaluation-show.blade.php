@@ -53,7 +53,8 @@
         <thead id="skills-table-head">
             <tr>
                 <th>ID Clase</th>
-                {{-- columnas dinámicas --}}
+                {{-- columnas dinámicas de habilidades --}}
+                <th>Áreas débiles</th>
             </tr>
         </thead>
         <tbody id="skills-table-body">

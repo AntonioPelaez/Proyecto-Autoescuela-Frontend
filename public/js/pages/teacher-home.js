@@ -60,7 +60,7 @@
             studentName: raw.studentName || '-',
             townName: raw.townName || '-',
             vehicle: raw.vehicle || 'Sin vehiculo asignado',
-            status: raw.status || '-',
+            status: translateStatus(raw.status || '-'),
             dt: parseDateTime(raw),
         };
     }
@@ -96,6 +96,15 @@
             tbody.appendChild(row);
         });
     }
+function translateStatus(status) {
+    const map = {
+        pending: 'Pendiente',
+        confirmed: 'Confirmada',
+        completed: 'Completada',
+        cancelled: 'Cancelada'
+    };
+    return map[status] || status;
+}
 
     function renderWeekSummary(bookings) {
         const container = document.getElementById(WEEK_SUMMARY_ID);
@@ -181,7 +190,7 @@
                 formatDateDMY(item.date),
                 item.time,
                 item.studentName,
-                item.status
+                translateStatus(item.status)
             ]);
 
         renderRows(TODAY_BODY_ID, todayRows, 4, 'No tienes clases para hoy.');

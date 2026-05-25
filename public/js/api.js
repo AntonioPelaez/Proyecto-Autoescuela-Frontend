@@ -809,4 +809,11 @@ createStudentSkillEvaluation(data) {
         credentials: 'include'
     }).then(handleResponse);
 },
+getStudentSkillEvaluationReport(sessionId) {
+    return fetch(`${API_BASE_URL}/student-skill-evaluations/class/${sessionId}/report`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

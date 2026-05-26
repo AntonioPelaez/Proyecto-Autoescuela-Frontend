@@ -96,9 +96,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadBookings(filters) {
-        UI.setLoading(true);
-        upcomingTbody.innerHTML = '';
-        pastTbody.innerHTML = '';
+        UI.setLoading('upcoming-tbody', true);
+        UI.setLoading('past-tbody', true);
 
         try {
             let bookings = await Api.getTeacherBookings(filters);
@@ -132,12 +131,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             upcomingTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
             pastTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #d32f2f;">Error al cargar</td></tr>';
         } finally {
-            UI.setLoading(false);
+            UI.setLoading('upcoming-tbody', false);
+            UI.setLoading('past-tbody', false);
         }
     }
 
     async function loadAvailability(date) {
-        UI.setLoading(true);
+        UI.setLoading('availability-grid', true);
         availabilityGrid.innerHTML = '';
 
         try {
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             showMessage('error', error.message || 'Error al cargar disponibilidad.');
         } finally {
-            UI.setLoading(false);
+            UI.setLoading('availability-grid', false);
         }
     }
 

@@ -58,7 +58,7 @@
                     </tr>
                 </thead>
                 <tbody id="upcoming-classes-tbody">
-                    <tr><td colspan="8" style="text-align: center; padding: 20px;">Cargando...</td></tr>
+                    <tr><td colspan="8" style="text-align: center; padding: 20px;"><div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -81,7 +81,7 @@
                     </tr>
                 </thead>
                 <tbody id="past-classes-tbody">
-                    <tr><td colspan="7" style="text-align: center; padding: 20px;">Cargando...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 20px;"><div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div></td></tr>
                 </tbody>
             </table>
         </div>

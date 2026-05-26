@@ -36,6 +36,17 @@
 				<div id="student-summary" class="table-actions"></div>
 			</div>
 			</section>
+            <section class="card">
+    <div class="card-header">
+        <h2>Total gastado</h2>
+    </div>
+    <div class="card-body">
+        <p id="student-total-spent" 
+           style="font-size: 32px; font-weight: bold; color: #007bff; margin: 0;">
+            €0.00
+        </p>
+    </div>
+</section>
 
 			<section class="card">
 			<div class="card-header">

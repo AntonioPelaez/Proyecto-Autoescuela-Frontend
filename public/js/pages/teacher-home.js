@@ -197,6 +197,7 @@ function translateStatus(status) {
         renderRows(UPCOMING_BODY_ID, upcomingRows, 4, 'No hay próximas clases registradas.');
         renderRows(HISTORY_BODY_ID, historyRows, 4, 'Sin clases históricas.');
         renderWeekSummary(sorted);
+        UI.setLoading(WEEK_SUMMARY_ID, false);
     }
 
     async function init() {

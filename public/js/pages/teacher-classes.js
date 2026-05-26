@@ -54,9 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function loadClasses(filters) {
-        UI.setLoading(true);
-        upcomingTbody.innerHTML = '';
-        pastTbody.innerHTML = '';
+        UI.setLoading('upcoming-classes-tbody', true);
+        UI.setLoading('past-classes-tbody', true);
 
         try {
             const safeFilters = {
@@ -98,7 +97,8 @@ const past = bookings.filter(b =>
         } catch (error) {
             showMessage('error', error.message || 'Error al cargar clases.');
         } finally {
-            UI.setLoading(false);
+            UI.setLoading('upcoming-classes-tbody', false);
+            UI.setLoading('past-classes-tbody', false);
         }
     }
 

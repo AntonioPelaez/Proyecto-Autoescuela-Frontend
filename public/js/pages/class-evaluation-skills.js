@@ -4,7 +4,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const infoEl = document.getElementById("class-info");
     const skillsContainer = document.getElementById("skills-container");
     const form = document.getElementById("skills-form");
-
+    const formatDate = (isoDate) => {
+    const d = new Date(isoDate);
+    return d.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+};
     try {
         // 1. Obtener datos de la clase
         let classData = await Api.getTeacherBookings();
@@ -29,22 +36,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         infoEl.innerHTML = `
             Alumno: <strong>${classInfo.studentName}</strong><br>
-            Fecha: <strong>${classInfo.date}</strong> — Hora: <strong>${classInfo.time}</strong>
+            Fecha: <strong>${formatDate(classInfo.date)}</strong> — Hora: <strong>${classInfo.time}</strong>
         `;
 
         // 2. Cargar skills
         const skills = await Api.getDrivingSkills();
 
         skillsContainer.innerHTML = skills.map(skill => `
-            <div class="col-md-3">
-                <label><strong>${skill.name}</strong></label>
-                <input type="number"
-                       class="form-control skill-score"
-                       data-skill-id="${skill.id}"
-                       min="1" max="10"
-                       required>
-            </div>
-        `).join("");
+    <div class="col-md-3">
+        <label><strong>${skill.name}</strong></label>
+        <select class="form-control skill-score"
+                data-skill-id="${skill.id}"
+                required>
+            <option value="" disabled selected>Selecciona una puntuación</option>
+            ${Array.from({ length: 11 }, (_, i) => `
+                <option value="${i}">${i}</option>
+            `).join("")}
+        </select>
+    </div>
+`).join("");
+
 
     } catch (err) {
         console.error(err);

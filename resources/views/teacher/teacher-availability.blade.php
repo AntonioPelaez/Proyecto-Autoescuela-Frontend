@@ -121,7 +121,13 @@
             <th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="teacher-availability-body"></tbody>
+        <tbody id="teacher-availability-body">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 20px;">
+              <div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>

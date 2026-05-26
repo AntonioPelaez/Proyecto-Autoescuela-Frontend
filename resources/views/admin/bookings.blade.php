@@ -105,7 +105,9 @@
 								<th>Acciones</th>
 							</tr>
 						</thead>
-						<tbody id="bookings-table-body"></tbody>
+						<tbody id="bookings-table-body">
+							<tr><td colspan="10" style="text-align: center; padding: 20px;"><div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div></td></tr>
+						</tbody>
 					</table>
 				</div>
 			</section>

@@ -42,7 +42,9 @@
 			<div class="card-header">
 				<h2>Agenda semanal (7 dias)</h2>
 			</div>
-			<div class="card-body" id="teacher-week-summary"></div>
+			<div class="card-body" id="teacher-week-summary">
+				<div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div>
+			</div>
 			</section>
 
 			<section class="card">

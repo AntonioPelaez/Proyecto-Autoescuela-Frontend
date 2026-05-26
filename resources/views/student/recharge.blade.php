@@ -33,6 +33,16 @@
         </div>
     </section>
 </div>
+<section class="card" style="margin-bottom: 30px; max-width: 600px;">
+    <div class="card-header">
+        <h3 style="margin: 0;">Total de saldo gastado</h3>
+    </div>
+    <div class="card-body">
+        <p style="font-size: 28px; font-weight: bold; color: #007bff;" id="total-spent">
+        €0.00
+    </p>
+    </div>
+</section>
 
 @endsection
 

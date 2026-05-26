@@ -7,6 +7,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const balanceAmount = document.getElementById("balance-amount");
     const startRechargeBtn = document.getElementById("start-recharge-btn"); // ← ID correcto
     const withdrawBtn = document.getElementById("withdraw-balance-btn");
+    const totalSpentBox = document.getElementById("total-spent");
+
+async function loadTotalSpent() {
+    try {
+        const me = await Api.getMe();
+        const studentId = me.student_profile.id;
+
+        const result = await Api.totalSpent(studentId);
+
+        const total = parseFloat(result.total_spent || 0);
+
+        totalSpentBox.textContent = `€${total.toFixed(2)}`;
+    } catch (err) {
+        console.error("Error cargando total gastado:", err);
+        totalSpentBox.textContent = "€0.00";
+    }
+}
+    // Cargar total gastado al iniciar
+    await loadTotalSpent();
 
     async function loadBalance() {
         try {

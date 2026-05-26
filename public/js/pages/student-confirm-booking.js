@@ -116,11 +116,22 @@ document.addEventListener("DOMContentLoaded", async () => {
             // ============================
             // 🔥 3) PAGAR CON MONEDERO
             // ============================
-            const payment = await Api.payWithWallet({
-                class_session_id: classSessionId
-            });
+           const payment = await Api.payWithWallet({
+    class_session_id: classSessionId
+});
 
-            console.log("Pago realizado:", payment);
+console.log("Pago realizado:", payment);
+
+// ============================
+// 🔥 DESCARGAR TICKET PDF
+// ============================
+try {
+    await downloadTicketPDF(payment.payment_intent_id);
+} catch (err) {
+    console.error("Error descargando ticket:", err);
+    showState(messageBox, "warning", "La reserva se pagó, pero no se pudo descargar el ticket.");
+}
+
 
             // Limpiar reserva temporal
             sessionStorage.removeItem("pendingBooking");

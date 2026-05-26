@@ -10,6 +10,29 @@
     const QUICK_TOWN_ID = "quick-town";
     const QUICK_DATE_ID = "quick-date";
     const QUICK_RESULTS_ID = "student-quick-results";
+async function loadTotalSpent() {
+    try {
+        const me = await Api.getMe();
+        const studentId = me.student_profile.id;
+
+        const result = await Api.totalSpent(studentId);
+
+        // Normalizar respuesta
+        const total = Number(
+            result.total_spent ??
+            result.data?.total_spent ??
+            result.raw?.total_spent ??
+            0
+        );
+
+        const el = document.getElementById("student-total-spent");
+        if (el) el.textContent = `€${total.toFixed(2)}`;
+
+    } catch (err) {
+        console.error("Error cargando total gastado:", err);
+    }
+}
+
 
     function formatDate(value) {
         const raw = String(value || "").trim();
@@ -241,18 +264,30 @@
             
             // Crear celda de acciones
             const actionCell = document.createElement("td");
-            const isCompleted = booking.status === "completada";
+let html = "";
 
-if (isCompleted) {
-    actionCell.innerHTML = `
-        <button 
-            class="btn btn-info btn-sm view-report-btn"
-            data-session-id="${booking.id}">
+// ✔ Mostrar informe SOLO si está completada
+if (booking.status === "completada") {
+    html += `
+        <button class="btn btn-info btn-sm view-report-btn" data-session-id="${booking.id}">
             Ver informe
-        </button>`;
-} else {
-    actionCell.innerHTML = '<span class="badge bg-secondary">Pendiente</span>';
+        </button>
+    `;
 }
+
+// ✔ Mostrar ticket SIEMPRE que tenga payment_intent_id
+if (booking.payment_intent_id) {
+    html += `
+        <button class="btn btn-primary btn-sm download-ticket-btn" data-session-id="${booking.id}">
+            Ticket
+        </button>
+    `;
+} else {
+    html += `<span class="badge bg-warning">Sin pago</span>`;
+}
+
+actionCell.innerHTML = html;
+
 
             
             row.append(
@@ -610,6 +645,7 @@ if (isCompleted) {
         try {
             await loadTowns();
             await loadPanelData();
+            await loadTotalSpent();
         } catch (error) {
             showState(
                 "error",
@@ -622,6 +658,43 @@ if (isCompleted) {
 
     document.addEventListener("DOMContentLoaded", init);
 })();
+document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("download-ticket-btn")) return;
+
+    const sessionId = Number(e.target.dataset.sessionId);
+
+    try {
+        const session = await Api.getClassSession(sessionId);
+        const paymentIntentId = session.payment_intent_id;
+
+        if (!paymentIntentId) {
+            alert("Esta clase no tiene ticket disponible.");
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/payments/${paymentIntentId}/ticket`, {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ticket-${paymentIntentId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+        console.error(err);
+        alert("No se pudo descargar el ticket.");
+    }
+});
+
 // ─────────────────────────────────────────────
 // MODAL PURO JS (sin Bootstrap)
 // ─────────────────────────────────────────────
@@ -719,4 +792,5 @@ document.addEventListener("click", async (e) => {
         console.error(err);
         openReportModal("<p>Error cargando el informe.</p>");
     }
+    
 });

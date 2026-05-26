@@ -55,6 +55,28 @@ async function handleResponse(response) {
     }
     return data;
 }
+async function downloadTicketPDF(paymentIntentId) {
+    const response = await fetch(`${API_BASE_URL}/payments/${paymentIntentId}/ticket`, {
+        method: "GET",
+        headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+        throw new Error("No se pudo descargar el ticket");
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ticket-${paymentIntentId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+}
 
 function buildDefaultTimeSlots() {
     const slots = [];
@@ -740,7 +762,13 @@ withdrawWallet(amount) {
 withdrawBalance(amount) {
     return this.withdrawWallet(amount);
 },
-
+totalSpent(studentId) {
+    return fetch(`${API_BASE_URL}/payments/student/${studentId}/spent`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 // ─────────── STUDENT SKILL EVALUATIONS ───────────
 getStudentSkillEvaluations() {
     return fetch(`${API_BASE_URL}/student-skill-evaluations`, {

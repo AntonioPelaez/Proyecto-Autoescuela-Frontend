@@ -10,7 +10,7 @@
     </a>
 </div>
 
-<h1 class="page-title">Histórial de clases</h1>
+<h1 class="page-title">Historial de clases</h1>
 
 <!-- BOTONES DE VISTA -->
 <div class="mb-3 d-flex gap-2">

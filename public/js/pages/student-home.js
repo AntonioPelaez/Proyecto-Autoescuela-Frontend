@@ -208,6 +208,7 @@ async function loadTotalSpent() {
 
     function renderSummary(bookings) {
         const container = document.getElementById(SUMMARY_ID);
+       
         if (!container) {
             return;
         }
@@ -595,43 +596,44 @@ actionCell.innerHTML = html;
     }
 
     async function loadPanelData() {
-        UI.setLoading(HISTORY_BODY_ID, true);
-        try {
-            const response = await Api.getMyClasses();
-            const rawBookings = Array.isArray(response && response.data)
-                ? response.data
-                : Array.isArray(response)
-                  ? response
-                  : [];
-            const teacherVehicleMap = await buildTeacherVehicleMap(rawBookings);
-            const bookings = rawBookings.map((b) => {
-                const nb = normalizeBookingRecord(b);
-                const sid = b?.id ?? null;
+    UI.setLoading(HISTORY_BODY_ID, true);
+    UI.setLoading(SUMMARY_ID, true); // ✔ activar cargando en el resumen
 
-                // ✔ Solo usar el mapa si el backend NO envía vehículo
-                if (!nb.vehicle && sid && teacherVehicleMap[sid]) {
-                    nb.vehicle = teacherVehicleMap[sid];
-                }
+    try {
+        const response = await Api.getMyClasses();
+        const rawBookings = Array.isArray(response && response.data)
+            ? response.data
+            : Array.isArray(response)
+            ? response
+            : [];
 
-                return nb;
-            });
+        const teacherVehicleMap = await buildTeacherVehicleMap(rawBookings);
 
-            renderNextClass(bookings);
-            renderSummary(bookings);
-            renderHistory(bookings);
-            showState("success", "Panel actualizado correctamente.");
-        } catch (error) {
-            showState(
-                "error",
-                error && error.message
-                    ? error.message
-                    : "No se pudo cargar el panel del alumno.",
-            );
-            UI.showToast("Error al cargar el panel del alumno.", "error");
-        } finally {
-            UI.setLoading(HISTORY_BODY_ID, false);
-        }
+        const bookings = rawBookings.map((b) => {
+            const nb = normalizeBookingRecord(b);
+            const sid = b?.id ?? null;
+
+            if (!nb.vehicle && sid && teacherVehicleMap[sid]) {
+                nb.vehicle = teacherVehicleMap[sid];
+            }
+
+            return nb;
+        });
+
+        renderNextClass(bookings);
+        renderSummary(bookings);
+        renderHistory(bookings);
+
+        showState("success", "Panel actualizado correctamente.");
+    } catch (error) {
+        showState("error", error?.message || "No se pudo cargar el panel del alumno.");
+        UI.showToast("Error al cargar el panel del alumno.", "error");
+    } finally {
+        UI.setLoading(HISTORY_BODY_ID, false);
+        UI.setLoading(SUMMARY_ID, false); // ✔ desactivar cargando en el resumen
     }
+}
+
 
     async function init() {
         const root = document.getElementById(ROOT_ID);

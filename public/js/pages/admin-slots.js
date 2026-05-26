@@ -88,8 +88,6 @@ function setApiSyncState(state, details = "") {
         apiStatusBox.textContent = details || "Selecciona población y fecha para consultar.";
         return;
     }
-
-    apiStatusBox.textContent = "Sincronizando con API...";
 }
 // ------------------------------------------------------------
 // CARGAR SELECTORES
@@ -189,6 +187,13 @@ async function autoCleanExpiredSpecials(specials) {
 }
 
 async function loadSlots() {
+    tableBody.innerHTML = `
+<tr>
+    <td colspan="9" style="text-align:center; padding:20px;">
+        <div class="loader loader-inline loader-sm">Cargando…</div>
+    </td>
+</tr>`;
+
     setApiSyncState("loading");
 
     try {

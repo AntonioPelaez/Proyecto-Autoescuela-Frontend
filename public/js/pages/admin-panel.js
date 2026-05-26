@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadPanelSummary() {
         showState('', '');
+        UI.setLoading('admin-management-body', true);
+UI.setLoading('admin-operations-body', true);
+UI.setLoading('admin-incidents-summary', true);
+
 
         const today = new Date();
         const todayYmd = formatDateYYYYMMDD(today);

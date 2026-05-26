@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        UI.setLoading(true);
+        UI.setLoading('incidents-tbody', true);
         try {
             if (id) {
                 await Api.updateIncident(id, payload);
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             showState('error', error.message || 'Error al guardar incidencia.');
         } finally {
-            UI.setLoading(false);
+            UI.setLoading('incidents-tbody', false);
         }
     });
 
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadIncidents(filters = {}) {
-        UI.setLoading(true);
+        UI.setLoading('incidents-tbody', true);
         try {
             const incidents = await fetchIncidents(filters);
             incidentsCache = incidents;
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             showState('error', error.message || 'No se pudieron cargar las incidencias.');
         } finally {
-            UI.setLoading(false);
+            UI.setLoading('incidents-tbody', false);
         }
     }
 

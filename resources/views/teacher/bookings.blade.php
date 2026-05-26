@@ -75,7 +75,7 @@
                     </tr>
                 </thead>
                 <tbody id="upcoming-tbody">
-                    <tr><td colspan="7" style="text-align: center; padding: 20px;">Cargando...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 20px;"><div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -97,7 +97,7 @@
                     </tr>
                 </thead>
                 <tbody id="past-tbody">
-                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Cargando...</td></tr>
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;"><div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div></td></tr>
                 </tbody>
             </table>
         </div>

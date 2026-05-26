@@ -254,6 +254,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     await deleteAvailability(slot.id, slot.type);
                 });
             });
+
+            UI.setLoading('teacher-availability-body', false);
         } catch (error) {
             console.error("Error cargando disponibilidades:", error);
         }

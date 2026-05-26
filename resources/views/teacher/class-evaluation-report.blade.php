@@ -9,24 +9,29 @@
 
     <div class="card card-body">
 
-        <p>Clase ID <strong id="class-id"></strong></p>
+        <p class="mb-2">Clase ID <strong id="class-id"></strong></p>
 
         <form id="report-form">
 
-            <div class="form-group">
+            <!-- TEXTAREA -->
+            <div class="form-group mb-2">
                 <label for="report-text">Escribe el reporte *</label>
                 <textarea id="report-text" class="form-control" rows="6" required></textarea>
             </div>
 
-            <div class="form-group mt-3 d-flex align-items-center">
-                <input type="checkbox" id="ready-checkbox" class="form-check-input me-2">
-                <label for="ready-checkbox" class="form-check-label">
+            <!-- CHECKBOX -->
+            <div class="checkbox-row">
+                <label for="ready-checkbox" class="checkbox-label">
                     ¿Está listo para examen?
                 </label>
+                <input type="checkbox" id="ready-checkbox" class="checkbox-input">
             </div>
 
-            <div class="mt-4">
-                <button type="submit" class="btn btn-success">Guardar evaluación</button>
+            <!-- BOTÓN -->
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    Guardar evaluación
+                </button>
             </div>
 
         </form>
@@ -42,9 +47,26 @@
 </script>
 
 <style>
-    #ready-checkbox {
-        transform: scale(1.2);
-    }
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 14px 0 !important; /* ← SEPARACIÓN PERFECTA */
+}
+
+.checkbox-label {
+    margin: 0;
+    padding: 0;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+}
 </style>
 
 <script src="{{ asset('js/pages/class-evaluation-report.js') }}"></script>

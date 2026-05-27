@@ -920,6 +920,14 @@ getReadyForExamStudents() {
         credentials: 'include'
     }).then(handleResponse);
 },
+
+getExamStatistics(teacherId) {
+    return fetch(`${API_BASE_URL}/exam-calls/teacher/${teacherId}/stats`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 // ─────────── ESTADOS DE EXAMEN ───────────
 getExamResultStatuses() {
     return fetch(`${API_BASE_URL}/exam-result-statuses`, {
@@ -936,5 +944,11 @@ getExamCallStatuses() {
         credentials: 'include'
     }).then(handleResponse);
 },
-
+getStudentExamHistory(studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/history`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

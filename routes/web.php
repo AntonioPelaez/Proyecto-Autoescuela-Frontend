@@ -38,5 +38,11 @@ Route::view('/teacher/student-evaluations/{id}/history', 'evaluacion.student-eva
 Route::view('/teacher/student-evaluations/{id}/reports', 'evaluacion.student-reports');
 Route::get('/teacher/classes/{classSession}/evaluate-skills', function ($classSession) { return view('teacher.class-evaluation-skills');})->name('teacher.classes.evaluate-skills');
 Route::get('/teacher/classes/{classSession}/evaluate-report', function ($classSession) {return view('teacher.class-evaluation-report');})->name('teacher.classes.evaluate-report');
+Route::get('/admin/convocatorias', function () {return view('admin.convocatoria_index');})->name('admin.convocatorias');
+Route::get('/admin/convocatorias/crear', function () {return view('admin.convocatoria_create');})->name('exam-calls.create');
+Route::get('/admin/convocatorias/{id}/editar', function ($id) {return view('admin.convocatoria_edit');})->name('exam-calls.edit');
+
+
+
 
 

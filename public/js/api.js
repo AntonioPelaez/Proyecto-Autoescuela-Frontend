@@ -844,4 +844,111 @@ getStudentSkillEvaluationReport(sessionId) {
         credentials: 'include'
     }).then(handleResponse);
 },
+// ─────────── EXAM CALLS (CONVOCATORIAS DE EXAMEN) ───────────
+getExamCalls() {
+    return fetch(`${API_BASE_URL}/exam-calls`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getExamCall(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+createExamCall(data) {
+    return fetch(`${API_BASE_URL}/exam-calls`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+updateExamCall(id, data) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+cancelExamCall(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/cancel`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+completeExamCall(id, data = {}) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/complete`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getExamCallStudents(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/students`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+updateExamStudentResult(examCallId, studentId, data) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/result`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getReadyForExamStudents() {
+    return fetch(`${API_BASE_URL}/exam-calls/ready-for-exam`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getExamStatistics(teacherId) {
+    return fetch(`${API_BASE_URL}/exam-calls/teacher/${teacherId}/stats`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+// ─────────── ESTADOS DE EXAMEN ───────────
+getExamResultStatuses() {
+    return fetch(`${API_BASE_URL}/exam-result-statuses`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getExamCallStatuses() {
+    return fetch(`${API_BASE_URL}/exam-call-statuses`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+getStudentExamHistory(studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/history`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

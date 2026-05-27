@@ -8,6 +8,10 @@
     const HISTORY_BODY_ID = 'teacher-history-body';
     const WEEK_SUMMARY_ID = 'teacher-week-summary';
 
+    // 🔥 NUEVOS IDS
+    const NEXT_EXAM_ID = 'teacher-next-exam';
+    const TEACHER_STATS_ID = 'teacher-stats';
+
     // 🔥 Convertir YYYY-MM-DD → DD/MM/YYYY
     function formatDateDMY(dateStr) {
         if (!dateStr) return "";
@@ -96,15 +100,16 @@
             tbody.appendChild(row);
         });
     }
-function translateStatus(status) {
-    const map = {
-        pending: 'Pendiente',
-        confirmed: 'Confirmada',
-        completed: 'Completada',
-        cancelled: 'Cancelada'
-    };
-    return map[status] || status;
-}
+
+    function translateStatus(status) {
+        const map = {
+            pending: 'Pendiente',
+            confirmed: 'Confirmada',
+            completed: 'Completada',
+            cancelled: 'Cancelada'
+        };
+        return map[status] || status;
+    }
 
     function renderWeekSummary(bookings) {
         const container = document.getElementById(WEEK_SUMMARY_ID);
@@ -200,6 +205,54 @@ function translateStatus(status) {
         UI.setLoading(WEEK_SUMMARY_ID, false);
     }
 
+    // ---------------------------------------------------------
+    // 🔥 NUEVO: Próxima convocatoria
+    // ---------------------------------------------------------
+    async function loadNextExam() {
+        const box = document.getElementById(NEXT_EXAM_ID);
+        if (!box) return;
+
+        try {
+            const data = await Api.getTeacherNextExam();
+
+            if (!data) {
+                box.innerHTML = `<p class="text-muted">No tienes convocatorias próximas.</p>`;
+                return;
+            }
+
+            box.innerHTML = `
+                <p><strong>Fecha:</strong> ${formatDateDMY(data.exam_date)}</p>
+                <p><strong>Hora:</strong> ${data.start_time}</p>
+                <p><strong>Población:</strong> ${data.town?.name}</p>
+                <p><strong>Alumnos:</strong> ${data.students.map(s => s.name).join(', ')}</p>
+            `;
+        } catch (e) {
+            box.innerHTML = `<p class="text-danger">Error cargando la próxima convocatoria.</p>`;
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 🔥 NUEVO: Estadísticas del profesor
+    // ---------------------------------------------------------
+    async function loadTeacherStats() {
+        const box = document.getElementById(TEACHER_STATS_ID);
+        if (!box) return;
+
+        try {
+            const stats = await Api.getTeacherExamStats();
+
+            box.innerHTML = `
+                <p><strong>Aprobados:</strong> ${stats.approved}%</p>
+                <p><strong>Suspendidos:</strong> ${stats.failed}%</p>
+            `;
+        } catch (e) {
+            box.innerHTML = `<p class="text-danger">Error cargando estadísticas.</p>`;
+        }
+    }
+
+    // ---------------------------------------------------------
+    // INIT
+    // ---------------------------------------------------------
     async function init() {
         const root = document.getElementById(ROOT_ID);
         if (!root) return;
@@ -208,6 +261,10 @@ function translateStatus(status) {
         UI.setLoading(TODAY_BODY_ID, true);
         UI.setLoading(UPCOMING_BODY_ID, true);
         UI.setLoading(HISTORY_BODY_ID, true);
+
+        // 🔥 NUEVO
+        await loadNextExam();
+        await loadTeacherStats();
 
         try {
             const raw = await Api.getTeacherBookings();

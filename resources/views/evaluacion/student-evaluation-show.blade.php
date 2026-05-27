@@ -30,18 +30,38 @@
                     <th>Preparación</th>
                     <td id="ready-status">—</td>
                 </tr>
+
+                {{-- BOTÓN VER REPORTES (ES BUTTON PORQUE EL JS NO LE CAMBIA HREF) --}}
                 <tr>
                     <th>Reportes escritos</th>
                     <td>
-                        <a id="reports-button" href="#" class="btn btn-primary btn-sm">Ver reportes</a>
+                        <button id="reports-button" class="btn btn-primary btn-sm">
+                            Ver reportes
+                        </button>
                     </td>
                 </tr>
+
+                {{-- 🔵 HISTORIAL DE CLASES (TIENE QUE SER <a> POR EL JS) --}}
                 <tr>
                     <th>Histórico de clases</th>
                     <td>
-                        <a id="history-button" href="#" class="btn btn-info btn-sm">Ver historial</a>
+                        <a id="history-button" class="btn btn-primary btn-sm" href="#">
+                            Ver historial
+                        </a>
                     </td>
                 </tr>
+
+                {{-- 🟠 HISTORIAL DE EXÁMENES (LO HACEMOS <a> PARA QUE SEA IGUAL) --}}
+                <tr>
+                    <th>Historial de exámenes</th>
+                    <td>
+                        <a class="btn btn-primary btn-sm"
+                           href="/teacher/student-evaluations/{{ $id ?? '' }}/exams">
+                            Ver historial de exámenes
+                        </a>
+                    </td>
+                </tr>
+
             </tbody>
         </table>
 
@@ -50,8 +70,7 @@
     {{-- TABLA DE NOTAS POR CLASE Y POR HABILIDAD --}}
     <div class="table-responsive">
         <table class="table table-striped table-bordered text-center align-middle w-auto" id="skills-table">
-            <thead id="skills-table-head">
-            </thead>
+            <thead id="skills-table-head"></thead>
             <tbody id="skills-table-body">
                 <tr id="loader-row">
                     <td colspan="20" class="text-center py-4">
@@ -59,10 +78,8 @@
                     </td>
                 </tr>
             </tbody>
-
         </table>
     </div>
-
 
 @endsection
 

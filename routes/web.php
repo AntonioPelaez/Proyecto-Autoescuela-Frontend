@@ -41,3 +41,7 @@ Route::get('/teacher/classes/{classSession}/evaluate-report', function ($classSe
 Route::get('/admin/convocatorias', function () {return view('admin.convocatoria_index');})->name('admin.convocatorias');
 Route::get('/admin/convocatorias/crear', function () {return view('admin.convocatoria_create');})->name('exam-calls.create');
 Route::get('/admin/convocatorias/{id}/editar', function ($id) {return view('admin.convocatoria_edit');})->name('exam-calls.edit');
+Route::view('/teacher/student-evaluations/{id}/exams', 'exams.history');
+
+
+

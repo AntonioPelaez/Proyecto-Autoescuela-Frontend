@@ -15,18 +15,37 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+
         convocatorias.forEach(call => {
             const row = document.createElement("tr");
 
-            // Primer alumno (para obtener profesor y vehículo)
-            const firstStudent = call.exam_students?.[0] ?? null;
+            // Formatear fecha y hora
+            const fechaHora = call.exam_date && call.start_time
+                ? `${call.exam_date} ${call.start_time}`
+                : '-';
+
+            // Nombre del pueblo
+            const townName = call.town?.name ?? '-';
+
+            // Contar profesores y vehículos únicos
+            const teachersSet = new Set();
+            const vehiclesSet = new Set();
+            if (Array.isArray(call.exam_students)) {
+                call.exam_students.forEach(s => {
+                    if (s.teacher_id) teachersSet.add(s.teacher_id);
+                    if (s.vehicle_id) vehiclesSet.add(s.vehicle_id);
+                });
+            }
+            const teachersCount = teachersSet.size;
+            const vehiclesCount = vehiclesSet.size;
+            const studentsCount = call.exam_students?.length ?? 0;
 
             row.innerHTML = `
-                <td>${call.exam_date} ${call.start_time}</td>
-                <td>${call.town_id ?? '-'}</td>
-                <td>${firstStudent?.teacher_id ?? '-'}</td>
-                <td>${firstStudent?.vehicle_id ?? '-'}</td>
-                <td>${call.exam_students?.length ?? 0}</td>
+                <td>${fechaHora}</td>
+                <td>${townName}</td>
+                <td>${teachersCount}</td>
+                <td>${vehiclesCount}</td>
+                <td>${studentsCount}</td>
                 <td>${call.exam_call_status?.label ?? call.exam_call_status?.name ?? '-'}</td>
                 <td>
                     <button class="btn btn-sm btn-warning" data-id="${call.id}" data-action="edit">Editar</button>

@@ -16,83 +16,69 @@ document.addEventListener("DOMContentLoaded", () => {
         setupSubmit();
     }
 
-    /* ---------------------------------------------------------
-        CARGAR POBLACIONES
-    --------------------------------------------------------- */
+    function normalizeList(raw) {
+        if (Array.isArray(raw)) return raw;
+        if (raw?.data && Array.isArray(raw.data)) return raw.data;
+        if (raw?.vehicles && Array.isArray(raw.vehicles)) return raw.vehicles;
+        if (raw?.items && Array.isArray(raw.items)) return raw.items;
+        return [];
+    }
+
     async function loadTowns() {
         try {
-            const res = await api.get("/towns");
-            const towns = res.data;
-
+            const towns = normalizeList(await Api.getTowns());
             townSelect.innerHTML = `<option value="">Selecciona una población</option>`;
-
             towns.forEach(town => {
                 const opt = document.createElement("option");
                 opt.value = town.id;
                 opt.textContent = town.name;
                 townSelect.appendChild(opt);
             });
-
-        } catch (error) {
-            console.error("Error cargando poblaciones:", error);
+        } catch {
             townSelect.innerHTML = `<option value="">Error cargando poblaciones</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR PROFESORES
-    --------------------------------------------------------- */
     async function loadTeachers() {
         try {
-            const res = await api.get("/teachers");
-            const teachers = res.data;
-
+            const teachers = normalizeList(await Api.getTeachers());
             teacherSelect.innerHTML = `<option value="">Selecciona un profesor</option>`;
-
             teachers.forEach(teacher => {
                 const opt = document.createElement("option");
                 opt.value = teacher.id;
-                opt.textContent = teacher.user.name;
+                opt.textContent = teacher.name ?? teacher.user?.name ?? "Profesor sin nombre";
                 teacherSelect.appendChild(opt);
             });
-
-        } catch (error) {
-            console.error("Error cargando profesores:", error);
+        } catch {
             teacherSelect.innerHTML = `<option value="">Error cargando profesores</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR VEHÍCULOS
-    --------------------------------------------------------- */
     async function loadVehicles() {
         try {
-            const res = await api.get("/vehicles");
-            const vehicles = res.data;
-
+            const vehicles = normalizeList(await Api.getVehicles());
             vehicleSelect.innerHTML = `<option value="">Selecciona un vehículo</option>`;
 
             vehicles.forEach(vehicle => {
                 const opt = document.createElement("option");
                 opt.value = vehicle.id;
-                opt.textContent = vehicle.plate;
+
+                opt.textContent =
+                    (vehicle.brand && vehicle.model)
+                        ? `${vehicle.brand} ${vehicle.model}`
+                        : vehicle.name ?? vehicle.plate_number ?? "Vehículo";
+
                 vehicleSelect.appendChild(opt);
             });
 
-        } catch (error) {
-            console.error("Error cargando vehículos:", error);
+        } catch {
             vehicleSelect.innerHTML = `<option value="">Error cargando vehículos</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR ALUMNOS PREPARADOS
-    --------------------------------------------------------- */
     async function loadStudents() {
         try {
-            const res = await api.get("/students?ready_for_exam=1");
-            const students = res.data;
-
+            const students = normalizeList(await Api.getReadyForExamStudents());
             studentsList.innerHTML = "";
 
             if (!students.length) {
@@ -102,27 +88,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
             students.forEach(student => {
                 const wrapper = document.createElement("div");
-                wrapper.className = "form-check mb-2";
+                wrapper.className = "d-flex align-items-center justify-content-between mb-2";
 
                 wrapper.innerHTML = `
-                    <input type="checkbox" class="form-check-input" id="student_${student.id}" name="students[]" value="${student.id}">
-                    <label class="form-check-label" for="student_${student.id}">
-                        ${student.user.name}
+                    <label class="mb-0" for="student_${student.id}">
+                        ${student.name ?? student.user?.name ?? "Alumno sin nombre"}
                     </label>
+                    <input type="checkbox" class="form-check-input" id="student_${student.id}" name="students[]" value="${student.id}">
                 `;
 
                 studentsList.appendChild(wrapper);
             });
 
-        } catch (error) {
-            console.error("Error cargando alumnos:", error);
+        } catch {
             studentsList.innerHTML = `<p class="text-danger">Error cargando alumnos.</p>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        ENVIAR FORMULARIO
-    --------------------------------------------------------- */
     function setupSubmit() {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -130,7 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData(form);
 
             const payload = {
-                date_time: formData.get("date_time"),
+                exam_date: formData.get("date_time").split("T")[0],
+                start_time: formData.get("date_time").split("T")[1],
                 town_id: formData.get("town_id"),
                 teacher_id: formData.get("teacher_id"),
                 vehicle_id: formData.get("vehicle_id"),
@@ -138,12 +121,10 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             try {
-                await api.post("/exam-calls", payload);
+                await Api.createExamCall(payload);
                 ui.showToast("Convocatoria creada correctamente", "success");
                 router.go("/admin/convocatorias");
-
-            } catch (error) {
-                console.error("Error creando convocatoria:", error);
+            } catch {
                 ui.showToast("Error al crear la convocatoria", "error");
             }
         });

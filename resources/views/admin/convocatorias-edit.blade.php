@@ -42,10 +42,12 @@
 
         {{-- Alumnos --}}
         <div class="form-group mb-4">
-            <label>Alumnos preparados</label>
+            <label class="fw-bold">Alumnos preparados para examen</label>
 
-            <div class="card card-body" style="max-height: 300px; overflow-y: auto;" id="students-list">
-                <p class="text-muted">Cargando alumnos...</p>
+            <div class="card card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                <div id="students-list" class="d-flex flex-column gap-1">
+                    <p class="text-muted">Cargando alumnos...</p>
+                </div>
             </div>
         </div>
 
@@ -58,6 +60,17 @@
     </form>
 </div>
 
+@endsection
+
+@section('styles')
+<style>
+    .student-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 2px;
+    }
+</style>
 @endsection
 
 @section('scripts')

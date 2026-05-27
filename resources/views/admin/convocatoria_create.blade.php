@@ -24,7 +24,7 @@
             </select>
         </div>
 
-        {{-- Profesor acompañante --}}
+        {{-- Profesor --}}
         <div class="form-group mb-3">
             <label for="teacher_id">Profesor acompañante</label>
             <select id="teacher_id" name="teacher_id" class="form-control" required>
@@ -40,12 +40,14 @@
             </select>
         </div>
 
-        {{-- Alumnos preparados --}}
+        {{-- Alumnos --}}
         <div class="form-group mb-4">
-            <label>Alumnos preparados para examen</label>
+            <label class="fw-bold">Alumnos preparados para examen</label>
 
-            <div class="card card-body" style="max-height: 300px; overflow-y: auto;" id="students-list">
-                <p class="text-muted" id="students-loading">Cargando alumnos...</p>
+            <div class="card card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                <div id="students-list" class="d-flex flex-column gap-1">
+                    <p class="text-muted">Cargando alumnos...</p>
+                </div>
             </div>
         </div>
 
@@ -58,6 +60,18 @@
     </form>
 </div>
 
+@endsection
+
+@section('styles')
+<style>
+    /* Alineación perfecta del alumno */
+    .student-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 2px;
+    }
+</style>
 @endsection
 
 @section('scripts')

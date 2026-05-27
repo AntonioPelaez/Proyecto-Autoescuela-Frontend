@@ -19,9 +19,9 @@
             <tr>
                 <th>Fecha</th>
                 <th>Población</th>
-                <th>Profesor</th>
-                <th>Vehículo</th>
-                <th>Alumnos</th>
+                <th>Nº Profesores</th>
+                <th>Nº Vehículos</th>
+                <th>Nº Alumnos</th>
                 <th>Estado</th>
                 <th style="width: 200px;">Acciones</th>
             </tr>

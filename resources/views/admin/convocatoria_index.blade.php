@@ -14,14 +14,22 @@
         </a>
     </div>
 
+    <!-- Loader -->
+    <div id="convocatorias-loader" class="text-center my-4" style="display:none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <div>Cargando convocatorias...</div>
+    </div>
+
     <table class="table table-bordered table-striped mt-3" id="convocatorias-table">
         <thead>
             <tr>
                 <th>Fecha</th>
                 <th>Población</th>
-                <th>Profesor</th>
-                <th>Vehículo</th>
-                <th>Alumnos</th>
+                <th>Nº Profesores</th>
+                <th>Nº Vehículos</th>
+                <th>Nº Alumnos</th>
                 <th>Estado</th>
                 <th style="width: 200px;">Acciones</th>
             </tr>

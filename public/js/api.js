@@ -951,4 +951,11 @@ getStudentExamHistory(studentId) {
         credentials: 'include'
     }).then(handleResponse);
 },
+toggleConvocation(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/toggle`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

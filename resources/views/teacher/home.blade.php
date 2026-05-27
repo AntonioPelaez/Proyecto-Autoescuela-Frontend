@@ -4,89 +4,111 @@
 @section('main-id', 'teacher-home-page')
 
 @section('content')
-			<div class="page-shell page-shell-teacher">
-			<header>
-				<h1>Panel del profesor</h1>
-				<div class="table-actions">
-					<a href="/teacher/classes" class="btn btn-primary">Ver clases</a>
-					<a href="/teacher/bookings" class="btn btn-outline">Abrir agenda completa</a>
-				</div>
-			</header>
+<div class="page-shell page-shell-teacher">
 
-			<div class="page-shell-intro">
-				<p>Organiza tu día, revisa las próximas sesiones y controla la carga semanal con una visión más clara.</p>
-			</div>
+    <header>
+        <h1>Panel del profesor</h1>
+        <div class="table-actions">
+            <a href="/teacher/classes" class="btn btn-primary">Ver clases</a>
+            <a href="/teacher/bookings" class="btn btn-outline">Abrir agenda completa</a>
+        </div>
+    </header>
 
-			<div id="teacher-home-state" class="hidden"></div>
+    <div class="page-shell-intro">
+        <p>Organiza tu día, revisa las próximas sesiones y controla la carga semanal con una visión más clara.</p>
+    </div>
 
-			<section class="card">
-			<div class="card-header">
-				<h2>Clases de hoy</h2>
-			</div>
-			<div class="card-body table-wrapper">
-				<table class="table table-striped table-hover">
-					<thead>
-						<tr>
-							<th>Hora</th>
-							<th>Alumno</th>
-							<th>Poblacion</th>
-							<th>Vehiculo</th>
-						</tr>
-					</thead>
-					<tbody id="teacher-today-body"></tbody>
-				</table>
-			</div>
-			</section>
+    <div id="teacher-home-state" class="hidden"></div>
 
-			<section class="card">
-			<div class="card-header">
-				<h2>Agenda semanal (7 dias)</h2>
-			</div>
-			<div class="card-body" id="teacher-week-summary">
-				<div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div>
-			</div>
-			</section>
+    {{-- 🔥 NUEVO: Próxima convocatoria --}}
+    <section class="card">
+        <div class="card-header">
+            <h2>Próxima convocatoria</h2>
+        </div>
+        <div class="card-body" id="teacher-next-exam">
+            <div class="loader loader-inline loader-sm">Cargando…</div>
+        </div>
+    </section>
 
-			<section class="card">
-			<div class="card-header">
-				<h2>Proximas clases</h2>
-			</div>
-			<div class="card-body table-wrapper">
-				<table class="table table-striped table-hover">
-					<thead>
-						<tr>
-							<th>Fecha</th>
-							<th>Hora</th>
-							<th>Alumno</th>
-							<th>Poblacion</th>
-						</tr>
-					</thead>
-					<tbody id="teacher-upcoming-body"></tbody>
-				</table>
-			</div>
-			</section>
+    {{-- 🔥 NUEVO: Estadísticas del profesor --}}
+    <section class="card">
+        <div class="card-header">
+            <h2>Estadísticas del profesor</h2>
+        </div>
+        <div class="card-body" id="teacher-stats">
+            <div class="loader loader-inline loader-sm">Cargando…</div>
+        </div>
+    </section>
 
-			<section class="card">
-			<div class="card-header">
-				<h2>Historial impartido</h2>
-			</div>
-			<div class="card-body table-wrapper">
-				<table class="table table-striped table-hover">
-					<thead>
-						<tr>
-							<th>Fecha</th>
-							<th>Hora</th>
-							<th>Alumno</th>
-							<th>Estado</th>
-						</tr>
-					</thead>
-					<tbody id="teacher-history-body"></tbody>
-				</table>
-			</div>
-			</section>
-			</div>
+    <section class="card">
+        <div class="card-header">
+            <h2>Clases de hoy</h2>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Alumno</th>
+                        <th>Poblacion</th>
+                        <th>Vehiculo</th>
+                    </tr>
+                </thead>
+                <tbody id="teacher-today-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Agenda semanal (7 dias)</h2>
+        </div>
+        <div class="card-body" id="teacher-week-summary">
+            <div class="loader loader-inline loader-sm" aria-live="polite">Cargando…</div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Proximas clases</h2>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Alumno</th>
+                        <th>Poblacion</th>
+                    </tr>
+                </thead>
+                <tbody id="teacher-upcoming-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h2>Historial impartido</h2>
+        </div>
+        <div class="card-body table-wrapper">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Alumno</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="teacher-history-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
 @endsection
 
 @section('scripts')
-	<script src="{{ asset('js/pages/teacher-home.js') }}" defer></script>
+<script src="{{ asset('js/pages/teacher-home.js') }}" defer></script>
 @endsection

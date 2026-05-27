@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const vehicleSelect = document.querySelector("#vehicle_id");
     const studentsList = document.querySelector("#students-list");
 
-    const convocatoriaId = router.param("id"); // /admin/convocatorias/123/editar
+    // Obtener ID desde la URL
+    const parts = window.location.pathname.split("/");
+    const convocatoriaId = parts[parts.length - 2];
 
     init();
 
@@ -19,105 +21,86 @@ document.addEventListener("DOMContentLoaded", () => {
         setupSubmit();
     }
 
-    /* ---------------------------------------------------------
-        CARGAR DATOS DE LA CONVOCATORIA
-    --------------------------------------------------------- */
+    function normalizeList(raw) {
+        if (Array.isArray(raw)) return raw;
+        if (raw?.data && Array.isArray(raw.data)) return raw.data;
+        if (raw?.vehicles && Array.isArray(raw.vehicles)) return raw.vehicles;
+        if (raw?.items && Array.isArray(raw.items)) return raw.items;
+        return [];
+    }
+
     async function loadConvocatoriaData() {
         try {
-            const res = await api.get(`/exam-calls/${convocatoriaId}`);
-            const c = res.data;
+            const c = await Api.getExamCall(convocatoriaId);
 
-            document.querySelector("#date_time").value = c.date_time.replace(" ", "T");
-            townSelect.value = c.town_id;
-            teacherSelect.value = c.teacher_id;
-            vehicleSelect.value = c.vehicle_id;
+            document.querySelector("#date_time").value = `${c.exam_date}T${c.start_time}`;
+            townSelect.value = c.town_id ?? "";
+            teacherSelect.value = c.teacher_id ?? "";
+            vehicleSelect.value = c.vehicle_id ?? "";
 
-            // Marcar alumnos seleccionados
-            c.students.forEach(s => {
-                const checkbox = document.querySelector(`#student_${s.id}`);
-                if (checkbox) checkbox.checked = true;
-            });
+            if (Array.isArray(c.exam_students)) {
+                c.exam_students.forEach(s => {
+                    const checkbox = document.querySelector(`#student_${s.student_id}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
 
-        } catch (error) {
-            console.error("Error cargando convocatoria:", error);
-            ui.showToast("Error cargando datos", "error");
+        } catch {
+            UI.showToast("Error cargando datos", "error");
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR POBLACIONES
-    --------------------------------------------------------- */
     async function loadTowns() {
         try {
-            const res = await api.get("/towns");
-            const towns = res.data;
-
+            const towns = normalizeList(await Api.getTowns());
             townSelect.innerHTML = `<option value="">Selecciona una población</option>`;
-
             towns.forEach(town => {
                 const opt = document.createElement("option");
                 opt.value = town.id;
                 opt.textContent = town.name;
                 townSelect.appendChild(opt);
             });
-
-        } catch (error) {
+        } catch {
             townSelect.innerHTML = `<option value="">Error cargando poblaciones</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR PROFESORES
-    --------------------------------------------------------- */
     async function loadTeachers() {
         try {
-            const res = await api.get("/teachers");
-            const teachers = res.data;
-
+            const teachers = normalizeList(await Api.getTeachers());
             teacherSelect.innerHTML = `<option value="">Selecciona un profesor</option>`;
-
             teachers.forEach(teacher => {
                 const opt = document.createElement("option");
                 opt.value = teacher.id;
-                opt.textContent = teacher.user.name;
+                opt.textContent = teacher.name ?? teacher.user?.name ?? "Profesor sin nombre";
                 teacherSelect.appendChild(opt);
             });
-
-        } catch (error) {
+        } catch {
             teacherSelect.innerHTML = `<option value="">Error cargando profesores</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR VEHÍCULOS
-    --------------------------------------------------------- */
     async function loadVehicles() {
         try {
-            const res = await api.get("/vehicles");
-            const vehicles = res.data;
-
+            const vehicles = normalizeList(await Api.getVehicles());
             vehicleSelect.innerHTML = `<option value="">Selecciona un vehículo</option>`;
-
             vehicles.forEach(vehicle => {
                 const opt = document.createElement("option");
                 opt.value = vehicle.id;
-                opt.textContent = vehicle.plate;
+                opt.textContent =
+                    (vehicle.brand && vehicle.model)
+                        ? `${vehicle.brand} ${vehicle.model}`
+                        : vehicle.name ?? vehicle.plate_number ?? "Vehículo";
                 vehicleSelect.appendChild(opt);
             });
-
-        } catch (error) {
+        } catch {
             vehicleSelect.innerHTML = `<option value="">Error cargando vehículos</option>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        CARGAR ALUMNOS
-    --------------------------------------------------------- */
     async function loadStudents() {
         try {
-            const res = await api.get("/students?ready_for_exam=1");
-            const students = res.data;
-
+            const students = normalizeList(await Api.getReadyForExamStudents());
             studentsList.innerHTML = "";
 
             if (!students.length) {
@@ -127,26 +110,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
             students.forEach(student => {
                 const wrapper = document.createElement("div");
-                wrapper.className = "form-check mb-2";
+                wrapper.className = "student-item";
 
                 wrapper.innerHTML = `
+                    <span class="student-name">
+                        ${student.name ?? student.user?.name ?? "Alumno sin nombre"}
+                    </span>
                     <input type="checkbox" class="form-check-input" id="student_${student.id}" name="students[]" value="${student.id}">
-                    <label class="form-check-label" for="student_${student.id}">
-                        ${student.user.name}
-                    </label>
                 `;
 
                 studentsList.appendChild(wrapper);
             });
 
-        } catch (error) {
+        } catch {
             studentsList.innerHTML = `<p class="text-danger">Error cargando alumnos.</p>`;
         }
     }
 
-    /* ---------------------------------------------------------
-        GUARDAR CAMBIOS
-    --------------------------------------------------------- */
     function setupSubmit() {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -154,7 +134,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData(form);
 
             const payload = {
-                date_time: formData.get("date_time"),
+                exam_date: formData.get("date_time").split("T")[0],
+                start_time: formData.get("date_time").split("T")[1],
                 town_id: formData.get("town_id"),
                 teacher_id: formData.get("teacher_id"),
                 vehicle_id: formData.get("vehicle_id"),
@@ -162,13 +143,11 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             try {
-                await api.put(`/exam-calls/${convocatoriaId}`, payload);
-                ui.showToast("Convocatoria actualizada", "success");
-                router.go("/admin/convocatorias");
-
-            } catch (error) {
-                console.error("Error actualizando:", error);
-                ui.showToast("Error al guardar cambios", "error");
+                await Api.updateExamCall(convocatoriaId, payload);
+                UI.showToast("Convocatoria actualizada", "success");
+               window.location.href = "/admin/convocatorias";
+            } catch {
+                UI.showToast("Error al guardar cambios", "error");
             }
         });
     }

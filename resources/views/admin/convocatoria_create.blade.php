@@ -24,7 +24,7 @@
             </select>
         </div>
 
-        {{-- Profesor acompañante --}}
+        {{-- Profesor --}}
         <div class="form-group mb-3">
             <label for="teacher_id">Profesor acompañante</label>
             <select id="teacher_id" name="teacher_id" class="form-control" required>
@@ -40,17 +40,19 @@
             </select>
         </div>
 
-        {{-- Alumnos preparados --}}
+        {{-- Alumnos --}}
         <div class="form-group mb-4">
-            <label>Alumnos preparados para examen</label>
+            <label class="fw-bold">Alumnos preparados para examen</label>
 
-            <div class="card card-body" style="max-height: 300px; overflow-y: auto;" id="students-list">
-                <p class="text-muted" id="students-loading">Cargando alumnos...</p>
+            <div class="card card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                <div id="students-list" class="d-flex flex-column gap-1">
+                    <p class="text-muted">Cargando alumnos...</p>
+                </div>
             </div>
         </div>
 
         {{-- Botones --}}
-        <div class="d-flex justify-content-between mt-4">
+        <div class="convocatoria-buttons d-flex justify-content-between">
             <a href="/admin/convocatorias" class="btn btn-secondary">Volver</a>
             <button type="submit" class="btn btn-primary">Crear convocatoria</button>
         </div>
@@ -58,6 +60,45 @@
     </form>
 </div>
 
+@endsection
+
+@section('styles')
+<style>
+/* 🔥 Fuerza el layout correcto sin importar el CSS global */
+.student-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;              /* 🔥 ESTO ES LO QUE FALTABA */
+    column-gap: 0 !important;       /* 🔥 POR SI ALGÚN CSS USA column-gap */
+    row-gap: 0 !important;
+    padding: 4px 2px !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+.student-name {
+    flex-grow: 1 !important;
+    width: auto !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.student-name,
+.student-item label {
+    flex-grow: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+    .convocatoria-buttons {
+        margin-top: 2rem !important;
+        padding-top: 1.5rem !important;
+        border-top: 1px solid #ddd !important;
+    }
+</style>
 @endsection
 
 @section('scripts')

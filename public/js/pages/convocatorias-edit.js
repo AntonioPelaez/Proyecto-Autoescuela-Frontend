@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         } catch {
-            ui.showToast("Error cargando datos", "error");
+            UI.showToast("Error cargando datos", "error");
         }
     }
 
@@ -144,10 +144,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 await Api.updateExamCall(convocatoriaId, payload);
-                ui.showToast("Convocatoria actualizada", "success");
-                router.go("/admin/convocatorias");
+                UI.showToast("Convocatoria actualizada", "success");
+               window.location.href = "/admin/convocatorias";
             } catch {
-                ui.showToast("Error al guardar cambios", "error");
+                UI.showToast("Error al guardar cambios", "error");
             }
         });
     }

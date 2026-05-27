@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const vehicleSelect = document.querySelector("#vehicle_id");
     const studentsList = document.querySelector("#students-list");
 
-    const convocatoriaId = router.param("id");
+    // Obtener ID desde la URL
+    const parts = window.location.pathname.split("/");
+    const convocatoriaId = parts[parts.length - 2];
 
     init();
 
@@ -108,12 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             students.forEach(student => {
                 const wrapper = document.createElement("div");
-                wrapper.className = "d-flex align-items-center justify-content-between mb-2";
+                wrapper.className = "student-item";
 
                 wrapper.innerHTML = `
-                    <label class="mb-0" for="student_${student.id}">
+                    <span class="student-name">
                         ${student.name ?? student.user?.name ?? "Alumno sin nombre"}
-                    </label>
+                    </span>
                     <input type="checkbox" class="form-check-input" id="student_${student.id}" name="students[]" value="${student.id}">
                 `;
 

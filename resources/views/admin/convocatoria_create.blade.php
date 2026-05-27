@@ -52,7 +52,7 @@
         </div>
 
         {{-- Botones --}}
-        <div class="d-flex justify-content-between mt-4">
+        <div class="convocatoria-buttons d-flex justify-content-between">
             <a href="/admin/convocatorias" class="btn btn-secondary">Volver</a>
             <button type="submit" class="btn btn-primary">Crear convocatoria</button>
         </div>
@@ -64,12 +64,39 @@
 
 @section('styles')
 <style>
-    /* Alineación perfecta del alumno */
-    .student-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 4px 2px;
+/* 🔥 Fuerza el layout correcto sin importar el CSS global */
+.student-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0 !important;              /* 🔥 ESTO ES LO QUE FALTABA */
+    column-gap: 0 !important;       /* 🔥 POR SI ALGÚN CSS USA column-gap */
+    row-gap: 0 !important;
+    padding: 4px 2px !important;
+    border-bottom: 1px solid #eee !important;
+}
+
+.student-name {
+    flex-grow: 1 !important;
+    width: auto !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.student-name,
+.student-item label {
+    flex-grow: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+    .convocatoria-buttons {
+        margin-top: 2rem !important;
+        padding-top: 1.5rem !important;
+        border-top: 1px solid #ddd !important;
     }
 </style>
 @endsection

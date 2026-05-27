@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    const form = document.querySelector("#convocatoria-create-form");
     const townSelect = document.querySelector("#town_id");
     const teacherSelect = document.querySelector("#teacher_id");
     const vehicleSelect = document.querySelector("#vehicle_id");
     const studentsList = document.querySelector("#students-list");
-    const form = document.querySelector("#convocatoria-create-form");
 
     init();
 
@@ -58,19 +58,15 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const vehicles = normalizeList(await Api.getVehicles());
             vehicleSelect.innerHTML = `<option value="">Selecciona un vehículo</option>`;
-
             vehicles.forEach(vehicle => {
                 const opt = document.createElement("option");
                 opt.value = vehicle.id;
-
                 opt.textContent =
                     (vehicle.brand && vehicle.model)
                         ? `${vehicle.brand} ${vehicle.model}`
                         : vehicle.name ?? vehicle.plate_number ?? "Vehículo";
-
                 vehicleSelect.appendChild(opt);
             });
-
         } catch {
             vehicleSelect.innerHTML = `<option value="">Error cargando vehículos</option>`;
         }
@@ -88,12 +84,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             students.forEach(student => {
                 const wrapper = document.createElement("div");
-                wrapper.className = "d-flex align-items-center justify-content-between mb-2";
+                wrapper.className = "student-item";
 
                 wrapper.innerHTML = `
-                    <label class="mb-0" for="student_${student.id}">
+                    <span class="student-name">
                         ${student.name ?? student.user?.name ?? "Alumno sin nombre"}
-                    </label>
+                    </span>
                     <input type="checkbox" class="form-check-input" id="student_${student.id}" name="students[]" value="${student.id}">
                 `;
 

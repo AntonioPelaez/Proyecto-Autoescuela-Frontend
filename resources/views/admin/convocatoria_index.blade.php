@@ -14,6 +14,14 @@
         </a>
     </div>
 
+    <!-- Loader -->
+    <div id="convocatorias-loader" class="text-center my-4" style="display:none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <div>Cargando convocatorias...</div>
+    </div>
+
     <table class="table table-bordered table-striped mt-3" id="convocatorias-table">
         <thead>
             <tr>

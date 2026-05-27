@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+
+    {{-- 🔥 IMPORTANTE: permite cargar estilos personalizados de cada vista --}}
+    @yield('styles')
 </head>
 <body class="page-role page-role-admin">
 
@@ -26,7 +29,6 @@
                     <a href="/admin/bookings" class="role-menu-link {{ request()->is('admin/bookings') ? 'is-active' : '' }}">Clases reservadas</a>
                     <a href="/admin/incidents" class="role-menu-link {{ request()->is('admin/incidents') ? 'is-active' : '' }}">Incidencias</a>
 
-                    <!-- 🔥 AÑADIDO: Convocatorias -->
                     <a href="/admin/convocatorias" class="role-menu-link {{ request()->is('admin/convocatorias') ? 'is-active' : '' }}">Convocatorias</a>
 
                     <a href="/admin/help" class="role-menu-link {{ request()->is('admin/help') ? 'is-active' : '' }}">Ayuda</a>
@@ -50,6 +52,8 @@
     <script src="{{ asset('js/api.js') }}" defer></script>
     <script src="{{ asset('js/ui.js') }}" defer></script>
     <script src="{{ asset('js/logout.js') }}" defer></script>
+
+    {{-- Scripts específicos de cada vista --}}
     @yield('scripts')
 
 </body>

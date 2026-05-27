@@ -1,29 +1,43 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const tbody = document.querySelector("#exam-history-body");
+    const studentId = window.STUDENT_ID;
+    const tableBody = document.getElementById("exam-history-body");
 
-    const data = await Api.getExamHistory(studentId);
+    try {
+        // 1. Obtener historial de exámenes del alumno
+        const exams = await Api.getStudentExamHistory(studentId);
 
-    tbody.innerHTML = data.map(exam => `
-        <tr>
-            <td>${exam.date}</td>
-            <td>${exam.result === 'approved' ? 'Aprobado' : 'Suspendido'}</td>
-            <td>${exam.notes ?? '-'}</td>
-        </tr>
-    `).join('');
+        // 2. Filtrar solo los finalizados
+        const finalizadas = exams.filter(e => e.status === "finalizada");
 
-    const approved = data.filter(e => e.result === 'approved').length;
-    const failed = data.filter(e => e.result === 'failed').length;
-
-    new Chart(document.querySelector("#exam-chart"), {
-        type: 'pie',
-        data: {
-            labels: ['Aprobados', 'Suspendidos'],
-            datasets: [{
-                data: [approved, failed],
-                backgroundColor: ['#28a745', '#dc3545']
-            }]
+        if (!finalizadas.length) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-3">
+                        No hay exámenes finalizados.
+                    </td>
+                </tr>
+            `;
+            return;
         }
-    });
 
+        // 3. Pintar tabla
+        tableBody.innerHTML = finalizadas.map(exam => `
+            <tr>
+                <td>${exam.date ?? "—"}</td>
+                <td>${exam.result ?? "—"}</td>
+                <td>${exam.notes ?? "—"}</td>
+            </tr>
+        `).join("");
+
+    } catch (err) {
+        console.error(err);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center text-danger py-3">
+                    Error cargando historial de exámenes.
+                </td>
+            </tr>
+        `;
+    }
 });

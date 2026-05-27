@@ -1,15 +1,19 @@
-@extends('layouts.teacher') {{-- o layouts.student según el rol --}}
-
+@extends('layouts.teacher')
 @section('title', 'Historial de exámenes')
-@section('main-id', 'exam-history')
+@section('main-id', 'student-exam-history')
 
 @section('content')
+
+<div class="mb-3">
+    <a href="/teacher/student-evaluations/{{ $id }}" class="btn btn-secondary">
+        ← Volver
+    </a>
+</div>
+
+<h1 class="page-title">Historial de exámenes</h1>
+
 <div class="card card-body">
-    <h2>Historial de exámenes</h2>
-
-    <canvas id="exam-chart" height="120"></canvas>
-
-    <table class="table table-striped mt-4">
+    <table class="table table-bordered text-center">
         <thead>
             <tr>
                 <th>Fecha</th>
@@ -17,12 +21,21 @@
                 <th>Notas</th>
             </tr>
         </thead>
-        <tbody id="exam-history-body"></tbody>
+        <tbody id="exam-history-body">
+            <tr>
+                <td colspan="3">Cargando…</td>
+            </tr>
+        </tbody>
     </table>
 </div>
+
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const urlParts = window.location.pathname.split('/');
+    window.STUDENT_ID = urlParts[urlParts.length - 2];
+</script>
+
 <script src="{{ asset('js/pages/exam-history.js') }}" defer></script>
 @endsection

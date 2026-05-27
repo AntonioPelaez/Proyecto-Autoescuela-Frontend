@@ -114,14 +114,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 teacher_id: formData.get("teacher_id"),
                 vehicle_id: formData.get("vehicle_id"),
                 students: formData.getAll("students[]"),
+                exam_call_status_id: 1, // Pendiente
             };
 
             try {
                 await Api.createExamCall(payload);
-                ui.showToast("Convocatoria creada correctamente", "success");
-                router.go("/admin/convocatorias");
+                UI.showToast("Convocatoria creada correctamente", "success");
+                window.location.href = "/admin/convocatorias";
             } catch {
-                ui.showToast("Error al crear la convocatoria", "error");
+                UI.showToast("Error al crear la convocatoria", "error");
             }
         });
     }

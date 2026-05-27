@@ -53,38 +53,54 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>${studentsCount}</td>
                 <td>${call.exam_call_status?.label ?? call.exam_call_status?.name ?? '-'}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" data-id="${call.id}" data-action="edit">Editar</button>
-                    <button class="btn btn-sm btn-danger" data-id="${call.id}" data-action="cancel">Cancelar</button>
-                    <button class="btn btn-sm btn-success" data-id="${call.id}" data-action="complete">Completar</button>
-                </td>
+    <button class="btn btn-sm btn-primary" data-id="${call.id}" data-action="edit">Editar</button>
+
+    ${
+        call.exam_call_status?.name === "cancelada"
+            ? `<button class="btn btn-sm btn-warning" data-id="${call.id}" data-action="reactivate">Reactivar</button>`
+            : `<button class="btn btn-sm btn-danger" data-id="${call.id}" data-action="cancel">Cancelar</button>`
+    }
+
+    <button class="btn btn-sm btn-success" data-id="${call.id}" data-action="complete">Completar</button>
+</td>
+
             `;
 
             tableBody.appendChild(row);
         });
 
         // Delegación de eventos
-        tableBody.addEventListener("click", function (e) {
-            const btn = e.target.closest("button[data-action]");
-            if (!btn) return;
+        tableBody.addEventListener("click", async function (e) {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
 
-            const id = btn.getAttribute("data-id");
-            const action = btn.getAttribute("data-action");
+    const id = btn.getAttribute("data-id");
+    const action = btn.getAttribute("data-action");
 
-            if (action === "edit") {
-                // RUTA CORRECTA SEGÚN TU web.php
-                window.location.href = `/admin/convocatorias/${id}/editar`;
-            }
+    if (action === "edit") {
+        window.location.href = `/admin/convocatorias/${id}/editar`;
+        return;
+    }
 
-            if (action === "cancel") {
-                console.log("Cancelar convocatoria", id);
-                // Aquí luego añadimos la lógica real
-            }
+    if (action === "cancel") {
+        await Api.cancelExamCall(id);
+        location.reload();
+        return;
+    }
 
-            if (action === "complete") {
-                console.log("Completar convocatoria", id);
-                // Aquí luego añadimos la lógica real
-            }
-        });
+    if (action === "complete") {
+        await Api.completeExamCall(id);
+        location.reload();
+        return;
+    }
+
+    if (action === "reactivate") {
+        await Api.toggleConvocation(id);
+        location.reload();
+        return;
+    }
+});
+
 
     } catch (error) {
         if (loader) loader.style.display = "none";

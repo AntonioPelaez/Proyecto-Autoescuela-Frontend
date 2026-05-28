@@ -40,6 +40,11 @@
                         Evaluación alumnos
                     </a>
 
+                    <a href="/teacher/exam-calls"
+                       class="role-menu-link {{ request()->is('teacher/exam-calls*') ? 'is-active' : '' }}">
+                        Evaluar convocatoria
+                    </a>
+
                     <a href="/teacher/availability"
                        class="role-menu-link {{ request()->is('teacher/availability') ? 'is-active' : '' }}">
                         Disponibilidad

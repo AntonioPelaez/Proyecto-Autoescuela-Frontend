@@ -195,7 +195,7 @@ const past = bookings.filter(b =>
         pastTbody.innerHTML = '';
 
         if (bookings.length === 0) {
-            pastTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">Sin historial.</td></tr>';
+            pastTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">Sin historial.</td></tr>';
             return;
         }
 
@@ -213,7 +213,44 @@ const past = bookings.filter(b =>
                 <td>${booking.vehicle || 'Sin especificar'}</td>
                 <td>${booking.townName || 'N/A'}</td>
                 <td><span class="badge-inline ${statusColor}">${_formatStatus(booking.status)}</span></td>
+                <td>
+                    ${booking.status === 'confirmed' ? `
+                        <button class="btn btn-sm btn-complete" data-booking-id="${booking.id}">
+                            Completar
+                        </button>
+                    ` : ''}
+
+                    ${booking.status !== 'cancelled' && booking.status !== 'completed' ? `
+                        <button class="btn btn-sm btn-cancel" data-booking-id="${booking.id}">
+                            Cancelar
+                        </button>
+                    ` : ''}
+                </td>
             `;
+
+            const completeBtn = row.querySelector('.btn-complete');
+            if (completeBtn) {
+                completeBtn.addEventListener('click', async () => {
+                    // 👉 Redirigimos a la página de evaluación de skills
+                    window.location.href = `/teacher/classes/${booking.id}/evaluate-skills`;
+                });
+            }
+
+            const cancelBtn = row.querySelector('.btn-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', async () => {
+                    UI.setLoading(true);
+                    try {
+                        await Api.cancelClassSession({ id: parseInt(booking.id, 10) });
+                        showMessage('success', 'Clase cancelada correctamente.');
+                        await loadClasses(buildFilters());
+                    } catch (error) {
+                        showMessage('error', error.message || 'No se pudo cancelar la clase.');
+                    } finally {
+                        UI.setLoading(false);
+                    }
+                });
+            }
 
             pastTbody.appendChild(row);
         });

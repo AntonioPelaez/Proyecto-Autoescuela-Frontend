@@ -37,6 +37,11 @@
         </div>
         <div class="card-body" id="teacher-stats">
             <div class="loader loader-inline loader-sm">Cargando…</div>
+
+            {{-- 📊 Gráfico de queso --}}
+            <div class="mt-4 text-center">
+                <canvas id="teacher-stats-chart" width="200" height="200"></canvas>
+            </div>
         </div>
     </section>
 
@@ -110,5 +115,6 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ asset('js/pages/teacher-home.js') }}" defer></script>
 @endsection

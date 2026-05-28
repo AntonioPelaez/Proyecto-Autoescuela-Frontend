@@ -12,6 +12,7 @@
     const NEXT_EXAM_ID = 'teacher-next-exam';
     const TEACHER_STATS_ID = 'teacher-stats';
     let townsCache = null;
+    let teacherStatsChart = null;
 
     async function loadTownsCache() {
         if (townsCache) return townsCache;
@@ -345,16 +346,74 @@ async function loadTeacherStats() {
 
         // 🔥 Llamada correcta a la API
         const stats = await Api.getExamStatistics(teacherId);
+        const aprobados = Number(stats.porcentaje_aprobados ?? 0);
+        const suspendidos = Number(stats.porcentaje_suspendidos ?? 0);
+        const restante = Math.max(0, 100 - aprobados - suspendidos);
 
         box.innerHTML = `
-            <p><strong>Aprobados:</strong> ${stats.porcentaje_aprobados ?? 0}%</p>
-            <p><strong>Suspendidos:</strong> ${stats.porcentaje_suspendidos ?? 0}%</p>
+            <p><strong>Aprobados:</strong> ${aprobados}%</p>
+            <p><strong>Suspendidos:</strong> ${suspendidos}%</p>
+            ${restante > 0 ? `<p><strong>Otros:</strong> ${restante}%</p>` : ''}
+            <div class="mt-4 text-center">
+                <canvas id="teacher-stats-chart" width="200" height="200"></canvas>
+            </div>
         `;
+
+        const ctx = document.getElementById('teacher-stats-chart');
+        if (ctx && window.Chart) {
+            if (teacherStatsChart) {
+                teacherStatsChart.destroy();
+                teacherStatsChart = null;
+            }
+
+            const chartData = [aprobados, suspendidos];
+            const chartLabels = ['Aprobados', 'Suspendidos'];
+            const chartColors = ['#198754', '#dc3545'];
+
+            if (restante > 0) {
+                chartData.push(restante);
+                chartLabels.push('Otros');
+                chartColors.push('#6c757d');
+            }
+
+            teacherStatsChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    return `${label}: ${value}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     } catch (e) {
         console.error("Error cargando estadísticas:", e);
         box.innerHTML = `<p class="text-danger">Error cargando estadísticas.</p>`;
     }
 }
+
+
     // ---------------------------------------------------------
     // INIT
     // ---------------------------------------------------------

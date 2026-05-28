@@ -3,6 +3,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const studentId = document.getElementById('result-student-id')?.value;
     const resultInfo = document.getElementById('result-info');
     const form = document.getElementById('result-form');
+    const RESULT_MAP = {
+    apto: 2,
+    no_apto: 3,
+    no_presentado: 4
+};
+
 
     function formatDate(value) {
         if (!value) return '—';
@@ -17,12 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function formatTime(value) {
         if (!value) return '—';
         const raw = String(value).trim();
-        if (/^\d{2}:\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(0, 5);
-        }
-        if (/^\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(0, 5);
-        }
+        if (/^\d{2}:\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
+        if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
         return raw;
     }
 
@@ -31,58 +33,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         const firstName =
             person?.user?.name ||
             person?.name ||
-            person?.first_name ||
-            person?.firstName ||
-            person?.full_name ||
-            person?.fullName ||
             '';
         const lastName =
+            person?.user?.surname1 ||
             person?.user?.surname ||
             person?.surname ||
-            person?.last_name ||
-            person?.lastName ||
-            person?.family_name ||
             '';
         return [firstName, lastName].filter(Boolean).join(' ').trim();
     }
 
     function formatVehicleValue(value) {
-        if (value === null || value === undefined) return '—';
+        if (!value) return '—';
         if (typeof value === 'string') return value;
+
         if (typeof value === 'object') {
             const plate =
                 value.plate ||
                 value.plate_number ||
-                value.vehicle_plate ||
-                value.license_plate ||
                 value.registration ||
-                value.plateNumber;
+                null;
+
             const brandModel =
                 [value.brand, value.model].filter(Boolean).join(' ') ||
                 value.name ||
-                value.display_name ||
-                value.title ||
                 '';
-            const result = [brandModel, plate].filter(Boolean).join(' ').trim();
-            return result || JSON.stringify(value);
+
+            return [brandModel, plate].filter(Boolean).join(' ').trim() || '—';
         }
+
         return String(value);
     }
 
-    function getStudentRecord(item) {
-        const studentName = getFullName(item.student) || getFullName(item.user) || item.name || 'Sin nombre';
+    function getStudentRecord(item, examCall) {
+    const studentName = getFullName(item.student) || 'Sin nombre';
 
-        return {
-            studentId: item.student_id ?? item.student?.id ?? item.id ?? null,
-            studentName,
-            examDate: item.exam_date || item.examDate || item.date || item.exam_call?.exam_date || item.exam_call?.date || '—',
-            startTime: item.start_time || item.startTime || item.time || item.exam_call?.start_time || item.exam_call?.time || '—',
-            town: item.town || item.city || item.exam_call?.town || item.exam_call?.city || '—',
-            vehicle: formatVehicleValue(item.vehicle || item.vehicle_number || item.vehicle_plate || item.exam_call?.vehicle || item.exam_call?.vehicle?.name || item.exam_call?.vehicle?.plate_number || null),
-            result: item.resultado || item.result || item.status || 'Pendiente',
-            notes: item.result_notes || item.notes || '',
-        };
-    }
+    return {
+        studentId: item.student_id ?? item.student?.id ?? null,
+        studentName,
+        examDate: examCall.exam_date ?? '—',
+        startTime: examCall.start_time ?? '—',
+        town: examCall.town?.name ?? '—',
+        vehicle: formatVehicleValue(
+            item.vehicle ||
+            examCall.vehicle ||
+            null
+        ),
+        result: item.resultado || item.result || 'Pendiente',
+        notes: item.result_notes || '',
+    };
+}
+
 
     function showInfo(student) {
         resultInfo.innerHTML = `
@@ -99,56 +99,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        // 🔥 1. Cargar alumnos
         const response = await Api.getExamCallStudents(examCallId);
         const students = Array.isArray(response) ? response : response?.data ?? [];
-        const student = students.find(item => String(item.student_id ?? item.student?.id ?? item.id ?? '') === String(studentId));
+
+        // 🔥 2. Cargar convocatoria completa
+        const examCall = await Api.getExamCall(examCallId);
+
+        // 🔥 3. Inyectar exam_call en cada alumno
+        const studentsWithCall = students.map(s => ({
+            ...s,
+            exam_call: examCall
+        }));
+
+        // 🔥 4. Buscar alumno
+        const student = studentsWithCall.find(item =>
+            String(item.student_id ?? item.student?.id ?? '') === String(studentId)
+        );
 
         if (!student) {
             resultInfo.textContent = 'No se ha encontrado el alumno en esta convocatoria.';
             return;
         }
 
-        const record = getStudentRecord(student);
-        showInfo(record);
+        // 🔥 5. Normalizar y mostrar
+        const record = getStudentRecord(student, examCall);
+showInfo(record);
 
+
+        // 🔥 6. Seleccionar radio correcto
         const selectedValue = student.resultado || student.result || '';
         const radios = form.elements['resultado'];
         Array.from(radios).forEach(radio => {
             radio.checked = radio.value === selectedValue;
         });
+
     } catch (error) {
         console.error('Error cargando alumno:', error);
         resultInfo.textContent = 'Error cargando datos del alumno.';
     }
 
-    form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const resultado = form.elements['resultado'].value;
-        if (!resultado) {
-            UI.showToast('Selecciona un resultado antes de continuar.', 'error');
-            return;
-        }
+    // 🔥 7. Guardar resultado
+form.addEventListener('submit', async event => {
+    event.preventDefault();
 
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Guardando...';
-        }
+    const resultado = form.elements['resultado'].value;
+    if (!resultado) {
+        UI.showToast('Selecciona un resultado antes de continuar.', 'error');
+        return;
+    }
 
-        try {
-            await Api.updateExamStudentResult(examCallId, studentId, {
-                resultado,
-            });
-            UI.showToast('Resultado guardado. Continúa con las notas.', 'success');
-            window.location.href = `/teacher/exam-calls/${examCallId}/students/${studentId}/notes`;
-        } catch (error) {
-            console.error('Error guardando resultado:', error);
-            UI.showToast('No se pudo guardar el resultado.', 'error');
-        } finally {
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Siguiente';
-            }
-        }
-    });
+    const exam_result_status_id = RESULT_MAP[resultado];
+
+    try {
+        await Api.updateExamStudentResult(examCallId, studentId, {
+            exam_result_status_id,
+            result_notes: "" // si quieres enviar notas vacías
+        });
+
+        UI.showToast('Resultado guardado. Continúa con las notas.', 'success');
+        window.location.href = `/teacher/exam-calls/${examCallId}/students/${studentId}/notes`;
+
+    } catch (error) {
+        console.error('Error guardando resultado:', error);
+        UI.showToast('No se pudo guardar el resultado.', 'error');
+    }
+});
+
 });

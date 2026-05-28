@@ -21,14 +21,15 @@
             <label class="form-label">Resultado</label>
             <div class="radio-group" role="group" aria-labelledby="resultado-label">
                 <label class="radio-inline me-3">
-                    <input type="radio" name="resultado" value="apto"> Apto
-                </label>
-                <label class="radio-inline me-3">
-                    <input type="radio" name="resultado" value="no apto"> No apto
-                </label>
-                <label class="radio-inline">
-                    <input type="radio" name="resultado" value="no presentado"> No presentado
-                </label>
+    <input type="radio" name="resultado" value="apto"> Apto
+</label>
+<label class="radio-inline me-3">
+    <input type="radio" name="resultado" value="no_apto"> No apto
+</label>
+<label class="radio-inline">
+    <input type="radio" name="resultado" value="no_presentado"> No presentado
+</label>
+
             </div>
         </div>
 

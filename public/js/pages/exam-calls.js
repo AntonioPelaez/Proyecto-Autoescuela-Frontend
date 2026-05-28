@@ -114,7 +114,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             examDate,
             startTime,
             vehicle: formatVehicleValue(vehicleValue),
-            result: item.resultado || item.result || item.status || 'Pendiente',
+           result:
+    item.exam_result_status?.label ||
+    item.exam_result_status?.name ||
+    item.resultado ||
+    item.result ||
+    item.status ||
+    'Pendiente',
+
             notes: item.result_notes || item.notes || '—',
         };
     }
@@ -220,35 +227,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function loadExamCallStudents(examCallId) {
-        if (!examCallId) {
-            studentsBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center py-3">Selecciona una convocatoria para ver los alumnos.</td>
-                </tr>
-            `;
-            return;
-        }
-
+   async function loadExamCallStudents(examCallId) {
+    if (!examCallId) {
         studentsBody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-3">Cargando alumnos...</td>
+                <td colspan="7" class="text-center py-3">Selecciona una convocatoria para ver los alumnos.</td>
             </tr>
         `;
-
-        try {
-            const response = await Api.getExamCallStudents(examCallId);
-            currentStudents = normalizeList(response);
-            renderStudents(currentStudents, examCallId);
-        } catch (error) {
-            console.error('Error loading exam call students:', error);
-            studentsBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center py-3 text-danger">Error cargando alumnos de la convocatoria.</td>
-                </tr>
-            `;
-        }
+        return;
     }
+
+    studentsBody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center py-3">Cargando alumnos...</td>
+        </tr>
+    `;
+
+    try {
+        // 🔥 Cargar convocatoria COMPLETA (incluye resultados actualizados)
+        const examCall = await Api.getExamCall(examCallId);
+
+        // 🔥 Usar SOLO exam_students
+        currentStudents = examCall.exam_students.map(s => ({
+            ...s,
+            exam_call: examCall
+        }));
+
+        renderStudents(currentStudents, examCallId);
+
+    } catch (error) {
+        console.error('Error loading exam call students:', error);
+        studentsBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-3 text-danger">Error cargando alumnos de la convocatoria.</td>
+            </tr>
+        `;
+    }
+}
+
+
 
     examCallSelect.addEventListener('change', () => {
         loadExamCallStudents(examCallSelect.value);

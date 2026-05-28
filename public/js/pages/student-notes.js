@@ -18,80 +18,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     function formatTime(value) {
         if (!value) return '—';
         const raw = String(value).trim();
-        if (/^\d{2}:\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(0, 5);
-        }
-        if (/^\d{2}:\d{2}/.test(raw)) {
-            return raw.slice(0, 5);
-        }
+        if (/^\d{2}:\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
+        if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
         return raw;
     }
 
     function getFullName(person) {
         if (!person) return '';
-        const firstName =
-            person?.user?.name ||
-            person?.name ||
-            person?.first_name ||
-            person?.firstName ||
-            person?.full_name ||
-            person?.fullName ||
-            '';
-        const lastName =
-            person?.user?.surname ||
-            person?.surname ||
-            person?.last_name ||
-            person?.lastName ||
-            person?.family_name ||
-            '';
+        const firstName = person?.user?.name || person?.name || '';
+        const lastName = person?.user?.surname1 || person?.surname || '';
         return [firstName, lastName].filter(Boolean).join(' ').trim();
     }
 
     function formatVehicleValue(value) {
-        if (value === null || value === undefined) return '—';
+        if (!value) return '—';
         if (typeof value === 'string') return value;
+
         if (typeof value === 'object') {
-            const plate =
-                value.plate ||
-                value.plate_number ||
-                value.vehicle_plate ||
-                value.license_plate ||
-                value.registration ||
-                value.plateNumber;
-            const brandModel =
-                [value.brand, value.model].filter(Boolean).join(' ') ||
-                value.name ||
-                value.display_name ||
-                value.title ||
-                '';
-            const result = [brandModel, plate].filter(Boolean).join(' ').trim();
-            return result || JSON.stringify(value);
+            const plate = value.plate || value.plate_number || null;
+            const brandModel = [value.brand, value.model].filter(Boolean).join(' ') || value.name || '';
+            return [brandModel, plate].filter(Boolean).join(' ').trim() || '—';
         }
+
         return String(value);
     }
 
-    function getStudentRecord(item) {
-        const studentName = getFullName(item.student) || getFullName(item.user) || item.name || 'Sin nombre';
-
+    function getStudentRecord(student, examCall) {
         return {
-            studentId: item.student_id ?? item.student?.id ?? item.id ?? null,
-            studentName,
-            examDate: item.exam_date || item.examDate || item.date || item.exam_call?.exam_date || item.exam_call?.date || '—',
-            startTime: item.start_time || item.startTime || item.time || item.exam_call?.start_time || item.exam_call?.time || '—',
-            town: item.town || item.city || item.exam_call?.town || item.exam_call?.city || '—',
-            vehicle: formatVehicleValue(item.vehicle || item.vehicle_number || item.vehicle_plate || item.exam_call?.vehicle || item.exam_call?.vehicle?.name || item.exam_call?.vehicle?.plate_number || null),
-            result: item.resultado || item.result || item.status || 'Pendiente',
-            notes: item.result_notes || item.notes || '',
+            studentId: student.student_id,
+            studentName: getFullName(student.student),
+            examDate: examCall.exam_date,
+            startTime: examCall.start_time,
+            town: examCall.town?.name ?? '—',
+            vehicle: formatVehicleValue(student.vehicle),
+            result: student.exam_result_status?.name ?? 'Pendiente',
+            notes: student.result_notes ?? '',
         };
-    }
-
-    function showInfo(student) {
-        notesInfo.innerHTML = `
-            <p><strong>Alumno:</strong> ${student.studentName}</p>
-            <p><strong>Convocatoria:</strong> ${formatDate(student.examDate)} ${formatTime(student.startTime)}</p>
-            <p><strong>Resultado guardado:</strong> ${student.result}</p>
-            <p><strong>Población:</strong> ${student.town}</p>
-        `;
     }
 
     if (!examCallId || !studentId) {
@@ -100,36 +62,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await Api.getExamCallStudents(examCallId);
-        const students = Array.isArray(response) ? response : response?.data ?? [];
-        const student = students.find(item => String(item.student_id ?? item.student?.id ?? item.id ?? '') === String(studentId));
+        // 🔥 Cargar convocatoria completa (incluye resultado actualizado)
+        const examCall = await Api.getExamCall(examCallId);
+
+        // 🔥 Buscar alumno dentro de exam_students
+        const student = examCall.exam_students.find(s =>
+            String(s.student_id) === String(studentId)
+        );
 
         if (!student) {
             notesInfo.textContent = 'No se ha encontrado el alumno en esta convocatoria.';
             return;
         }
 
-        const record = getStudentRecord(student);
-        showInfo(record);
-        notesField.value = student.result_notes || student.notes || '';
+        const record = getStudentRecord(student, examCall);
+
+        notesInfo.innerHTML = `
+            <p><strong>Alumno:</strong> ${record.studentName}</p>
+            <p><strong>Convocatoria:</strong> ${formatDate(record.examDate)} ${formatTime(record.startTime)}</p>
+            <p><strong>Resultado guardado:</strong> ${record.result}</p>
+            <p><strong>Población:</strong> ${record.town}</p>
+        `;
+
+        notesField.value = record.notes;
+
     } catch (error) {
         console.error('Error cargando alumno:', error);
         notesInfo.textContent = 'Error cargando datos del alumno.';
     }
 
+    // 🔥 Guardar notas
     form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const notes = notesField.value.trim();
+    event.preventDefault();
+    const notes = notesField.value.trim();
 
-        try {
-            await Api.updateExamStudentResult(examCallId, studentId, {
-                result_notes: notes || null,
-            });
-            UI.showToast('Notas guardadas correctamente.', 'success');
-            window.location.href = '/teacher/exam-calls';
-        } catch (error) {
-            console.error('Error guardando notas:', error);
-            UI.showToast('No se pudieron guardar las notas.', 'error');
-        }
-    });
+    try {
+        // 🔥 1. Cargar convocatoria completa para obtener el resultado actual
+        const examCall = await Api.getExamCall(examCallId);
+
+        const student = examCall.exam_students.find(s =>
+            String(s.student_id) === String(studentId)
+        );
+
+        const exam_result_status_id = student.exam_result_status_id;
+
+        // 🔥 2. Enviar resultado + notas
+        await Api.updateExamStudentResult(examCallId, studentId, {
+            exam_result_status_id,
+            result_notes: notes || null,
+        });
+
+        UI.showToast('Notas guardadas correctamente.', 'success');
+        window.location.href = '/teacher/exam-calls';
+
+    } catch (error) {
+        console.error('Error guardando notas:', error);
+        UI.showToast('No se pudieron guardar las notas.', 'error');
+    }
+});
+
 });

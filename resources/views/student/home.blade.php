@@ -28,6 +28,15 @@
 			</div>
 			</section>
 
+            <section class="card">
+                <div class="card-header">
+                    <h2>Próxima convocatoria</h2>
+                </div>
+                <div class="card-body" id="student-next-exam">
+                    <p>Cargando información...</p>
+                </div>
+            </section>
+
 			<section class="card">
 			<div class="card-header">
 				<h2>Resumen de reservas</h2>

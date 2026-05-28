@@ -959,7 +959,7 @@ toggleConvocation(id) {
     }).then(handleResponse);
 },
 nextConvocation() {
-    return fetch(`${API_BASE_URL}/exam-calls/next-convocation`, {
+    return fetch(`${API_BASE_URL}/exam-calls/next-convocations`, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include'

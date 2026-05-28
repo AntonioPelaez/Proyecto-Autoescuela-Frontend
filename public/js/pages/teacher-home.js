@@ -268,30 +268,31 @@
     }
 
     function getStudentList(exam) {
-        if (!exam) return "-";
-        const rawStudents =
-            Array.isArray(exam.exam_students) && exam.exam_students.length > 0
-                ? exam.exam_students
-                : Array.isArray(exam.students) && exam.students.length > 0
-                ? exam.students
-                : Array.isArray(exam.participants) && exam.participants.length > 0
-                ? exam.participants
-                : [];
+    if (!exam) return "-";
 
-        if (!rawStudents.length) return "-";
+    const rawStudents =
+        Array.isArray(exam.exam_students) && exam.exam_students.length > 0
+            ? exam.exam_students
+            : Array.isArray(exam.students) && exam.students.length > 0
+            ? exam.students
+            : Array.isArray(exam.participants) && exam.participants.length > 0
+            ? exam.participants
+            : [];
 
-        return rawStudents
-            .map(function (item) {
-                return (
-                    item?.student?.name ||
-                    item?.name ||
-                    item?.student_name ||
-                    item?.student?.full_name ||
-                    "Alumno"
-                );
-            })
-            .join(", ");
-    }
+    if (!rawStudents.length) return "-";
+
+    return rawStudents
+        .map((item) => {
+            const user = item?.student?.user;
+            if (!user) return "Alumno";
+
+            return (
+                `${user.name || ""} ${user.surname1 || ""} ${user.surname2 || ""}`
+            ).trim();
+        })
+        .join(", ");
+}
+
 
     try {
         const data = await Api.nextConvocation();
@@ -315,26 +316,45 @@
         box.innerHTML = `<p class="text-danger">Error cargando la próxima convocatoria.</p>`;
     }
 }
-    // ---------------------------------------------------------
-    // 🔥 NUEVO: Estadísticas del profesor (usa getExamStatistics)
-    // ---------------------------------------------------------
-    async function loadTeacherStats() {
+async function loadTeacherStats() {
     const box = document.getElementById(TEACHER_STATS_ID);
     if (!box) return;
 
     try {
-        const stats = await Api.getExamStatistics();
+        // 🔥 Obtener usuario desde localStorage
+        const user = Auth.getUser();
+
+        if (!user) {
+            console.error("Auth.getUser() devolvió null");
+            box.innerHTML = `<p class="text-danger">No se pudo cargar estadísticas.</p>`;
+            return;
+        }
+
+        // 🔥 Obtener teacherId según cómo guardas el usuario
+        const teacherId =
+            user.teacher_profile?.id ??
+            user.teacher_profile_id ??
+            user.teacher?.id ??
+            null;
+
+        if (!teacherId) {
+            console.error("No se pudo obtener teacherId. Usuario:", user);
+            box.innerHTML = `<p class="text-danger">No se pudo cargar estadísticas.</p>`;
+            return;
+        }
+
+        // 🔥 Llamada correcta a la API
+        const stats = await Api.getExamStatistics(teacherId);
 
         box.innerHTML = `
-            <p><strong>Aprobados:</strong> ${stats.approved ?? stats.aprobados ?? stats.passed ?? 0}%</p>
-            <p><strong>Suspendidos:</strong> ${stats.failed ?? stats.suspendidos ?? stats.failed_count ?? 0}%</p>
+            <p><strong>Aprobados:</strong> ${stats.porcentaje_aprobados ?? 0}%</p>
+            <p><strong>Suspendidos:</strong> ${stats.porcentaje_suspendidos ?? 0}%</p>
         `;
     } catch (e) {
+        console.error("Error cargando estadísticas:", e);
         box.innerHTML = `<p class="text-danger">Error cargando estadísticas.</p>`;
     }
 }
-
-
     // ---------------------------------------------------------
     // INIT
     // ---------------------------------------------------------

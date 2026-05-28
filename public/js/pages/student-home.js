@@ -448,75 +448,73 @@ actionCell.innerHTML = html;
         container.appendChild(paragraph);
     }
 
-    async function loadNextConvocation() {
-        const box = document.getElementById(NEXT_EXAM_CALL_ID);
-        if (!box) {
+   async function loadNextConvocation() {
+    const box = document.getElementById(NEXT_EXAM_CALL_ID);
+    if (!box) return;
+
+    function normalizeExamCallPayload(data) {
+        if (!data) return null;
+        if (data.exam_call) return data.exam_call;
+        if (data.data?.exam_call) return data.data.exam_call;
+        return null;
+    }
+
+    function getTownLabel(exam) {
+        return exam?.town?.name || "-";
+    }
+
+    async function resolveTownName(exam) {
+        const label = getTownLabel(exam);
+        if (label !== "-" && !label.startsWith("Población #")) return label;
+
+        const towns = await loadStudentHomeTownsCache();
+        const id = exam.town_id || exam.town?.id || null;
+
+        if (id) {
+            const town = towns.find(t => String(t.id) === String(id));
+            if (town?.name) return town.name;
+        }
+
+        return label;
+    }
+
+    function getStudentList(exam) {
+        if (!exam?.exam_students?.length) return "-";
+
+        return exam.exam_students
+            .map(s => {
+                const user = s.student?.user;
+                if (!user) return "Alumno";
+                return `${user.name} ${user.surname1 ?? ""} ${user.surname2 ?? ""}`.trim();
+            })
+            .join(", ");
+    }
+
+    try {
+        box.innerHTML = '<div class="loader loader-inline loader-sm">Cargando…</div>';
+
+        const response = await Api.nextConvocation();
+        const exam = normalizeExamCallPayload(response);
+
+        if (!exam) {
+            box.innerHTML = '<p class="text-muted">No tienes convocatorias próximas.</p>';
             return;
         }
 
-        function normalizeExamCallPayload(data) {
-    if (!data) return null;
+        const townLabel = await resolveTownName(exam);
 
-    // Tu backend SIEMPRE devuelve exam_call
-    if (data.exam_call) return data.exam_call;
+        box.replaceChildren();
+        appendLabelValue(box, "Fecha:", formatDate(exam.exam_date));
+        appendLabelValue(box, "Hora:", exam.start_time);
+        appendLabelValue(box, "Población:", townLabel);
+        appendLabelValue(box, "Alumnos:", getStudentList(exam));
 
-    // Por si algún día lo envías dentro de data
-    if (data.data?.exam_call) return data.data.exam_call;
-
-    return null;
-}
-
-        function getTownLabel(exam) {
-    return exam?.town?.name || "-";
-}
-
-
-        async function resolveTownName(exam) {
-            const label = getTownLabel(exam);
-            if (label && label !== "-" && !label.startsWith('Población #')) {
-                return label;
-            }
-
-            const towns = await loadStudentHomeTownsCache();
-            const id = exam.town_id || exam.town?.id || null;
-            if (id) {
-                const town = towns.find((t) => String(t.id) === String(id));
-                if (town?.name) return town.name;
-            }
-            return label;
-        }
-
-        function getStudentList(exam) {
-    if (!exam?.exam_students?.length) return "-";
-
-    return exam.exam_students
-        .map(s => s.student?.name || s.name || "Alumno")
-        .join(", ");
-}
-
-
-        try {
-            box.innerHTML = '<div class="loader loader-inline loader-sm">Cargando…</div>';
-            const response = await Api.nextConvocation();
-            const exam = normalizeExamCallPayload(response);
-
-            if (!exam || Object.keys(exam).length === 0) {
-                box.innerHTML = '<p class="text-muted">No tienes convocatorias próximas.</p>';
-                return;
-            }
-
-            const townLabel = await resolveTownName(exam);
-
-            box.replaceChildren();
-            appendLabelValue(box, "Fecha:", formatDate(exam.exam_date || exam.date || exam.start_date || exam.exam_date));
-            appendLabelValue(box, "Hora:", exam.start_time || exam.time || exam.slot_time || "-");
-            appendLabelValue(box, "Población:", townLabel);
-            appendLabelValue(box, "Alumnos:", getStudentList(exam));
-        } catch (error) {
-            console.error(error);
-            box.innerHTML = '<p class="text-danger">Error cargando la próxima convocatoria.</p>';
-        }
+    } catch (error) {
+        console.error(error);
+        box.innerHTML = '<p class="text-danger">Error cargando la próxima convocatoria.</p>';
     }
+}
+
 
     function createBadge(text) {
         const badge = document.createElement("span");

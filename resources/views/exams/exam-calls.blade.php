@@ -1,21 +1,48 @@
 @extends('layouts.teacher')
-@section('title', 'Evaluar convocatoria')
+@section('title', 'Convocatoria')
 @section('main-id', 'teacher-exam-calls')
 
 @section('content')
 
-<h1 class="page-title mb-4">Evaluar convocatoria</h1>
+<h1 class="page-title mb-4">Convocatoria</h1>
 
 <div class="card card-body shadow-sm mb-4">
+    <h2 class="mb-3">Aceptar en la Convocatoria</h2>
+    <div class="table-responsive">
+        <div class="card card-body shadow-sm mb-4">
     <div class="form-group">
-        <label for="exam-call-select" class="form-label">Selecciona convocatoria</label>
-        <select id="exam-call-select" class="form-control" aria-label="Selecciona convocatoria">
+        <label for="accept-exam-call-select" class="form-label">Selecciona convocatoria</label>
+        <select id="accept-exam-call-select" class="form-control" aria-label="Selecciona convocatoria">
             <option value="">Cargando convocatorias...</option>
         </select>
     </div>
 </div>
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Alumno</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="pending-reservations-body">
+                <tr>
+                    <td colspan="2">Selecciona una convocatoria para ver los alumnos pendientes de aceptar.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <div class="card card-body shadow-sm mb-4">
+    <h2 class="mb-3">Evaluar convocatoria</h2>
+    <div class="card card-body shadow-sm mb-4">
+    <div class="form-group">
+        <label for="evaluate-exam-call-select" class="form-label">Selecciona convocatoria</label>
+        <select id="evaluate-exam-call-select" class="form-control" aria-label="Selecciona convocatoria">
+            <option value="">Cargando convocatorias...</option>
+        </select>
+    </div>
+</div>
     <table class="table table-striped table-bordered align-middle">
         <thead class="table-light">
             <tr>

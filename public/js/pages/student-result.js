@@ -4,10 +4,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultInfo = document.getElementById('result-info');
     const form = document.getElementById('result-form');
     const RESULT_MAP = {
-    apto: 2,
-    no_apto: 3,
-    no_presentado: 4
-};
+        apto: 2,
+        no_apto: 3,
+        'no apto': 3,
+        no_presentado: 4,
+        'no presentado': 4
+    };
 
 
     function formatDate(value) {
@@ -128,7 +130,7 @@ showInfo(record);
 
 
         // 🔥 6. Seleccionar radio correcto
-        const selectedValue = student.resultado || student.result || '';
+        const selectedValue = String(student.resultado || student.result || '').trim().toLowerCase().replace(/\s+/g, '_');
         const radios = form.elements['resultado'];
         Array.from(radios).forEach(radio => {
             radio.checked = radio.value === selectedValue;

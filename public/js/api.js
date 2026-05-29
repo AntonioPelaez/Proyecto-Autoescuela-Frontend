@@ -986,4 +986,11 @@ getStudentConvocationHistory(studentId) {
         credentials: 'include'
     }).then(handleResponse);
 },
+deleteExamCall(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

@@ -302,7 +302,7 @@ async function loadConvocationHistory() {
             const statusColor = (booking.status === 'confirmada' || booking.status === 'pendiente') ? 'badge-green' : 'badge-gray';
             
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${formatDate(booking.date)}</td>
                 <td>${booking.time}</td>
                 <td>${booking.professorName}</td>
                 <td>${booking.vehicle || '(sin especificar)'}</td>
@@ -345,7 +345,7 @@ async function loadConvocationHistory() {
             const statusColor = booking.status === 'cancelada' ? 'badge-red' : 'badge-blue';
             
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${formatDate(booking.date)}</td>
                 <td>${booking.time}</td>
                 <td>${booking.professorName}</td>
                 <td>${booking.vehicle || '(sin especificar)'}</td>

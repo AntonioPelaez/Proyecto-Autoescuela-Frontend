@@ -1,6 +1,18 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const tableBody = document.querySelector("#convocatorias-table tbody");
     const loader = document.getElementById("convocatorias-loader");
+    function formatDate(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '—';
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+            const parts = raw.slice(0, 10).split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+            return raw.slice(0, 10);
+        }
+        return raw;
+    }
 
     if (loader) loader.style.display = "block";
 
@@ -35,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Fecha y hora
             const fechaHora = call.exam_date && call.start_time
-                ? `${call.exam_date} ${call.start_time}`
+                ? `${formatDate(call.exam_date)} ${call.start_time}`
                 : '-';
 
             // Pueblo
@@ -73,6 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
 
                     <button class="btn btn-sm btn-success" data-id="${call.id}" data-action="complete">Completar</button>
+                    <button class="btn btn-sm btn-secondary" data-id="${call.id}" data-action="delete">Eliminar</button>
                 </td>
             `;
 
@@ -107,6 +120,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (action === "reactivate") {
                 await Api.toggleConvocation(id);
                 location.reload();
+                return;
+            }
+            if (action === "delete") {
+                if (confirm("¿Estás seguro de que deseas eliminar esta convocatoria? Esta acción no se puede deshacer.")) {
+                    await Api.deleteExamCall(id);
+                    UI.showToast("Convocatoria eliminada", "success");
+                    location.reload();
+                }
                 return;
             }
         });

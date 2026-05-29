@@ -74,6 +74,26 @@
         </div>
     </div>
 
+    <div class="form-section">
+        <h3>Historial de Convocatorias</h3>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Estado de confirmación</th>
+                        <th>Estado del examen</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="convocatorias-history-body">
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Cargando...</td></tr>
+                </tbody>
+            </table>
+    </div>
+    </div>
+
     <!-- Cancelación Form (Oculto) -->
     <div id="cancel-form-container" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
         <h4>Cancelar Clase</h4>

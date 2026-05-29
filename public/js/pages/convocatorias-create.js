@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const teacherSelect = document.querySelector("#teacher_id");
     const vehicleSelect = document.querySelector("#vehicle_id");
     const studentsList = document.querySelector("#students-list");
+    const maxStudentsInput = document.querySelector("#max_students");
 
     init();
 
@@ -114,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 teacher_id: formData.get("teacher_id"),
                 vehicle_id: formData.get("vehicle_id"),
                 students: formData.getAll("students[]"),
+                max_students: formData.get("max_students"),
                 exam_call_status_id: 1, // Pendiente
             };
 

@@ -4,6 +4,7 @@
     const ROOT_ID = "student-home-page";
     const STATE_ID = "student-home-state";
     const NEXT_CLASS_ID = "student-next-class";
+    const NEXT_EXAM_CALL_ID = "student-next-exam";
     const SUMMARY_ID = "student-summary";
     const HISTORY_BODY_ID = "student-history-body";
     const QUICK_FORM_ID = "student-quick-form";
@@ -447,6 +448,74 @@ actionCell.innerHTML = html;
         container.appendChild(paragraph);
     }
 
+   async function loadNextConvocation() {
+    const box = document.getElementById(NEXT_EXAM_CALL_ID);
+    if (!box) return;
+
+    function normalizeExamCallPayload(data) {
+        if (!data) return null;
+        if (data.exam_call) return data.exam_call;
+        if (data.data?.exam_call) return data.data.exam_call;
+        return null;
+    }
+
+    function getTownLabel(exam) {
+        return exam?.town?.name || "-";
+    }
+
+    async function resolveTownName(exam) {
+        const label = getTownLabel(exam);
+        if (label !== "-" && !label.startsWith("Población #")) return label;
+
+        const towns = await loadStudentHomeTownsCache();
+        const id = exam.town_id || exam.town?.id || null;
+
+        if (id) {
+            const town = towns.find(t => String(t.id) === String(id));
+            if (town?.name) return town.name;
+        }
+
+        return label;
+    }
+
+    function getStudentList(exam) {
+        if (!exam?.exam_students?.length) return "-";
+
+        return exam.exam_students
+            .map(s => {
+                const user = s.student?.user;
+                if (!user) return "Alumno";
+                return `${user.name} ${user.surname1 ?? ""} ${user.surname2 ?? ""}`.trim();
+            })
+            .join(", ");
+    }
+
+    try {
+        box.innerHTML = '<div class="loader loader-inline loader-sm">Cargando…</div>';
+
+        const response = await Api.nextConvocation();
+        const exam = normalizeExamCallPayload(response);
+
+        if (!exam) {
+            box.innerHTML = '<p class="text-muted">No tienes convocatorias próximas.</p>';
+            return;
+        }
+
+        const townLabel = await resolveTownName(exam);
+
+        box.replaceChildren();
+        appendLabelValue(box, "Fecha:", formatDate(exam.exam_date));
+        appendLabelValue(box, "Hora:", exam.start_time);
+        appendLabelValue(box, "Población:", townLabel);
+        appendLabelValue(box, "Alumnos:", getStudentList(exam));
+
+    } catch (error) {
+        console.error(error);
+        box.innerHTML = '<p class="text-danger">Error cargando la próxima convocatoria.</p>';
+    }
+}
+
+
     function createBadge(text) {
         const badge = document.createElement("span");
         badge.className = "badge";
@@ -635,6 +704,25 @@ actionCell.innerHTML = html;
 }
 
 
+    let townsCache = [];
+    let studentHomeTownsCache = null;
+
+    async function loadStudentHomeTownsCache() {
+        if (studentHomeTownsCache) return studentHomeTownsCache;
+        try {
+            const response = await Api.getTowns();
+            studentHomeTownsCache = Array.isArray(response)
+                ? response
+                : Array.isArray(response?.data)
+                ? response.data
+                : [];
+        } catch (error) {
+            console.error('Error loading student towns cache:', error);
+            studentHomeTownsCache = [];
+        }
+        return studentHomeTownsCache;
+    }
+
     async function init() {
         const root = document.getElementById(ROOT_ID);
         if (!root) {
@@ -646,6 +734,7 @@ actionCell.innerHTML = html;
 
         try {
             await loadTowns();
+            await loadNextConvocation();
             await loadPanelData();
             await loadTotalSpent();
         } catch (error) {

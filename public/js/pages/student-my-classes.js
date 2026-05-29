@@ -9,12 +9,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const upcomingTbody = document.getElementById('upcoming-tbody');
     const pastTbody = document.getElementById('past-tbody');
+    const examHistoryBody = document.getElementById('exam-history-body');
     const messageBox = document.getElementById('message-state');
     const cancelFormContainer = document.getElementById('cancel-form-container');
     const cancelForm = document.getElementById('cancel-form');
     const cancelFormCancel = document.getElementById('cancel-form-cancel');
 
     await loadMyClasses();
+    await loadExamHistory();
+    await loadConvocationHistory();
 
     cancelForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -79,6 +82,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return map;
     }
+async function loadConvocationHistory() {
+    const tbody = document.getElementById('convocatorias-history-body');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Cargando...</td></tr>';
+
+    try {
+        const me = await Api.getMe();
+        const studentId = me?.student_profile?.id;
+
+        const response = await Api.getStudentConvocationHistory(studentId);
+        const convocations = Array.isArray(response) ? response : response?.data ?? [];
+
+        if (!convocations.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#999;">No hay convocatorias.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = convocations.map(c => {
+            const confirmBtn = !c.student_confirmed
+                ? `<button class="btn btn-sm btn-success" data-action="confirm" data-id="${c.exam_call_id}">Confirmar</button>`
+                : `<button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.exam_call_id}">Cancelar</button>`;
+
+            return `
+                <tr>
+                    <td>${formatDate(c.date)}</td>
+                    <td>${formatBookingTime(c.time)}</td>
+                    <td>${c.student_confirmed ? 'Confirmada' : 'Pendiente'}</td>
+                    <td>${c.exam_status}</td>
+                    <td>${confirmBtn}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Eventos de botones
+        tbody.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const examCallId = btn.dataset.id;
+                const action = btn.dataset.action;
+
+                UI.setLoading(true);
+                try {
+                    if (action === 'confirm') {
+                        await Api.confirmExamCall(examCallId, studentId);
+                    } else {
+                        await Api.unconfirmExamCall(examCallId, studentId);
+                    }
+
+                    showMessage('success', 'Estado actualizado correctamente');
+                    await loadConvocationHistory();
+
+                } catch (err) {
+                    showMessage('error', err.message || 'Error al actualizar.');
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#d32f2f;">Error cargando historial.</td></tr>';
+    }
+}
 
     async function loadMyClasses() {
         try {
@@ -120,6 +185,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (raw.length >= 16 && /\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(raw)) return raw.slice(11, 16);
         if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
         return raw;
+    }
+
+    function formatDate(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '—';
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+            const parts = raw.slice(0, 10).split('-');
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) {
+            return raw.slice(0, 10);
+        }
+        return raw;
+    }
+
+    async function loadExamHistory() {
+        if (!examHistoryBody) {
+            return;
+        }
+
+        examHistoryBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">Cargando...</td></tr>';
+
+        try {
+            const me = await Api.getMe();
+            const studentId = me?.student_profile?.id;
+            if (!studentId) {
+                throw new Error('No se ha encontrado el perfil de alumno.');
+            }
+
+            const response = await Api.getStudentExamHistory(studentId);
+            const exams = Array.isArray(response)
+                ? response
+                : response?.data ?? [];
+
+            const finalizadas = exams.filter(exam => {
+                return String(exam.status_convocatoria || exam.status || '').toLowerCase() === 'finalizada';
+            });
+
+            if (!finalizadas.length) {
+                examHistoryBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #999;">No hay exámenes finalizados.</td></tr>';
+                return;
+            }
+
+            examHistoryBody.innerHTML = finalizadas.map(exam => {
+                const date = formatDate(exam.exam_date || exam.date);
+                const result = exam.resultado ?? exam.result ?? '—';
+                const notes = exam.result_notes ?? exam.notes ?? '—';
+
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${result}</td>
+                        <td>${notes}</td>
+                    </tr>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Error loading exam history:', error);
+            examHistoryBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #d32f2f;">Error cargando historial de exámenes.</td></tr>';
+        }
     }
 
     function _normalizeStatus(raw) {
@@ -176,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const statusColor = (booking.status === 'confirmada' || booking.status === 'pendiente') ? 'badge-green' : 'badge-gray';
             
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${formatDate(booking.date)}</td>
                 <td>${booking.time}</td>
                 <td>${booking.professorName}</td>
                 <td>${booking.vehicle || '(sin especificar)'}</td>
@@ -219,7 +345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const statusColor = booking.status === 'cancelada' ? 'badge-red' : 'badge-blue';
             
             row.innerHTML = `
-                <td>${booking.date}</td>
+                <td>${formatDate(booking.date)}</td>
                 <td>${booking.time}</td>
                 <td>${booking.professorName}</td>
                 <td>${booking.vehicle || '(sin especificar)'}</td>

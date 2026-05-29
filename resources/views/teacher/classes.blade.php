@@ -78,6 +78,7 @@
                         <th>Vehículo</th>
                         <th>Población</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="past-classes-tbody">

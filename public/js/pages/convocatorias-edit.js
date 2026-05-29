@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const teacherSelect = document.querySelector("#teacher_id");
     const vehicleSelect = document.querySelector("#vehicle_id");
     const studentsList = document.querySelector("#students-list");
+    const maxStudentsInput = document.querySelector("#max_students");
 
     // Obtener ID desde la URL
     const parts = window.location.pathname.split("/");
@@ -29,26 +30,37 @@ document.addEventListener("DOMContentLoaded", () => {
         return [];
     }
 
-    async function loadConvocatoriaData() {
-        try {
-            const c = await Api.getExamCall(convocatoriaId);
+   async function loadConvocatoriaData() {
+    try {
+        const c = await Api.getExamCall(convocatoriaId);
 
-            document.querySelector("#date_time").value = `${c.exam_date}T${c.start_time}`;
-            townSelect.value = c.town_id ?? "";
-            teacherSelect.value = c.teacher_id ?? "";
-            vehicleSelect.value = c.vehicle_id ?? "";
+        // Fecha y hora
+        document.querySelector("#date_time").value = `${c.exam_date}T${c.start_time}`;
 
-            if (Array.isArray(c.exam_students)) {
-                c.exam_students.forEach(s => {
-                    const checkbox = document.querySelector(`#student_${s.student_id}`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
+        // Selects
+        townSelect.value = c.town_id ?? "";
+        teacherSelect.value = c.teacher_id ?? "";
+        vehicleSelect.value = c.vehicle_id ?? "";
 
-        } catch {
-            UI.showToast("Error cargando datos", "error");
+        // 🔥 Forzar plazas después de que el navegador termine de pintar
+        setTimeout(() => {
+            maxStudentsInput.value = c.max_students ?? "";
+        }, 0);
+
+        // Marcar alumnos ya asignados
+        if (Array.isArray(c.exam_students)) {
+            c.exam_students.forEach(s => {
+                const checkbox = document.querySelector(`#student_${s.student_id}`);
+                if (checkbox) checkbox.checked = true;
+            });
         }
+
+    } catch {
+        UI.showToast("Error cargando datos", "error");
     }
+}
+
+
 
     async function loadTowns() {
         try {
@@ -140,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 teacher_id: formData.get("teacher_id"),
                 vehicle_id: formData.get("vehicle_id"),
                 students: formData.getAll("students[]"),
+                max_students: formData.get("max_students")
             };
 
             try {

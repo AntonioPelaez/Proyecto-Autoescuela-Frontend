@@ -958,4 +958,39 @@ toggleConvocation(id) {
         credentials: 'include'
     }).then(handleResponse);
 },
+nextConvocation() {
+    return fetch(`${API_BASE_URL}/exam-calls/next-convocations`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+confirmExamCall(id, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/students/${studentId}/confirm`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+unconfirmExamCall(id, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}/students/${studentId}/unconfirm`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+getStudentConvocationHistory(studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/convocations`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+deleteExamCall(id) {
+    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

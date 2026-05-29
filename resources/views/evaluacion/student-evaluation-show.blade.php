@@ -35,7 +35,7 @@
                 <tr>
                     <th>Reportes escritos</th>
                     <td>
-                        <button id="reports-button" class="btn btn-primary btn-sm">
+                        <button id="reports-button" class="btn btn-primary btn-sm" href="#">
                             Ver reportes
                         </button>
                     </td>

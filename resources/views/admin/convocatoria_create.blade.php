@@ -40,6 +40,13 @@
             </select>
         </div>
 
+        {{-- Plazas disponibles --}}
+<div class="form-group mb-3">
+    <label for="max_students">Plazas disponibles</label>
+    <input type="number" id="max_students" name="max_students" class="form-control" min="1" placeholder="Número de plazas">
+</div>
+
+
         {{-- Alumnos --}}
         <div class="form-group mb-4">
             <label class="fw-bold">Alumnos preparados para examen</label>

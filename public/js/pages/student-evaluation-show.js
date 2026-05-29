@@ -12,22 +12,63 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tableHead = document.getElementById("skills-table-head");
     const tableBody = document.getElementById("skills-table-body");
 
+    // ---------------------------------------------------------
+    // 🔵 BOTÓN "VER REPORTES" — FUNCIONA COMO <a> PERO ES <button>
+    // ---------------------------------------------------------
+    const reportsUrl = `/teacher/student-evaluations/${studentId}/reports`;
+
+    reportsBtn.addEventListener("click", (e) => {
+        // Ctrl+Click o Cmd+Click → nueva pestaña
+        if (e.ctrlKey || e.metaKey) {
+            window.open(reportsUrl, "_blank");
+            return;
+        }
+        // Clic normal → navegación
+        window.location.href = reportsUrl;
+    });
+
+    // Clic con rueda (botón central)
+    reportsBtn.addEventListener("auxclick", (e) => {
+        if (e.button === 1) {
+            window.open(reportsUrl, "_blank");
+        }
+    });
+
+    // ---------------------------------------------------------
+    // 🔵 BOTÓN "VER HISTORIAL" — MISMO COMPORTAMIENTO
+    // ---------------------------------------------------------
+    const historyUrl = `/teacher/student-evaluations/${studentId}/history`;
+
+    historyBtn.addEventListener("click", (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            window.open(historyUrl, "_blank");
+            return;
+        }
+        window.location.href = historyUrl;
+    });
+
+    historyBtn.addEventListener("auxclick", (e) => {
+        if (e.button === 1) {
+            window.open(historyUrl, "_blank");
+        }
+    });
+
+    // ---------------------------------------------------------
+    // 🔵 CARGA DE DATOS DEL ALUMNO
+    // ---------------------------------------------------------
     try {
-        // 1. Datos del alumno
         const student = await Api.getStudent(studentId);
 
         const fullName =
-    (student.user?.name ?? student.name ?? "Sin nombre") + " " +
-    ((student.user?.surname1 ?? student.surname1 ?? "") + " " +
-     (student.user?.surname2 ?? student.surname2 ?? "")).trim();
-
+            (student.user?.name ?? student.name ?? "Sin nombre") + " " +
+            ((student.user?.surname1 ?? student.surname1 ?? "") + " " +
+            (student.user?.surname2 ?? student.surname2 ?? "")).trim();
 
         nameEl.innerHTML = fullName;
 
-        reportsBtn.href = `/teacher/student-evaluations/${studentId}/reports`;
-        historyBtn.href = `/teacher/student-evaluations/${studentId}/history`;
-
-        // 2. Resumen general
+        // ---------------------------------------------------------
+        // 🔵 RESUMEN GENERAL
+        // ---------------------------------------------------------
         const summary = await Api.getStudentSkillEvaluationSummary(studentId);
 
         const globalAvg = summary.skills_summary.length
@@ -39,12 +80,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         globalAvgEl.innerHTML = globalAvg;
 
-        // Preparación
         readyEl.innerHTML = summary.ready_for_exam
             ? '<span class="badge bg-success">Preparado</span>'
             : '<span class="badge bg-danger">No preparado</span>';
 
-        // 3. Histórico para tabla de skills
+        // ---------------------------------------------------------
+        // 🔵 HISTÓRICO DE CLASES
+        // ---------------------------------------------------------
         const history = await Api.getStudentSkillEvaluationHistory(studentId);
 
         if (!history.length) {
@@ -54,10 +96,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // Obtener lista de skills dinámicamente
         const allSkills = history[0].skill_evaluations.map(s => s.driving_skill.name);
 
-        // Construir cabecera
         tableHead.innerHTML = `
             <tr>
                 <th>ID Clase</th>
@@ -66,13 +106,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             </tr>
         `;
 
-        // Construir filas
         tableBody.innerHTML = history.map(ev => {
             const weakAreas = ev.skill_evaluations
                 .filter(s => (s.score ?? 0) <= 2)
                 .map(s => s.driving_skill.name)
                 .join(", ") || "No hay áreas débiles";
-            
+
             return `
                 <tr>
                     <td>${ev.class_session.id}</td>
@@ -82,7 +121,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             `;
         }).join("");
 
-        // 4. Media última clase
+        // ---------------------------------------------------------
+        // 🔵 MEDIA ÚLTIMA CLASE
+        // ---------------------------------------------------------
         const last = history[0];
         const lastAvg = last.skill_evaluations.length
             ? (

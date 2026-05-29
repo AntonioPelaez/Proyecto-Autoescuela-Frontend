@@ -10,18 +10,25 @@
     </a>
 </div>
 
-<h1 class="page-title">Historial de exámenes</h1>
+<h1 class="page-title mb-4">Historial de exámenes</h1>
 
-<div class="card card-body">
-    <table class="table table-bordered text-center">
-        <thead>
+<div class="card card-body shadow-sm">
+    <table class="table table-bordered table-striped text-center align-middle mb-0 w-100">
+        <colgroup>
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 70%;">
+        </colgroup>
+
+        <thead class="table-light">
             <tr>
-                <th>Fecha</th>
-                <th>Resultado</th>
-                <th>Notas</th>
+                <th class="text-center">Fecha</th>
+                <th class="text-center">Resultado</th>
+                <th class="text-center">Notas</th>
             </tr>
         </thead>
-        <tbody id="exam-history-body">
+
+        <tbody id="exam-history-body" class="align-middle text-center">
             <tr>
                 <td colspan="3">Cargando…</td>
             </tr>

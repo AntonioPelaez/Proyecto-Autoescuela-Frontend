@@ -66,6 +66,18 @@
     border-color: #ced4da !important;
 }
 
+#chart-container {
+}
+
+.skill-chart {
+    margin-bottom: 1.5rem;
+}
+
+.skill-chart canvas {
+    width: 100% !important;
+    height: 240px !important;
+}
+
 /* MODAL */
 .modal {
     position: fixed;

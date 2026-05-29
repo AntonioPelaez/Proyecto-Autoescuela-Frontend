@@ -447,8 +447,7 @@ actionCell.innerHTML = html;
         paragraph.append(strong, document.createTextNode(String(value || "-")));
         container.appendChild(paragraph);
     }
-
-   async function loadNextConvocation() {
+async function loadNextConvocation() {
     const box = document.getElementById(NEXT_EXAM_CALL_ID);
     if (!box) return;
 
@@ -502,18 +501,125 @@ actionCell.innerHTML = html;
         }
 
         const townLabel = await resolveTownName(exam);
-
         box.replaceChildren();
+
         appendLabelValue(box, "Fecha:", formatDate(exam.exam_date));
         appendLabelValue(box, "Hora:", exam.start_time);
         appendLabelValue(box, "Población:", townLabel);
         appendLabelValue(box, "Alumnos:", getStudentList(exam));
 
+        // ─────────────────────────────────────────────
+        // ESTADO DE CONFIRMACIÓN DEL ESTUDIANTE
+        // ─────────────────────────────────────────────
+        const me = await Api.getMe();
+        const studentId = me.student_profile.id;
+
+        const studentRecord = exam.exam_students?.find(
+            s => Number(s.student_id) === Number(studentId)
+        );
+
+        const isConfirmed = !!studentRecord && Number(studentRecord.student_confirmed) === 1;
+        const isEnrolled = !!studentRecord;
+
+        let statusLabel;
+        if (!isEnrolled) {
+            statusLabel = "No inscrito";
+        } else {
+            statusLabel = isConfirmed ? "Confirmada" : "No confirmada";
+        }
+
+        appendLabelValue(box, "Estado:", statusLabel);
+
+        // ─────────────────────────────────────────────
+        // BOTONES SEGÚN ESTADO
+        // ─────────────────────────────────────────────
+        const btnContainer = document.createElement("div");
+        btnContainer.style.marginTop = "15px";
+        btnContainer.style.display = "flex";
+        btnContainer.style.gap = "10px";
+
+        const examStatus = String(exam.exam_status || "").toLowerCase();
+        const isClosed = examStatus === "finalizada" || examStatus === "cancelada";
+
+        // Si la convocatoria está cerrada → no hay botones
+        if (isClosed) {
+            box.appendChild(btnContainer);
+            return;
+        }
+
+        // Caso 1: alumno NO inscrito → solo botón "Confirmar asistencia" (inscribirse)
+        if (!isEnrolled) {
+            const confirmBtn = document.createElement("button");
+            confirmBtn.className = "btn btn-success";
+            confirmBtn.textContent = "Confirmar asistencia";
+
+            confirmBtn.addEventListener("click", async () => {
+                UI.setLoading(true);
+                try {
+                    await Api.confirmExamCall(exam.id, studentId);
+                    showState("success", "Te has inscrito y confirmado en la convocatoria.");
+                    await loadNextConvocation();
+                } catch (err) {
+                    showState("error", err.message || "No se pudo confirmar.");
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+
+            btnContainer.appendChild(confirmBtn);
+        }
+
+        // Caso 2: inscrito pero NO confirmado → botón Confirmar
+        if (isEnrolled && !isConfirmed) {
+            const confirmBtn = document.createElement("button");
+            confirmBtn.className = "btn btn-success";
+            confirmBtn.textContent = "Confirmar asistencia";
+
+            confirmBtn.addEventListener("click", async () => {
+                UI.setLoading(true);
+                try {
+                    await Api.confirmExamCall(exam.id, studentId);
+                    showState("success", "Has confirmado tu asistencia.");
+                    await loadNextConvocation();
+                } catch (err) {
+                    showState("error", err.message || "No se pudo confirmar.");
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+
+            btnContainer.appendChild(confirmBtn);
+        }
+
+        // Caso 3: inscrito y confirmado → botón Cancelar
+        if (isEnrolled && isConfirmed) {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "btn btn-danger";
+            cancelBtn.textContent = "Cancelar asistencia";
+
+            cancelBtn.addEventListener("click", async () => {
+                UI.setLoading(true);
+                try {
+                    await Api.unconfirmExamCall(exam.id, studentId);
+                    showState("success", "Has cancelado tu asistencia.");
+                    await loadNextConvocation();
+                } catch (err) {
+                    showState("error", err.message || "No se pudo cancelar.");
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+
+            btnContainer.appendChild(cancelBtn);
+        }
+
+        box.appendChild(btnContainer);
     } catch (error) {
         console.error(error);
         box.innerHTML = '<p class="text-danger">Error cargando la próxima convocatoria.</p>';
     }
 }
+
 
 
     function createBadge(text) {

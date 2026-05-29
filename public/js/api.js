@@ -978,5 +978,12 @@ unconfirmExamCall(id, studentId) {
         headers: getAuthHeaders(),
         credentials: 'include'
     }).then(handleResponse);
-}
+},
+getStudentConvocationHistory(studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/convocations`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
 };

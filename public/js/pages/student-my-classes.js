@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadMyClasses();
     await loadExamHistory();
+    await loadConvocationHistory();
 
     cancelForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -81,6 +82,68 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return map;
     }
+async function loadConvocationHistory() {
+    const tbody = document.getElementById('convocatorias-history-body');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Cargando...</td></tr>';
+
+    try {
+        const me = await Api.getMe();
+        const studentId = me?.student_profile?.id;
+
+        const response = await Api.getStudentConvocationHistory(studentId);
+        const convocations = Array.isArray(response) ? response : response?.data ?? [];
+
+        if (!convocations.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#999;">No hay convocatorias.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = convocations.map(c => {
+            const confirmBtn = !c.student_confirmed
+                ? `<button class="btn btn-sm btn-success" data-action="confirm" data-id="${c.exam_call_id}">Confirmar</button>`
+                : `<button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.exam_call_id}">Cancelar</button>`;
+
+            return `
+                <tr>
+                    <td>${formatDate(c.date)}</td>
+                    <td>${formatBookingTime(c.time)}</td>
+                    <td>${c.student_confirmed ? 'Confirmada' : 'Pendiente'}</td>
+                    <td>${c.exam_status}</td>
+                    <td>${confirmBtn}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Eventos de botones
+        tbody.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const examCallId = btn.dataset.id;
+                const action = btn.dataset.action;
+
+                UI.setLoading(true);
+                try {
+                    if (action === 'confirm') {
+                        await Api.confirmExamCall(examCallId, studentId);
+                    } else {
+                        await Api.unconfirmExamCall(examCallId, studentId);
+                    }
+
+                    showMessage('success', 'Estado actualizado correctamente');
+                    await loadConvocationHistory();
+
+                } catch (err) {
+                    showMessage('error', err.message || 'Error al actualizar.');
+                } finally {
+                    UI.setLoading(false);
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#d32f2f;">Error cargando historial.</td></tr>';
+    }
+}
 
     async function loadMyClasses() {
         try {

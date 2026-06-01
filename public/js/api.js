@@ -993,4 +993,57 @@ deleteExamCall(id) {
         credentials: 'include'
     }).then(handleResponse);
 },
+// ✔ APROBAR alumno (profesor)
+approveExamCall(examCallId, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/approved`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+// ✔ DESAPROBAR alumno (profesor)
+rejectExamCall(examCallId, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/unapproved`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+// ─────────── EXAM CALLS: APROBACIONES DEL PROFESOR ───────────
+
+getApprovedStudents(examCallId) {
+    return fetch(`${API_BASE_URL}/approved-students/${examCallId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+getPendingApprovalStudents(examCallId) {
+    return fetch(`${API_BASE_URL}/pending-approval-students/${examCallId}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+addApprovedStudent(examCallId, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/add-approved`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({}),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
+removeApprovedStudent(examCallId, studentId, data = {}) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/remove-approved`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

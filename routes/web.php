@@ -40,6 +40,9 @@ Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/result', funct
 Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/notes', function ($examCallId, $studentId) {
     return view('exams.student-notes', compact('examCallId', 'studentId'));
 });
+Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/remove', function ($examCallId, $studentId) {
+    return view('exams.student-remove', compact('examCallId', 'studentId'));
+});
 Route::view('/teacher/student-evaluations/{id}', 'evaluacion.student-evaluation-show');
 Route::view('/teacher/student-evaluations/{id}/history', 'evaluacion.student-evaluation-history');
 Route::view('/teacher/student-evaluations/{id}/reports', 'evaluacion.student-reports');

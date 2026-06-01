@@ -42,7 +42,7 @@
 
                     <a href="/teacher/exam-calls"
                        class="role-menu-link {{ request()->is('teacher/exam-calls*') ? 'is-active' : '' }}">
-                        Evaluar convocatoria
+                        Convocatoria
                     </a>
 
                     <a href="/teacher/availability"

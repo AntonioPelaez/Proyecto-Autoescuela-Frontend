@@ -22,7 +22,7 @@
             <!-- CHECKBOX -->
             <div class="checkbox-row">
                 <label for="ready-checkbox" class="checkbox-label">
-                    ¿Está listo para examen?
+                    Está listo para examen
                 </label>
                 <input type="checkbox" id="ready-checkbox" class="checkbox-input">
             </div>

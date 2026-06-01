@@ -517,14 +517,6 @@ async function loadNextConvocation() {
         const studentRecord = exam.exam_students?.find(
             s => Number(s.student_id) === Number(studentId)
         );
-        if (!studentRecord) {
-    appendLabelValue(box, "Estado:", "No se encuentra inscrito en esta convocatoria.");
-
-    // No mostrar botones
-    const btnContainer = document.createElement("div");
-    box.appendChild(btnContainer);
-    return;
-}
 
 
         const isConfirmed = !!studentRecord && Number(studentRecord.student_confirmed) === 1;

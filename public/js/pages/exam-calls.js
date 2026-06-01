@@ -239,37 +239,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function isConfirmedStudent(item) {
-        if (!item) return false;
+    if (!item) return false;
 
-        const confirmedFlag =
-            item.student_confirmed === 1 ||
-            item.student_confirmed === '1' ||
-            item.student_confirmed === true ||
-            item.student_confirmed === 'true' ||
-            item.confirmed === true ||
-            item.confirmed === '1';
-
-        if (confirmedFlag) {
-            return true;
-        }
-
-        const status = String(
-            item.status ||
-            item.booking_status ||
-            item.status_convocatoria ||
-            item.exam_result_status?.name ||
-            item.exam_result_status?.label ||
-            ''
-        ).toLowerCase();
-
-        return [
-            'confirmed',
-            'confirmada',
-            'approved',
-            'aprobado',
-            'booked'
-        ].includes(status);
+    // 🔥 Si el profesor lo ha aprobado → es confirmado
+    if (
+        item.teacher_approved === 1 ||
+        item.teacher_approved === '1' ||
+        item.teacher_approved === true ||
+        item.teacher_approved === 'true'
+    ) {
+        return true;
     }
+
+    // 🔥 Si el alumno ha confirmado → también es confirmado
+    if (
+        item.student_confirmed === 1 ||
+        item.student_confirmed === '1' ||
+        item.student_confirmed === true ||
+        item.student_confirmed === 'true'
+    ) {
+        return true;
+    }
+
+    // 🔥 Compatibilidad con otros estados
+    const status = String(
+        item.status ||
+        item.booking_status ||
+        item.status_convocatoria ||
+        item.exam_result_status?.name ||
+        item.exam_result_status?.label ||
+        ''
+    ).toLowerCase();
+
+    return [
+    'confirmed',
+    'confirmada',
+    'booked'
+].includes(status);
+
+}
+
 
     function splitStudentsByConfirmation(items) {
         if (!Array.isArray(items)) return { pending: [], confirmed: [] };
@@ -295,40 +304,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    async function acceptPendingStudent(studentId) {
-        const match = pendingStudents.find(s => String(s.student_id ?? s.student?.id ?? s.id ?? '') === String(studentId));
-        if (!match) return;
+async function acceptPendingStudent(studentId) {
+    const match = pendingStudents.find(s =>
+        String(s.student_id ?? s.student?.id ?? s.id ?? '') === String(studentId)
+    );
+    if (!match) return;
 
-        if (!currentAcceptExamCallId) {
-            console.error('No exam call selected for acceptance.');
-            return;
-        }
-
-        try {
-            await Api.confirmExamCall(currentAcceptExamCallId, studentId);
-            removePendingStudent(studentId);
-
-            if (currentEvaluateExamCallId === currentAcceptExamCallId) {
-                const examCall = await Api.getExamCall(currentAcceptExamCallId);
-                evaluationStudents.push({ ...match, exam_call: examCall });
-                renderStudents(evaluationStudents, currentEvaluateExamCallId);
-            }
-
-            renderPendingReservations();
-        } catch (error) {
-            console.error('Error confirming pending student:', error);
-            pendingReservationsBody.innerHTML = `
-                <tr>
-                    <td colspan="2" class="text-center py-3 text-danger">No se pudo aceptar al alumno. Intenta de nuevo.</td>
-                </tr>
-            `;
-        }
+    if (!currentAcceptExamCallId) {
+        console.error('No exam call selected for acceptance.');
+        return;
     }
 
-    function rejectPendingStudent(studentId) {
+    try {
+        // ✔ APROBAR ALUMNO (teacher_approved = true)
+        await Api.approveExamCall(currentAcceptExamCallId, studentId);
+
+        removePendingStudent(studentId);
+
+        // Si estamos en la misma convocatoria → mover a evaluación
+        if (currentEvaluateExamCallId === currentAcceptExamCallId) {
+            const examCall = await Api.getExamCall(currentAcceptExamCallId);
+            evaluationStudents.push({ ...match, exam_call: examCall });
+            renderStudents(evaluationStudents, currentEvaluateExamCallId);
+        }
+
+        renderPendingReservations();
+    } catch (error) {
+        console.error('Error approving student:', error);
+        pendingReservationsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3 text-danger">
+                    No se pudo aprobar al alumno. Intenta de nuevo.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+async function rejectPendingStudent(studentId) {
+    if (!currentAcceptExamCallId) {
+        console.error('No exam call selected for rejection.');
+        return;
+    }
+
+    try {
+        // ✔ DESAPROBAR ALUMNO
+        await Api.rejectExamCall(currentAcceptExamCallId, studentId);
+
         removePendingStudent(studentId);
         renderPendingReservations();
+    } catch (error) {
+        console.error('Error rejecting student:', error);
+        pendingReservationsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3 text-danger">
+                    No se pudo rechazar al alumno. Intenta de nuevo.
+                </td>
+            </tr>
+        `;
     }
+}
+
+
 
     function normalizeList(raw) {
         if (Array.isArray(raw)) return raw;
@@ -395,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await Api.getExamCallStudents(examCallId);
             const studentsList = Array.isArray(response) ? response : response?.data ?? [];
-            pendingStudents = studentsList.filter(s => !isConfirmedStudent(s));
+            pendingStudents = studentsList.filter(s => !s.teacher_approved);
             renderPendingReservations();
         } catch (error) {
             console.error('Error loading pending students:', error);
@@ -434,7 +472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const studentsList = Array.isArray(response) ? response : response?.data ?? [];
             evaluationStudents = studentsList
-                .filter(s => isConfirmedStudent(s))
+                .filter(s => s.teacher_approved == 1)
                 .map(s => ({ ...s, exam_call: examCall }));
 
             renderStudents(evaluationStudents, examCallId);

@@ -993,18 +993,22 @@ deleteExamCall(id) {
         credentials: 'include'
     }).then(handleResponse);
 },
-approveExamCall(examCallId,studentID) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentID}/approved`, {
+// ✔ APROBAR alumno (profesor)
+approveExamCall(examCallId, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/approved`, {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include'
     }).then(handleResponse);
 },
-rejectExamCall(examCallId,studentID) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentID}/unapproved`, {
+
+// ✔ DESAPROBAR alumno (profesor)
+rejectExamCall(examCallId, studentId) {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/unapproved`, {
         method: 'POST',
         headers: getAuthHeaders(),
         credentials: 'include'
     }).then(handleResponse);
 },
+
 };

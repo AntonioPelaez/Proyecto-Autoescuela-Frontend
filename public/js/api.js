@@ -1037,11 +1037,11 @@ addApprovedStudent(examCallId, studentId) {
     }).then(handleResponse);
 },
 
-removeApprovedStudent(examCallId, studentId) {
+removeApprovedStudent(examCallId, studentId, data = {}) {
     return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/remove-approved`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({}),
+        body: JSON.stringify(data),
         credentials: 'include'
     }).then(handleResponse);
 },

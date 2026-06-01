@@ -324,7 +324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderApproved() {
         const rows = (approved || []).map((s) => {
             const id = s.student_id ?? s.student?.id ?? s.id ?? "";
-            return `<tr data-student-id="${id}"><td class="text-start">${studentName(s)}</td><td class="text-center text-nowrap"><button class="btn btn-danger btn-sm" data-action="remove" data-student-id="${id}">Quitar</button></td></tr>`;
+            return `<tr data-student-id="${id}"><td class="text-start">${studentName(s)}</td><td class="text-center text-nowrap"><a href="/teacher/exam-calls/${currentAccept}/students/${id}/remove" class="btn btn-danger btn-sm">Quitar</a></td></tr>`;
         });
         renderRows(approvedBody, rows);
     }
@@ -627,8 +627,21 @@ document.addEventListener("DOMContentLoaded", async () => {
                 String(studentId),
         );
         if (!match) return;
+
+        const reason = window.prompt(
+            "Introduce la razón para quitar al alumno de la convocatoria:",
+        );
+        if (reason === null) return;
+        const trimmedReason = String(reason).trim();
+        if (!trimmedReason) {
+            window.alert("Debes indicar una razón para quitar al alumno.");
+            return;
+        }
+
         try {
-            await Api.removeApprovedStudent(currentAccept, studentId);
+            await Api.removeApprovedStudent(currentAccept, studentId, {
+                result_notes: trimmedReason,
+            });
             approved = approved.filter(
                 (s) =>
                     String(s.student_id ?? s.student?.id ?? s.id ?? "") !==

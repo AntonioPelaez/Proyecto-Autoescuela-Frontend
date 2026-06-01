@@ -519,8 +519,12 @@ async function loadNextConvocation() {
         );
 
 
-        const isConfirmed = !!studentRecord && Number(studentRecord.student_confirmed) === 1;
         const isEnrolled = !!studentRecord;
+        const isConfirmed = isEnrolled && (
+            Number(studentRecord.student_confirmed) === 1 ||
+            Number(studentRecord.teacher_approved) === 1 ||
+            String(studentRecord.status_convocatoria || "").toLowerCase() === "confirmada"
+        );
 
         let statusLabel;
         if (!isEnrolled) {
@@ -548,7 +552,7 @@ async function loadNextConvocation() {
             return;
         }
 
-        // Caso 1: alumno NO inscrito → solo botón "Confirmar asistencia" (inscribirse)
+        // Caso 1: alumno NO inscrito → botón "Confirmar asistencia" (reservar plaza)
         if (!isEnrolled) {
             const confirmBtn = document.createElement("button");
             confirmBtn.className = "btn btn-success";
@@ -570,29 +574,8 @@ async function loadNextConvocation() {
             btnContainer.appendChild(confirmBtn);
         }
 
-        // Caso 2: inscrito pero NO confirmado → botón Confirmar
-        if (isEnrolled && !isConfirmed) {
-            const confirmBtn = document.createElement("button");
-            confirmBtn.className = "btn btn-success";
-            confirmBtn.textContent = "Confirmar asistencia";
-
-            confirmBtn.addEventListener("click", async () => {
-                UI.setLoading(true);
-                try {
-                    await Api.confirmExamCall(exam.id, studentId);
-                    showState("success", "Has confirmado tu asistencia.");
-                    await loadNextConvocation();
-                } catch (err) {
-                    showState("error", err.message || "No se pudo confirmar.");
-                } finally {
-                    UI.setLoading(false);
-                }
-            });
-
-            btnContainer.appendChild(confirmBtn);
-        }
-
-        // Caso 3: inscrito y confirmado → botón Cancelar
+        // Caso 2: alumno inscrito → no mostrar botón de reservar plaza,
+        // solo permitir cancelar si ya estaba confirmado.
         if (isEnrolled && isConfirmed) {
             const cancelBtn = document.createElement("button");
             cancelBtn.className = "btn btn-danger";

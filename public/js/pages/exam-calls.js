@@ -3,12 +3,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const evaluateExamCallSelect = document.getElementById('evaluate-exam-call-select');
     const studentsBody = document.getElementById('exam-call-students-body');
     const pendingReservationsBody = document.getElementById('pending-reservations-body');
+    const approvedStudentsBody = document.getElementById('approved-students-body');
+    const manualAddStudentsBody = document.getElementById('manual-add-students-body');
+    const examCallDateTime = document.getElementById('exam-call-date-time');
+    const examCallLocation = document.getElementById('exam-call-location');
+    const examCallProfessor = document.getElementById('exam-call-professor');
+    const examCallVehicle = document.getElementById('exam-call-vehicle');
+    const examCallRemainingSeats = document.getElementById('exam-call-remaining-seats');
+    const examCallStudentsCount = document.getElementById('exam-call-students-count');
 
     let examCalls = [];
     let currentAcceptExamCallId = null;
     let currentEvaluateExamCallId = null;
     let evaluationStudents = [];
     let pendingStudents = [];
+    let approvedStudents = [];
+    let manualAddStudents = [];
+    const teacherNameCache = {};
+    const vehicleNameCache = {};
 
     function formatDate(value) {
         if (!value) return '—';
@@ -32,47 +44,307 @@ document.addEventListener('DOMContentLoaded', async () => {
         return raw;
     }
 
+    function unwrapValue(value) {
+        if (value === null || value === undefined) return value;
+        if (typeof value === 'string' || typeof value === 'number') return value;
+        if (Array.isArray(value)) return value.length ? unwrapValue(value[0]) : value;
+        if (typeof value === 'object') {
+            if (value.data && value.data !== value) return unwrapValue(value.data);
+            if (value.user && value.user !== value) return unwrapValue(value.user);
+            if (value.teacher && value.teacher !== value) return unwrapValue(value.teacher);
+            if (value.professor && value.professor !== value) return unwrapValue(value.professor);
+            if (value.instructor && value.instructor !== value) return unwrapValue(value.instructor);
+            if (value.vehicle && value.vehicle !== value) return unwrapValue(value.vehicle);
+            if (value.car && value.car !== value) return unwrapValue(value.car);
+            if (value.person && value.person !== value) return unwrapValue(value.person);
+            if (value.record && value.record !== value) return unwrapValue(value.record);
+        }
+        return value;
+    }
+
+    function extractBestText(value, keys = []) {
+        const current = unwrapValue(value);
+        if (current === null || current === undefined) return null;
+        if (typeof current === 'string') return current.trim();
+        if (typeof current === 'number') return null;
+        if (Array.isArray(current)) return current.map(item => extractBestText(item, keys)).filter(Boolean)[0] || null;
+        if (typeof current === 'object') {
+            for (const key of keys) {
+                const candidate = current[key];
+                if (candidate !== null && candidate !== undefined && candidate !== '') {
+                    const text = extractBestText(candidate, keys);
+                    if (text) return text;
+                }
+            }
+            // prefer string-like primitives (with letters) and avoid returning generic ids/numbers
+            for (const key of Object.keys(current)) {
+                const candidate = current[key];
+                if (typeof candidate === 'string') {
+                    if (/[A-Za-zÀ-ÿ]/.test(candidate)) return candidate.trim();
+                }
+            }
+            for (const key of Object.keys(current)) {
+                const candidate = current[key];
+                if (typeof candidate === 'object') {
+                    const text = extractBestText(candidate, keys);
+                    if (text) return text;
+                }
+            }
+        }
+        return null;
+    }
+
+    function extractAnyString(value) {
+        const current = unwrapValue(value);
+        if (current === null || current === undefined) return null;
+        if (typeof current === 'string') return current.trim() || null;
+        if (typeof current === 'number') return String(current);
+        if (Array.isArray(current)) {
+            for (const item of current) {
+                const v = extractAnyString(item);
+                if (v) return v;
+            }
+            return null;
+        }
+        if (typeof current === 'object') {
+            for (const k of Object.keys(current)) {
+                const v = extractAnyString(current[k]);
+                if (v) return v;
+            }
+        }
+        return null;
+    }
+
     function getFullName(person) {
-        if (!person) return '';
+        const current = unwrapValue(person);
+        if (current === null || current === undefined) return '';
+        if (typeof current === 'string') return current.trim();
+        if (typeof current === 'number') return String(current);
+
         const firstName =
-            person?.user?.name ||
-            person?.name ||
-            person?.first_name ||
-            person?.firstName ||
-            person?.full_name ||
-            person?.fullName ||
+            current?.user?.name ||
+            current?.name ||
+            current?.first_name ||
+            current?.firstName ||
+            current?.full_name ||
+            current?.fullName ||
+            current?.display_name ||
+            current?.title ||
             '';
         const lastName =
-            person?.user?.surname ||
-            person?.surname ||
-            person?.last_name ||
-            person?.lastName ||
-            person?.family_name ||
+            current?.user?.surname ||
+            current?.surname ||
+            current?.last_name ||
+            current?.lastName ||
+            current?.family_name ||
+            current?.surname1 ||
+            current?.surname2 ||
             '';
-        return [firstName, lastName].filter(Boolean).join(' ').trim();
+        const result = [firstName, lastName].filter(Boolean).join(' ').trim();
+        if (result) return result;
+
+        const extracted = extractBestText(current, [
+            'full_name', 'fullName', 'display_name', 'title', 'nombre', 'name',
+            'professor_name', 'teacher_name', 'instructor_name', 'surname', 'surname1', 'surname2'
+        ]);
+        if (extracted && typeof extracted === 'string') return extracted.trim();
+
+        // Do not return generic object string like [object Object]
+        return '';
     }
 
     function formatVehicleValue(value) {
-        if (value === null || value === undefined) return '—';
-        if (typeof value === 'string') return value;
-        if (typeof value === 'object') {
+        const current = unwrapValue(value);
+        if (current === null || current === undefined) return '—';
+        if (typeof current === 'string') return current;
+        if (typeof current === 'number') return String(current);
+        if (Array.isArray(current)) return current.length ? formatVehicleValue(current[0]) : '—';
+        if (typeof current === 'object') {
             const plate =
-                value.plate ||
-                value.plate_number ||
-                value.vehicle_plate ||
-                value.license_plate ||
-                value.registration ||
-                value.plateNumber;
+                current.plate ||
+                current.plate_number ||
+                current.vehicle_plate ||
+                current.license_plate ||
+                current.registration ||
+                current.plateNumber ||
+                current?.vehicle?.plate ||
+                current?.vehicle?.plate_number;
             const brandModel =
-                [value.brand, value.model].filter(Boolean).join(' ') ||
-                value.name ||
-                value.display_name ||
-                value.title ||
+                [current.brand, current.model].filter(Boolean).join(' ') ||
+                current.name ||
+                current.display_name ||
+                current.title ||
+                current.registration ||
                 '';
             const result = [brandModel, plate].filter(Boolean).join(' ').trim();
-            return result || JSON.stringify(value);
+            return result || extractBestText(current, [
+                'plate', 'plate_number', 'vehicle_plate', 'registration', 'name',
+                'brand', 'model', 'title', 'display_name'
+            ]) || (typeof current === 'object' ? JSON.stringify(current) : String(current));
         }
-        return String(value);
+        return String(current);
+    }
+
+    async function resolveTeacherName(examCall) {
+        if (!examCall) return null;
+        // Try flat name fields first
+        const teacherParts = [
+            examCall?.teacher_name,
+            examCall?.teacher_surname1,
+            examCall?.teacher_surname2,
+            examCall?.professor_name,
+            examCall?.professor_surname1,
+            examCall?.professor_surname2,
+            examCall?.instructor_name,
+            examCall?.instructor_surname1,
+            examCall?.instructor_surname2
+        ].filter(Boolean);
+        if (teacherParts.length) return teacherParts.join(' ').trim();
+
+        const directTeacher =
+            examCall?.teacher ||
+            examCall?.professor ||
+            examCall?.instructor ||
+            examCall?.teacher_profile ||
+            examCall?.teacherProfile ||
+            examCall?.professor_profile ||
+            examCall?.instructor_profile ||
+            examCall?.user ||
+            examCall?.teacher?.user ||
+            examCall?.teacher_profile?.user ||
+            examCall?.teacherProfile?.user ||
+            examCall?.professor?.user;
+
+        const directName = getFullName(directTeacher);
+        if (directName) return directName;
+
+        const fallbackName =
+            examCall?.teacher_name ||
+            examCall?.professor_name ||
+            examCall?.instructor_name ||
+            examCall?.teacher_full_name ||
+            examCall?.professor_full_name ||
+            examCall?.teacher?.full_name ||
+            examCall?.teacher_profile?.full_name ||
+            examCall?.teacher_profile?.name ||
+            examCall?.teacher?.name ||
+            examCall?.professor?.name;
+        if (fallbackName) return fallbackName;
+
+        const teacherId =
+            examCall?.teacher_id ||
+            examCall?.teacher_profile_id ||
+            examCall?.professor_id ||
+            examCall?.instructor_id;
+        if (!teacherId) return null;
+
+        if (teacherNameCache[teacherId]) return teacherNameCache[teacherId];
+
+        try {
+            const teacherRaw = normalizeObject(await Api.getTeacher(teacherId));
+            console.debug('Api.getTeacher response for id', teacherId, teacherRaw);
+            const teacherName =
+                getFullName(teacherRaw) ||
+                teacherRaw?.name ||
+                teacherRaw?.full_name ||
+                getFullName(teacherRaw?.user) ||
+                (teacherRaw?.surname
+                    ? `${teacherRaw?.name || ''} ${teacherRaw?.surname}`.trim()
+                    : null);
+            if (teacherName) {
+                teacherNameCache[teacherId] = teacherName;
+                return teacherName;
+            }
+
+            // Try user by id if present
+            const userId = teacherRaw?.user_id || teacherRaw?.user?.id || teacherRaw?.user_id;
+            if (userId) {
+                try {
+                    const userRaw = normalizeObject(await Api.getUser(userId));
+                    const userName = getFullName(userRaw) || extractAnyString(userRaw);
+                    if (userName) {
+                        teacherNameCache[teacherId] = userName;
+                        return userName;
+                    }
+                } catch (e) {
+                    console.debug('Api.getUser failed for id', userId, e);
+                }
+            }
+
+            // As a last resort, pick any string from the teacher object
+            const any = extractAnyString(teacherRaw);
+            if (any) {
+                teacherNameCache[teacherId] = any;
+                return any;
+            }
+            if (teacherName) {
+                teacherNameCache[teacherId] = teacherName;
+                return teacherName;
+            }
+        } catch (error) {
+            console.error('Error loading teacher name:', error);
+        }
+
+        teacherNameCache[teacherId] = `Profesor #${teacherId}`;
+        return teacherNameCache[teacherId];
+    }
+
+    async function resolveVehicleLabel(examCall) {
+        if (!examCall) return '—';
+        const vehicleParts = [
+            examCall?.vehicle_brand,
+            examCall?.vehicle_model,
+            examCall?.vehicle_plate,
+            examCall?.plate_number,
+            examCall?.license_plate,
+            examCall?.registration
+        ].filter(Boolean);
+        if (vehicleParts.length) return vehicleParts.join(' ').trim();
+
+        const vehicleValue =
+            examCall?.vehicle ||
+            examCall?.vehicle_id ||
+            examCall?.vehicle_number ||
+            examCall?.vehicle_plate ||
+            examCall?.vehicle?.plate ||
+            examCall?.vehicle?.plate_number ||
+            examCall?.vehicle?.registration;
+
+        if (vehicleValue === null || vehicleValue === undefined) return '—';
+        if (typeof vehicleValue === 'object') return formatVehicleValue(vehicleValue);
+
+        const vehicleId = Number(vehicleValue);
+        if (!Number.isFinite(vehicleId)) return formatVehicleValue(vehicleValue);
+
+        if (vehicleNameCache[vehicleId]) return vehicleNameCache[vehicleId];
+
+        try {
+            const vehicleRaw = normalizeObject(await Api.getVehicle(vehicleId));
+            console.debug('Api.getVehicle response for id', vehicleId, vehicleRaw);
+            const resolved =
+                formatVehicleValue(vehicleRaw) ||
+                vehicleRaw?.name ||
+                vehicleRaw?.brand ||
+                vehicleRaw?.model ||
+                String(vehicleId);
+            if (resolved && resolved !== String(vehicleId)) {
+                vehicleNameCache[vehicleId] = resolved;
+                return resolved;
+            }
+
+            // fallback: try any string in the vehicle object (plate, display, etc.)
+            const anyVehicle = extractAnyString(vehicleRaw);
+            if (anyVehicle) {
+                vehicleNameCache[vehicleId] = anyVehicle;
+                return anyVehicle;
+            }
+
+            vehicleNameCache[vehicleId] = String(vehicleId);
+            return String(vehicleId);
+        } catch (error) {
+            console.error('Error loading vehicle label:', error);
+            return String(vehicleValue);
+        }
     }
 
     function normalizeStudentRecord(item) {
@@ -210,7 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `
                 <tr data-student-id="${studentId}">
                     <td class="text-start">${studentName}</td>
-                    <td class="text-nowrap">
+                    <td class="text-center text-nowrap">
                         <button type="button" class="btn btn-success btn-sm me-2" data-action="accept" data-student-id="${studentId}" aria-label="Aceptar ${studentName}">
                             ✓
                         </button>
@@ -221,6 +493,108 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </tr>
             `;
         }).join('');
+    }
+
+    function renderApprovedStudents(examCallId) {
+        if (!approvedStudents || !approvedStudents.length) {
+            approvedStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3">No hay alumnos en la convocatoria.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        approvedStudentsBody.innerHTML = approvedStudents.map(s => {
+            const studentName = getFullName(s.student) || getFullName(s.user) || s.name || 'Sin nombre';
+            const studentId = s.student_id ?? s.student?.id ?? s.id ?? '';
+            return `
+                <tr data-student-id="${studentId}">
+                    <td class="text-start">${studentName}</td>
+                    <td class="text-center text-nowrap">
+                        <button type="button" class="btn btn-danger btn-sm" data-action="remove" data-student-id="${studentId}" aria-label="Quitar ${studentName}">
+                            Quitar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderManualAddStudents(examCallId) {
+        if (!manualAddStudents || !manualAddStudents.length) {
+            manualAddStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3">No hay alumnos disponibles para añadir manualmente.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        manualAddStudentsBody.innerHTML = manualAddStudents.map(s => {
+            const studentName = getFullName(s.student) || getFullName(s.user) || s.name || 'Sin nombre';
+            const studentId = s.student_id ?? s.student?.id ?? s.id ?? '';
+            return `
+                <tr data-student-id="${studentId}">
+                    <td class="text-start">${studentName}</td>
+                    <td class="text-center text-nowrap">
+                        <button type="button" class="btn btn-primary btn-sm" data-action="add-manual" data-student-id="${studentId}" aria-label="Añadir ${studentName}">
+                            Añadir
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function renderExamCallInfo(examCall) {
+        const date = formatDate(
+            examCall?.exam_date ||
+            examCall?.date ||
+            examCall?.fecha ||
+            examCall?.start_date ||
+            examCall?.startDate ||
+            examCall?.examDate
+        );
+        const time = formatTime(
+            examCall?.start_time ||
+            examCall?.time ||
+            examCall?.hora ||
+            examCall?.startTime ||
+            examCall?.examTime
+        );
+        examCallDateTime.textContent = examCall ? `${date} ${time}` : 'Selecciona una convocatoria';
+
+        const location =
+            examCall?.location ||
+            examCall?.place ||
+            examCall?.address ||
+            examCall?.lugar ||
+            examCall?.town?.name ||
+            examCall?.city ||
+            examCall?.venue ||
+            examCall?.locality ||
+            '—';
+        examCallLocation.textContent = location;
+        examCallProfessor.textContent = (await resolveTeacherName(examCall)) || '—';
+        examCallVehicle.textContent = await resolveVehicleLabel(examCall);
+
+        const capacity = Number(
+            examCall?.capacity ??
+            examCall?.plazas ??
+            examCall?.slots ??
+            examCall?.max_students ??
+            examCall?.total_seats ??
+            examCall?.seats ??
+            examCall?.capacity_total ??
+            examCall?.maxCapacity ??
+            examCall?.seat_count ??
+            null
+        );
+
+        const remaining = Number.isFinite(capacity) ? Math.max(capacity - approvedStudents.length, 0) : null;
+        examCallRemainingSeats.textContent = remaining !== null ? `${remaining} de ${capacity}` : '—';
+        examCallStudentsCount.textContent = approvedStudents.length;
     }
 
     function loadExamCallsOptions() {
@@ -320,6 +694,7 @@ async function acceptPendingStudent(studentId) {
         await Api.approveExamCall(currentAcceptExamCallId, studentId);
 
         removePendingStudent(studentId);
+        approvedStudents.push(match);
 
         // Si estamos en la misma convocatoria → mover a evaluación
         if (currentEvaluateExamCallId === currentAcceptExamCallId) {
@@ -329,6 +704,8 @@ async function acceptPendingStudent(studentId) {
         }
 
         renderPendingReservations();
+        renderApprovedStudents(currentAcceptExamCallId);
+        renderExamCallInfo(await Api.getExamCall(currentAcceptExamCallId));
     } catch (error) {
         console.error('Error approving student:', error);
         pendingReservationsBody.innerHTML = `
@@ -366,6 +743,66 @@ async function rejectPendingStudent(studentId) {
     }
 }
 
+async function addManualStudent(studentId) {
+    if (!currentAcceptExamCallId) {
+        console.error('No exam call selected for manual add.');
+        return;
+    }
+
+    const match = manualAddStudents.find(s => String(s.student_id ?? s.student?.id ?? s.id ?? '') === String(studentId));
+    if (!match) return;
+
+    try {
+        await Api.addApprovedStudent(currentAcceptExamCallId, studentId);
+
+        manualAddStudents = manualAddStudents.filter(s => String(s.student_id ?? s.student?.id ?? s.id ?? '') !== String(studentId));
+        approvedStudents.push(match);
+
+        renderManualAddStudents(currentAcceptExamCallId);
+        renderApprovedStudents(currentAcceptExamCallId);
+        renderExamCallInfo(await Api.getExamCall(currentAcceptExamCallId));
+    } catch (error) {
+        console.error('Error adding student manually:', error);
+        manualAddStudentsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3 text-danger">
+                    No se pudo añadir al alumno. Intenta de nuevo.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+async function removeApprovedStudentFromCall(studentId) {
+    if (!currentAcceptExamCallId) {
+        console.error('No exam call selected for removal.');
+        return;
+    }
+
+    const match = approvedStudents.find(s => String(s.student_id ?? s.student?.id ?? s.id ?? '') === String(studentId));
+    if (!match) return;
+
+    try {
+        await Api.removeApprovedStudent(currentAcceptExamCallId, studentId);
+
+        approvedStudents = approvedStudents.filter(s => String(s.student_id ?? s.student?.id ?? s.id ?? '') !== String(studentId));
+        manualAddStudents.push(match);
+
+        renderApprovedStudents(currentAcceptExamCallId);
+        renderManualAddStudents(currentAcceptExamCallId);
+        renderExamCallInfo(await Api.getExamCall(currentAcceptExamCallId));
+    } catch (error) {
+        console.error('Error removing approved student:', error);
+        approvedStudentsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3 text-danger">
+                    No se pudo quitar al alumno. Intenta de nuevo.
+                </td>
+            </tr>
+        `;
+    }
+}
+
 
 
     function normalizeList(raw) {
@@ -374,6 +811,15 @@ async function rejectPendingStudent(studentId) {
         if (raw?.exam_calls && Array.isArray(raw.exam_calls)) return raw.exam_calls;
         if (raw?.examCalls && Array.isArray(raw.examCalls)) return raw.examCalls;
         return [];
+    }
+
+    function normalizeObject(raw) {
+        if (!raw) return null;
+        if (raw?.data && typeof raw.data === 'object') return raw.data;
+        if (raw?.exam_call && typeof raw.exam_call === 'object') return raw.exam_call;
+        if (raw?.teacher && typeof raw.teacher === 'object') return raw.teacher;
+        if (raw?.vehicle && typeof raw.vehicle === 'object') return raw.vehicle;
+        return raw;
     }
 
     async function loadExamCalls() {
@@ -420,7 +866,25 @@ async function rejectPendingStudent(studentId) {
                     <td colspan="2" class="text-center py-3">Selecciona una convocatoria para ver los alumnos pendientes de aceptar.</td>
                 </tr>
             `;
+            approvedStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3">Selecciona una convocatoria para ver los alumnos que ya están en la convocatoria.</td>
+                </tr>
+            `;
+            manualAddStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3">Selecciona una convocatoria para ver los alumnos que puedes añadir manualmente.</td>
+                </tr>
+            `;
+            examCallDateTime.textContent = 'Selecciona una convocatoria';
+            examCallLocation.textContent = '—';
+            examCallProfessor.textContent = '—';
+            examCallVehicle.textContent = '—';
+            examCallRemainingSeats.textContent = '—';
+            examCallStudentsCount.textContent = '0';
             pendingStudents = [];
+            approvedStudents = [];
+            manualAddStudents = [];
             return;
         }
 
@@ -429,17 +893,56 @@ async function rejectPendingStudent(studentId) {
                 <td colspan="2" class="text-center py-3">Cargando alumnos pendientes...</td>
             </tr>
         `;
+        approvedStudentsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3">Cargando alumnos en la convocatoria...</td>
+            </tr>
+        `;
+        manualAddStudentsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-3">Cargando alumnos disponibles...</td>
+            </tr>
+        `;
 
         try {
-            const response = await Api.getExamCallStudents(examCallId);
-            const studentsList = Array.isArray(response) ? response : response?.data ?? [];
-            pendingStudents = studentsList.filter(s => !s.teacher_approved);
+            const [examCallResponse, studentsResponse, allStudentsResponse] = await Promise.all([
+                Api.getExamCall(examCallId),
+                Api.getExamCallStudents(examCallId),
+                Api.getStudents(),
+            ]);
+
+            const examCall = normalizeObject(examCallResponse);
+            const studentsList = normalizeList(studentsResponse);
+            const allStudents = normalizeList(allStudentsResponse);
+
+            approvedStudents = studentsList.filter(s => isConfirmedStudent(s));
+            pendingStudents = studentsList.filter(s => !isConfirmedStudent(s));
+
+            const existingIds = new Set(studentsList.map(s => String(s.student_id ?? s.student?.id ?? s.id ?? '')));
+            manualAddStudents = allStudents.filter(s => {
+                const studentId = String(s.student_id ?? s.student?.id ?? s.id ?? '');
+                return studentId && !existingIds.has(studentId);
+            });
+
+            await renderExamCallInfo(examCall);
             renderPendingReservations();
+            renderApprovedStudents(examCallId);
+            renderManualAddStudents(examCallId);
         } catch (error) {
             console.error('Error loading pending students:', error);
             pendingReservationsBody.innerHTML = `
                 <tr>
                     <td colspan="2" class="text-center py-3 text-danger">Error cargando alumnos pendientes de la convocatoria.</td>
+                </tr>
+            `;
+            approvedStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3 text-danger">Error cargando alumnos en la convocatoria.</td>
+                </tr>
+            `;
+            manualAddStudentsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-3 text-danger">Error cargando alumnos disponibles para añadir.</td>
                 </tr>
             `;
         }
@@ -506,6 +1009,30 @@ async function rejectPendingStudent(studentId) {
         }
         if (action === 'reject') {
             rejectPendingStudent(studentId);
+        }
+    });
+
+    approvedStudentsBody?.addEventListener('click', event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        const studentId = button.dataset.studentId;
+        if (!studentId) return;
+
+        if (action === 'remove') {
+            removeApprovedStudentFromCall(studentId);
+        }
+    });
+
+    manualAddStudentsBody?.addEventListener('click', event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        const studentId = button.dataset.studentId;
+        if (!studentId) return;
+
+        if (action === 'add-manual') {
+            addManualStudent(studentId);
         }
     });
 

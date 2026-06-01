@@ -1029,7 +1029,7 @@ getPendingApprovalStudents(examCallId) {
 },
 
 addApprovedStudent(examCallId, studentId) {
-    return fetch(`${API_BASE_URL}/${examCallId}/students/${studentId}/add-approved`, {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/add-approved`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({}),
@@ -1038,7 +1038,7 @@ addApprovedStudent(examCallId, studentId) {
 },
 
 removeApprovedStudent(examCallId, studentId) {
-    return fetch(`${API_BASE_URL}/${examCallId}/students/${studentId}/remove-approved`, {
+    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/remove-approved`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({}),

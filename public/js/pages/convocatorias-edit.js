@@ -51,7 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(c.exam_students)) {
             c.exam_students.forEach(s => {
                 const checkbox = document.querySelector(`#student_${s.student_id}`);
-                if (checkbox) checkbox.checked = true;
+                if (checkbox && s.exam_result_status?.id !== 4) {
+    checkbox.checked = true;
+}
+
             });
         }
 

@@ -519,7 +519,11 @@ async function loadNextConvocation() {
         );
 
 
-        const isEnrolled = !!studentRecord;
+        const isEnrolled = !!studentRecord && (
+    Number(studentRecord.student_confirmed) === 1 ||
+    Number(studentRecord.teacher_approved) === 1
+);
+
         const isConfirmed = isEnrolled && (
             Number(studentRecord.student_confirmed) === 1 ||
             Number(studentRecord.teacher_approved) === 1 ||
@@ -528,7 +532,7 @@ async function loadNextConvocation() {
 
         let statusLabel;
         if (!isEnrolled) {
-            statusLabel = "No inscrito";
+            statusLabel = "Rechazado";
         } else {
             statusLabel = isConfirmed ? "Confirmada" : "No confirmada";
         }

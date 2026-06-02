@@ -130,6 +130,20 @@
         });
     }
 
+    function normalizeBoolean(value) {
+        return [1, "1", true, "true"].includes(value);
+    }
+
+    function isStudentConfirmed(studentRecord) {
+        if (!studentRecord) return false;
+        return normalizeBoolean(studentRecord.student_confirmed);
+    }
+
+    function isStudentPending(studentRecord) {
+        if (!studentRecord) return false;
+        return normalizeBoolean(studentRecord.teacher_approved) && !normalizeBoolean(studentRecord.student_confirmed);
+    }
+
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
         const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
@@ -149,7 +163,13 @@
         const available = Math.max(0, total - enrolled);
 
         const studentRecord = c.exam_students?.find(s => Number(s.student_id) === Number(studentId));
-        const isEnrolled = !!studentRecord;
+        const isEnrolled =
+    studentRecord &&
+    (normalizeBoolean(studentRecord.student_confirmed) ||
+     normalizeBoolean(studentRecord.teacher_approved));
+
+        const isConfirmed = isStudentConfirmed(studentRecord);
+        const isPending = isStudentPending(studentRecord);
 
         let status = "";
         let statusClass = "";
@@ -163,19 +183,25 @@
                 ? `<button class="btn btn-sm btn-success" data-action="confirm" data-id="${c.id}">Inscribirse</button>`
                 : `<span class="text-muted">Sin plazas</span>`;
 
+        } else if (isConfirmed) {
+            status = "Inscrito";
+            statusClass = "badge-success";
+            actionBtn = `
+                <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
+                    Cancelar inscripción
+                </button>
+            `;
+        } else if (isPending) {
+            status = "Pendiente";
+            statusClass = "badge-warning";
+            actionBtn = `
+                <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
+                    Cancelar solicitud
+                </button>
+            `;
         } else {
-            const isConfirmed =
-                Number(studentRecord.student_confirmed) === 1 ||
-                Number(studentRecord.teacher_approved) === 1;
-
-            if (isConfirmed) {
-                status = "Inscrito";
-                statusClass = "badge-success";
-            } else {
-                status = "Pendiente";
-                statusClass = "badge-warning";
-            }
-
+            status = "Pendiente";
+            statusClass = "badge-warning";
             actionBtn = `
                 <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
                     Cancelar inscripción

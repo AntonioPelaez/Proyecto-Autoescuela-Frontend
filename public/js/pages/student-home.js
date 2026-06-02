@@ -553,7 +553,7 @@ async function loadNextConvocation() {
         } else if (isTeacherApproved) {
             statusLabel = "Confirmada";
         } else if (isEnrolled) {
-            statusLabel = "Confirmación Pendiente";
+            statusLabel = "Confirmado también por el profesor";
         } else {
             statusLabel = "No inscrito";
         }

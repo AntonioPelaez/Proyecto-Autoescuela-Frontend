@@ -265,10 +265,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         return (
             fullName(item.student) ||
             fullName(item.user) ||
+            item.name + " " + (item.surname ?? "") ||
             item.name ||
             "Sin nombre"
         );
     }
+
     function renderRows(body, rows) {
         body.innerHTML = rows.length
             ? rows.join("")
@@ -277,7 +279,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderStudents(list, examCallId) {
         const rows = (list || []).map((s) => {
-            const id = s.student_id ?? s.student?.id ?? s.id ?? "";
+            const id = s.student_id ?? s.student?.id ?? s.id;
             const prof =
                 fullName(s.teacher) ||
                 fullName(s.professor) ||
@@ -337,61 +339,63 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function renderExamInfo(call) {
-    const c = normalizeObject(call);
+        const c = normalizeObject(call);
 
-    if (!c) {
-        dtEl.textContent = "Selecciona una convocatoria";
-        locEl.textContent = "—";
-        profEl.textContent = "—";
-        vehicleEl.textContent = "—";
-        seatsEl.textContent = "—";
-        countEl.textContent = 0;
-        return;
+        if (!c) {
+            dtEl.textContent = "Selecciona una convocatoria";
+            locEl.textContent = "—";
+            profEl.textContent = "—";
+            vehicleEl.textContent = "—";
+            seatsEl.textContent = "—";
+            countEl.textContent = 0;
+            return;
+        }
+
+        // Fecha y hora
+        dtEl.textContent = `${fmtDate(c.exam_date)} ${fmtTime(c.start_time)}`;
+
+        // Localidad
+        locEl.textContent = c?.town?.name || c?.town || c?.city || "—";
+
+        // 🔥 PROFESOR Y VEHÍCULO DESDE EL PRIMER ALUMNO
+        const first = Array.isArray(c.exam_students)
+            ? c.exam_students[0]
+            : null;
+
+        const teacher =
+            fullName(first?.teacher) ||
+            first?.teacher_name ||
+            (await resolveTeacher(first)) ||
+            "—";
+
+        const vehicle =
+            formatVehicle(first?.vehicle) ||
+            first?.vehicle_plate ||
+            (await resolveVehicle(first)) ||
+            "—";
+
+        profEl.textContent = teacher;
+        vehicleEl.textContent = vehicle;
+
+        // Plazas
+        const cap = Number(
+            c?.capacity ??
+                c?.plazas ??
+                c?.slots ??
+                c?.max_students ??
+                c?.total_seats ??
+                c?.seats ??
+                null,
+        );
+
+        const remaining = Number.isFinite(cap)
+            ? Math.max(cap - (approved?.length || 0), 0)
+            : null;
+
+        seatsEl.textContent =
+            remaining !== null ? `${remaining} de ${cap}` : "—";
+        countEl.textContent = approved?.length || 0;
     }
-
-    // Fecha y hora
-    dtEl.textContent = `${fmtDate(c.exam_date)} ${fmtTime(c.start_time)}`;
-
-    // Localidad
-    locEl.textContent = c?.town?.name || c?.town || c?.city || "—";
-
-    // 🔥 PROFESOR Y VEHÍCULO DESDE EL PRIMER ALUMNO
-    const first = Array.isArray(c.exam_students) ? c.exam_students[0] : null;
-
-    const teacher =
-        fullName(first?.teacher) ||
-        first?.teacher_name ||
-        (await resolveTeacher(first)) ||
-        "—";
-
-    const vehicle =
-        formatVehicle(first?.vehicle) ||
-        first?.vehicle_plate ||
-        (await resolveVehicle(first)) ||
-        "—";
-
-    profEl.textContent = teacher;
-    vehicleEl.textContent = vehicle;
-
-    // Plazas
-    const cap = Number(
-        c?.capacity ??
-        c?.plazas ??
-        c?.slots ??
-        c?.max_students ??
-        c?.total_seats ??
-        c?.seats ??
-        null
-    );
-
-    const remaining = Number.isFinite(cap)
-        ? Math.max(cap - (approved?.length || 0), 0)
-        : null;
-
-    seatsEl.textContent = remaining !== null ? `${remaining} de ${cap}` : "—";
-    countEl.textContent = approved?.length || 0;
-}
-
 
     async function loadExamCalls() {
         try {
@@ -447,6 +451,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadAccept(id) {
         currentAccept = id;
+
         if (!id) {
             pending = [];
             approved = [];
@@ -457,36 +462,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderManual();
             return;
         }
+
         pendingBody.innerHTML =
             approvedBody.innerHTML =
             manualBody.innerHTML =
                 '<tr><td class="text-center py-3">Cargando...</td></tr>';
+
         try {
-            const [callRes, studentsRes, allStudentsRes] = await Promise.all([
-                Api.getExamCall(id),
-                Api.getExamCallStudents(id),
-                Api.getStudents(),
-            ]);
-            const call = normalizeObject(callRes);
-            const studs = normalizeList(studentsRes);
-            const all = normalizeList(allStudentsRes);
-            approved = studs.filter(isConfirmed);
-            pending = studs.filter((s) => !isConfirmed(s));
-            const existing = new Set(
-                studs.map((s) =>
-                    String(s.student_id ?? s.student?.id ?? s.id ?? ""),
-                ),
-            );
-            manual = all.filter((s) => {
-                const sid = String(s.student_id ?? s.student?.id ?? s.id ?? "");
-                return sid && !existing.has(sid);
-            });
-            await renderExamInfo(callRes);
+            const callRes = await Api.getExamCall(id);
+            const call = callRes.data ?? callRes;
+
+            const approvedRes = await Api.getApprovedStudents(id);
+            approved = Array.isArray(approvedRes) ? approvedRes : [];
+
+            const pendingRes = await Api.getPendingApprovalStudents(id);
+
+            pending = pendingRes.pending_inside ?? [];
+            manual = pendingRes.pending_outside ?? [];
+
+            await renderExamInfo(call);
             renderPending();
             renderApproved();
             renderManual();
         } catch (e) {
-            console.error("loadAccept", e);
+            console.error("loadAccept error", e);
             pendingBody.innerHTML =
                 approvedBody.innerHTML =
                 manualBody.innerHTML =
@@ -496,22 +495,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadEval(id) {
         currentEval = id;
+
         if (!id) {
             renderStudents([], null);
             evalStudents = [];
             return;
         }
+
         studentsBody.innerHTML =
             '<tr><td colspan="7" class="text-center py-3">Cargando alumnos...</td></tr>';
+
         try {
-            const [studentsRes, callRes] = await Promise.all([
-                Api.getExamCallStudents(id),
-                Api.getExamCall(id),
-            ]);
-            const list = normalizeList(studentsRes);
-            evalStudents = list
-                .filter((s) => s.teacher_approved == 1)
-                .map((s) => ({ ...s, exam_call: callRes }));
+            const callRes = await Api.getExamCall(id);
+            const call = callRes.data ?? callRes;
+
+            const approved = await Api.getApprovedStudents(id);
+
+            evalStudents = approved.map((s) => ({ ...s, exam_call: call }));
+
             renderStudents(evalStudents, id);
         } catch (e) {
             console.error("loadEval", e);

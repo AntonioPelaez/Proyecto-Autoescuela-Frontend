@@ -470,13 +470,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             const call = normalizeObject(callRes);
             const studs = normalizeList(studentsRes);
             const all = normalizeList(allStudentsRes);
-            approved = studs.filter(isConfirmed);
-            pending = studs.filter((s) => !isConfirmed(s));
-            const existing = new Set(
-                studs.map((s) =>
-                    String(s.student_id ?? s.student?.id ?? s.id ?? ""),
-                ),
+            approved = studs.filter(s =>
+                isConfirmed(s) && Number(s.exam_result_status_id) !== 4
             );
+
+            pending = studs.filter(s =>
+                !isConfirmed(s) && Number(s.exam_result_status_id) !== 4
+            );
+
+            const existing = new Set(
+                studs
+                    .filter(s => Number(s.exam_result_status_id) !== 4)
+                    .map(s => String(s.student_id ?? s.student?.id ?? s.id ?? ""))
+            );
+
             manual = all.filter((s) => {
                 const sid = String(s.student_id ?? s.student?.id ?? s.id ?? "");
                 return sid && !existing.has(sid);
@@ -510,8 +517,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             ]);
             const list = normalizeList(studentsRes);
             evalStudents = list
-                .filter((s) => s.teacher_approved == 1)
-                .map((s) => ({ ...s, exam_call: callRes }));
+            .filter(s => s.teacher_approved == 1 && Number(s.exam_result_status_id) !== 4)
+            evalStudents = evalStudents.map((s) => ({ ...s, exam_call: callRes }));
             renderStudents(evalStudents, id);
         } catch (e) {
             console.error("loadEval", e);

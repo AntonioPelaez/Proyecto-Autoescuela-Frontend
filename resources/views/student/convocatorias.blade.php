@@ -2,40 +2,6 @@
 
 @section('title', 'Convocatorias Disponibles')
 @section('main-id', 'student-convocatorias-page')
-
-@section('styles')
-<style>
-    /* Evitar scroll horizontal en esta página */
-    #student-convocatorias-page,
-    .container.role-layout,
-    .role-main,
-    .role-main-inner {
-        overflow-x: hidden !important;
-        max-width: 100% !important;
-    }
-
-    /* La tabla se adapta al contenido */
-    #student-convocatorias-page .table {
-        width: auto !important;        /* NO ocupa 100% */
-        max-width: 100% !important;    /* Nunca se sale del contenedor */
-        table-layout: auto !important; /* Columnas según contenido */
-    }
-
-    /* Wrapper de la tabla */
-    #student-convocatorias-page .table-wrapper {
-        overflow-x: auto;
-        max-width: 100%;
-    }
-
-    /* Las celdas pueden romper línea */
-    #student-convocatorias-page .table td,
-    #student-convocatorias-page .table th {
-        white-space: normal !important;   /* Permite que el texto se adapte */
-        word-break: break-word !important;/* Evita que algo largo rompa el layout */
-    }
-</style>
-@endsection
-
 @section('content')
 <div class="student-panel">
     <h2>Convocatorias Disponibles</h2>
@@ -89,5 +55,53 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/pages/student-convocatorias.js') }}"></script>
+<script src="{{ asset('js/pages/student-convocatorias.js') }}"></script>
+
+<style>
+/* Wrapper */
+#student-convocatorias-page .table-wrapper {
+    overflow-x: hidden !important; /* sin scroll horizontal */
+    max-width: 100%;
+}
+
+/* Tabla */
+#student-convocatorias-page .table {
+    width: 100% !important;
+    table-layout: fixed !important; /* repartir espacio y evitar desbordes */
+    border-collapse: collapse;
+}
+
+/* Celdas */
+#student-convocatorias-page .table td,
+#student-convocatorias-page .table th {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere;
+    padding: 12px 10px;
+}
+
+/* Anchos porcentuales por columna para evitar cortes sin scroll */
+#student-convocatorias-page .table th:nth-child(1),
+#student-convocatorias-page .table td:nth-child(1) { width: 15%; }
+#student-convocatorias-page .table th:nth-child(2),
+#student-convocatorias-page .table td:nth-child(2) { width: 15%; }
+#student-convocatorias-page .table th:nth-child(3),
+#student-convocatorias-page .table td:nth-child(3) { width: 14%; }
+#student-convocatorias-page .table th:nth-child(4),
+#student-convocatorias-page .table td:nth-child(4) { width: 16%; }
+#student-convocatorias-page .table th:nth-child(5),
+#student-convocatorias-page .table td:nth-child(5) { width: 12%; }
+#student-convocatorias-page .table th:nth-child(6),
+#student-convocatorias-page .table td:nth-child(6) { width: 13%; }
+#student-convocatorias-page .table th:nth-child(7),
+#student-convocatorias-page .table td:nth-child(7) { width: 19%; }
+#student-convocatorias-page .table th:nth-child(8),
+#student-convocatorias-page .table td:nth-child(8) { width: 25%; }
+
+/* Asegurar que los botones en Acciones no se corten: permitir que el botón se ajuste dentro de la celda */
+#student-convocatorias-page .table td:nth-child(8) .btn {
+    display: inline-block;
+    white-space: normal;
+}
+</style>
 @endsection

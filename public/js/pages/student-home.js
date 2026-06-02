@@ -507,10 +507,15 @@ async function loadNextConvocation() {
         appendLabelValue(box, "Hora:", exam.start_time);
         appendLabelValue(box, "Población:", townLabel);
         
-        // Profesor
-        const teacherName = exam.teacher?.user
-            ? `${exam.teacher.user.name} ${exam.teacher.user.surname1 || ""}`
-            : "Por asignar";
+        // Profesor — intentar múltiples rutas
+        let teacherName = "Por asignar";
+        if (exam.teacher?.user) {
+            teacherName = `${exam.teacher.user.name} ${exam.teacher.user.surname1 || ""}`;
+        } else if (exam.exam_students?.[0]?.teacher?.user) {
+            teacherName = `${exam.exam_students[0].teacher.user.name} ${exam.exam_students[0].teacher.user.surname1 || ""}`;
+        } else if (exam.teacher?.name) {
+            teacherName = exam.teacher.name;
+        }
         appendLabelValue(box, "Profesor:", teacherName);
         
         // Plazas restantes

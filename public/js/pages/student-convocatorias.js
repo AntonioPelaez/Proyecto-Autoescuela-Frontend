@@ -87,30 +87,33 @@
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Cargando...</td></tr>';
 
         try {
-            const response = await Api.getExamCalls();
-            allConvocatorias = Array.isArray(response) ? response : response?.data ?? [];
+    const response = await Api.getExamCalls();
+    allConvocatorias = Array.isArray(response) ? response : response?.data ?? [];
 
-            // Filtrar solo convocatorias futuras y abiertas
-            const now = new Date();
-            allConvocatorias = allConvocatorias.filter(c => {
-                if (!c.exam_date) return false;
-                const examDate = new Date(c.exam_date);
-                const status = String(c.exam_status || "").toLowerCase();
-                // Mostrar convocatorias creadas o abiertas que no hayan pasado
-                return examDate >= now && (status === "creada" || status === "abierta");
-            });
+    // Filtrar solo convocatorias futuras y abiertas
+    const now = new Date();
+    allConvocatorias = allConvocatorias.filter(c => {
+        if (!c.exam_date) return false;
 
-            if (!allConvocatorias.length) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No hay convocatorias disponibles.</td></tr>';
-                return;
-            }
+        const examDate = new Date(c.exam_date);
+        const statusId = Number(c.exam_call_status_id);
 
-            applyFilters();
+        // 1 = abierta (ajusta si tu backend usa otros valores)
+        return examDate >= now && statusId === 1;
+    });
 
-        } catch (error) {
-            console.error(error);
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #d32f2f;">Error cargando convocatorias.</td></tr>';
-        }
+    if (!allConvocatorias.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #999;">No hay convocatorias disponibles.</td></tr>';
+        return;
+    }
+
+    applyFilters();
+
+} catch (error) {
+    console.error(error);
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #d32f2f;">Error cargando convocatorias.</td></tr>';
+}
+
     }
 
     function applyFilters() {

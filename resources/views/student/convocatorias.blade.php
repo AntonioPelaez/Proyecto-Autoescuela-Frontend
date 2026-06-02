@@ -3,6 +3,39 @@
 @section('title', 'Convocatorias Disponibles')
 @section('main-id', 'student-convocatorias-page')
 
+@section('styles')
+<style>
+    /* Evitar scroll horizontal en esta página */
+    #student-convocatorias-page,
+    .container.role-layout,
+    .role-main,
+    .role-main-inner {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+
+    /* La tabla se adapta al contenido */
+    #student-convocatorias-page .table {
+        width: auto !important;        /* NO ocupa 100% */
+        max-width: 100% !important;    /* Nunca se sale del contenedor */
+        table-layout: auto !important; /* Columnas según contenido */
+    }
+
+    /* Wrapper de la tabla */
+    #student-convocatorias-page .table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    /* Las celdas pueden romper línea */
+    #student-convocatorias-page .table td,
+    #student-convocatorias-page .table th {
+        white-space: normal !important;   /* Permite que el texto se adapte */
+        word-break: break-word !important;/* Evita que algo largo rompa el layout */
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="student-panel">
     <h2>Convocatorias Disponibles</h2>
@@ -53,7 +86,6 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @section('scripts')

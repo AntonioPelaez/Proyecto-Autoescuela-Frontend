@@ -24,6 +24,7 @@ Route::view('/student/recharge', 'student.recharge');
 Route::view('/student/recharge-form', 'student.recharge-form');
 Route::view('/student/confirm-booking', 'student.confirm-booking');
 Route::view('/student/my-classes', 'student.my-classes');
+Route::view('/student/convocatorias', 'student.convocatorias');
 Route::view('/teacher/bookings', 'teacher.bookings');
 Route::view('/teacher/classes', 'teacher.classes');
 Route::view('/admin/incidents', 'admin.incidents');
@@ -52,6 +53,4 @@ Route::get('/admin/convocatorias', function () {return view('admin.convocatoria_
 Route::get('/admin/convocatorias/crear', function () {return view('admin.convocatoria_create');})->name('exam-calls.create');
 Route::get('/admin/convocatorias/{id}/editar', function ($id) {return view('admin.convocatoria_edit');})->name('exam-calls.edit');
 Route::view('/teacher/student-evaluations/{id}/exams', 'exams.history');
-
-
-
+Route::get('/admin/convocatorias/nota', function () {return view('admin.convocatoria_note');});

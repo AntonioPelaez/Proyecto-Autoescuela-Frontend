@@ -41,11 +41,10 @@
         </div>
 
         {{-- Plazas disponibles --}}
-<div class="form-group mb-3">
-    <label for="max_students">Plazas disponibles</label>
-    <input type="number" id="max_students" name="max_students" class="form-control" min="1" placeholder="Número de plazas">
-</div>
-
+        <div class="form-group mb-3">
+            <label for="max_students">Plazas disponibles</label>
+            <input type="number" id="max_students" name="max_students" class="form-control" min="1" placeholder="Número de plazas">
+        </div>
 
         {{-- Alumnos --}}
         <div class="form-group mb-4">
@@ -61,7 +60,7 @@
         {{-- Botones --}}
         <div class="convocatoria-buttons d-flex justify-content-between">
             <a href="/admin/convocatorias" class="btn btn-secondary">Volver</a>
-            <button type="submit" class="btn btn-primary">Crear convocatoria</button>
+            <button type="submit" class="btn btn-primary">Siguiente</button>
         </div>
 
     </form>
@@ -71,12 +70,11 @@
 
 @section('styles')
 <style>
-/* 🔥 Fuerza el layout correcto sin importar el CSS global */
 .student-item {
     display: flex !important;
     align-items: center !important;
-    gap: 0 !important;              /* 🔥 ESTO ES LO QUE FALTABA */
-    column-gap: 0 !important;       /* 🔥 POR SI ALGÚN CSS USA column-gap */
+    gap: 0 !important;
+    column-gap: 0 !important;
     row-gap: 0 !important;
     padding: 4px 2px !important;
     border-bottom: 1px solid #eee !important;
@@ -100,11 +98,11 @@
     padding: 0 !important;
 }
 
-    .convocatoria-buttons {
-        margin-top: 2rem !important;
-        padding-top: 1.5rem !important;
-        border-top: 1px solid #ddd !important;
-    }
+.convocatoria-buttons {
+    margin-top: 2rem !important;
+    padding-top: 1.5rem !important;
+    border-top: 1px solid #ddd !important;
+}
 </style>
 @endsection
 

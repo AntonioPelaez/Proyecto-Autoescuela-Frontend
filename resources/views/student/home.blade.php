@@ -9,6 +9,7 @@
 				<h1>Panel del alumno</h1>
 				<div class="table-actions">
 					<a href="/student/availability" class="btn btn-primary">Reservar nueva clase</a>
+					<a href="/student/convocatorias" class="btn btn-outline">Convocatorias disponibles</a>
 					<a href="/student/my-classes" class="btn btn-outline">Ver mis clases</a>
 				</div>
 			</header>

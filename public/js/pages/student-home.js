@@ -506,7 +506,23 @@ async function loadNextConvocation() {
         appendLabelValue(box, "Fecha:", formatDate(exam.exam_date));
         appendLabelValue(box, "Hora:", exam.start_time);
         appendLabelValue(box, "Población:", townLabel);
-        appendLabelValue(box, "Alumnos:", getStudentList(exam));
+        
+        // Profesor — intentar múltiples rutas
+        let teacherName = "Por asignar";
+        if (exam.teacher?.user) {
+            teacherName = `${exam.teacher.user.name} ${exam.teacher.user.surname1 || ""}`;
+        } else if (exam.exam_students?.[0]?.teacher?.user) {
+            teacherName = `${exam.exam_students[0].teacher.user.name} ${exam.exam_students[0].teacher.user.surname1 || ""}`;
+        } else if (exam.teacher?.name) {
+            teacherName = exam.teacher.name;
+        }
+        appendLabelValue(box, "Profesor:", teacherName);
+        
+        // Plazas restantes
+        const totalPlaces = exam.max_students || 0;
+        const enrolledCount = exam.exam_students?.length || 0;
+        const availablePlaces = Math.max(0, totalPlaces - enrolledCount);
+        appendLabelValue(box, "Plazas disponibles:", `${availablePlaces}/${totalPlaces}`);
 
         // ─────────────────────────────────────────────
         // ESTADO DE CONFIRMACIÓN DEL ESTUDIANTE
@@ -519,18 +535,27 @@ async function loadNextConvocation() {
         );
 
 
-        const isEnrolled = !!studentRecord;
+        const isEnrolled = !!studentRecord && (
+    Number(studentRecord.student_confirmed) === 1 ||
+    Number(studentRecord.teacher_approved) === 1
+);
+
         const isConfirmed = isEnrolled && (
             Number(studentRecord.student_confirmed) === 1 ||
             Number(studentRecord.teacher_approved) === 1 ||
             String(studentRecord.status_convocatoria || "").toLowerCase() === "confirmada"
         );
+        const isTeacherApproved = isEnrolled && Number(studentRecord.teacher_approved) === 1;
 
         let statusLabel;
         if (!isEnrolled) {
-            statusLabel = "No inscrito";
+            statusLabel = "Rechazado";
+        } else if (isTeacherApproved) {
+            statusLabel = "Confirmada";
+        } else if (isEnrolled) {
+            statusLabel = "Confirmado también por el profesor";
         } else {
-            statusLabel = isConfirmed ? "Confirmada" : "No confirmada";
+            statusLabel = "No inscrito";
         }
 
         appendLabelValue(box, "Estado:", statusLabel);

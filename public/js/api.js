@@ -1013,7 +1013,7 @@ rejectExamCall(examCallId, studentId) {
 // ─────────── EXAM CALLS: APROBACIONES DEL PROFESOR ───────────
 
 getApprovedStudents(examCallId) {
-    return fetch(`${API_BASE_URL}/approved-students/${examCallId}`, {
+    return fetch(`${API_BASE_URL}/exam-calls/approved-students/${examCallId}`, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include'
@@ -1021,7 +1021,7 @@ getApprovedStudents(examCallId) {
 },
 
 getPendingApprovalStudents(examCallId) {
-    return fetch(`${API_BASE_URL}/pending-approval-students/${examCallId}`, {
+    return fetch(`${API_BASE_URL}/exam-calls/pending-approval-students/${examCallId}`, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include'

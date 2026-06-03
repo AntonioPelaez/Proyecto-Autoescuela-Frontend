@@ -119,13 +119,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 exam_call_status_id: 1, // Pendiente
             };
 
-            try {
-                await Api.createExamCall(payload);
-                UI.showToast("Convocatoria creada correctamente", "success");
-                window.location.href = "/admin/convocatorias";
-            } catch {
-                UI.showToast("Error al crear la convocatoria", "error");
-            }
+            // Guardamos los datos temporalmente
+            sessionStorage.setItem("new_exam_call_data", JSON.stringify(payload));
+
+            // Redirigimos a la página de nota
+            window.location.href = "/admin/convocatorias/nota";
         });
     }
 

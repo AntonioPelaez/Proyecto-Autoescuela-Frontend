@@ -82,66 +82,67 @@
     });
 
     // Submit handler
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+   form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        const password = passwordInput.value;
-        const passwordConfirm = passwordConfirmInput.value;
+    const password = passwordInput.value;
+    const passwordConfirm = passwordConfirmInput.value;
 
-        // Clear errors
-        passwordError.textContent = '';
-        passwordConfirmError.textContent = '';
-        passwordInput.classList.remove('input-invalid');
-        passwordConfirmInput.classList.remove('input-invalid');
+    passwordError.textContent = '';
+    passwordConfirmError.textContent = '';
+    passwordInput.classList.remove('input-invalid');
+    passwordConfirmInput.classList.remove('input-invalid');
 
-        // Validation
-        if (!password) {
-            passwordError.textContent = 'La contraseña es requerida';
-            passwordInput.classList.add('input-invalid');
-            return;
-        }
+    if (!password) {
+        passwordError.textContent = 'La contraseña es requerida';
+        passwordInput.classList.add('input-invalid');
+        return;
+    }
 
-        if (password.length < 8) {
-            passwordError.textContent = 'La contraseña debe tener al menos 8 caracteres';
-            passwordInput.classList.add('input-invalid');
-            return;
-        }
+    if (password.length < 8) {
+        passwordError.textContent = 'La contraseña debe tener al menos 8 caracteres';
+        passwordInput.classList.add('input-invalid');
+        return;
+    }
 
-        if (password !== passwordConfirm) {
-            passwordConfirmError.textContent = 'Las contraseñas no coinciden';
-            passwordConfirmInput.classList.add('input-invalid');
-            return;
-        }
+    if (password !== passwordConfirm) {
+        passwordConfirmError.textContent = 'Las contraseñas no coinciden';
+        passwordConfirmInput.classList.add('input-invalid');
+        return;
+    }
 
-        // Mock API call to reset password
-        setLoading(true);
+    setLoading(true);
 
-        try {
-            // Simulate API delay
-            await new Promise(r => setTimeout(r, 500));
+    try {
+        const token = new URLSearchParams(window.location.search).get('token');
+        const email = new URLSearchParams(window.location.search).get('email');
 
-            // Mock: find user and update password (in real app, backend handles this)
-            const token = new URLSearchParams(window.location.search).get('token');
-            if (!token) {
-                passwordError.textContent = 'Token inválido o expirado';
-                setLoading(false);
-                return;
-            }
-
-            // In mock API, we'd update the user password
-            // For now, just simulate success
-            showToast('Contraseña actualizada exitosamente', 'success');
-            
-            // Redirect to login after 2s
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-
-        } catch (err) {
-            passwordError.textContent = 'Error al actualizar la contraseña. Intenta nuevamente.';
+        if (!token || !email) {
+            passwordError.textContent = 'El enlace no es válido o ha expirado';
             setLoading(false);
+            return;
         }
-    });
+
+        // 🔥 Llamada REAL al backend
+        await Api.resetPassword({
+            token,
+            email,
+            password,
+            password_confirmation: passwordConfirm
+        });
+
+        showToast('Contraseña actualizada exitosamente', 'success');
+
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 2000);
+
+    } catch (err) {
+        passwordError.textContent = err.message || 'Error al actualizar la contraseña.';
+        setLoading(false);
+    }
+});
+
 
     function setLoading(loading) {
         submitBtn.disabled = loading;

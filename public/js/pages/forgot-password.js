@@ -48,7 +48,8 @@
         try {
             // Llamada real a la API de recuperación (ajusta el método según tu backend)
             // Por ejemplo: await Api.forgotPassword({ email });
-            await Api.forgotPassword({ email });
+            await Api.forgotPassword(email);
+
         } catch (err) {
             // Por seguridad, siempre redirigimos igual aunque haya error
         }

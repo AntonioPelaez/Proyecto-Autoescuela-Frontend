@@ -134,15 +134,17 @@
         return [1, "1", true, "true"].includes(value);
     }
 
-    function isStudentConfirmed(studentRecord) {
-        if (!studentRecord) return false;
-        return normalizeBoolean(studentRecord.student_confirmed);
-    }
-
     function isStudentPending(studentRecord) {
         if (!studentRecord) return false;
-        return normalizeBoolean(studentRecord.teacher_approved) && !normalizeBoolean(studentRecord.student_confirmed);
+        return !normalizeBoolean(studentRecord.student_confirmed);
     }
+
+    function isStudentConfirmed(studentRecord) {
+        if (!studentRecord) return false;
+        return normalizeBoolean(studentRecord.teacher_approved) &&
+            normalizeBoolean(studentRecord.student_confirmed);
+    }
+
 
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
@@ -162,11 +164,18 @@
         const enrolled = c.exam_students?.length || 0;
         const available = Math.max(0, total - enrolled);
 
-        const studentRecord = c.exam_students?.find(s => Number(s.student_id) === Number(studentId));
-        const isEnrolled =
-    studentRecord &&
-    (normalizeBoolean(studentRecord.student_confirmed) ||
-     normalizeBoolean(studentRecord.teacher_approved));
+        let studentRecord = null;
+
+        if (Array.isArray(c.exam_students)) {
+            studentRecord = c.exam_students.find(s => Number(s.student_id) === Number(studentId)) || null;
+        }
+
+        // Si el backend mete objetos que NO son registros de alumnos, ignorarlos
+        if (studentRecord && (!studentRecord.student_id || studentRecord.student_id == null)) {
+            studentRecord = null;
+        }
+
+        const isEnrolled = !!studentRecord;
 
         const isConfirmed = isStudentConfirmed(studentRecord);
         const isPending = isStudentPending(studentRecord);

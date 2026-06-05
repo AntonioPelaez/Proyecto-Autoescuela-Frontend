@@ -972,10 +972,11 @@ confirmExamCall(id, studentId) {
         credentials: 'include'
     }).then(handleResponse);
 },
-unconfirmExamCall(id, studentId) {
+unconfirmExamCall(id, studentId, data = {}) {
     return fetch(`${API_BASE_URL}/exam-calls/${id}/students/${studentId}/unconfirm`, {
         method: 'POST',
         headers: getAuthHeaders(),
+        body: JSON.stringify(data),
         credentials: 'include'
     }).then(handleResponse);
 },

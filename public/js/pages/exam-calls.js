@@ -480,6 +480,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             pending = pendingRes.pending_inside ?? [];
             manual = pendingRes.pending_outside ?? [];
 
+            // 🔥 Añadir alumnos confirmados por el alumno pero NO aprobados por el profesor
+const confirmedNotApproved = approvedRes.filter(s =>
+    s.student_confirmed &&
+    !s.teacher_approved
+);
+
+// Evitar duplicados
+const existingIds = new Set(
+    pending.map(s => String(s.student_id ?? s.student?.id ?? s.id))
+);
+
+confirmedNotApproved.forEach(s => {
+    const sid = String(s.student_id ?? s.student?.id ?? s.id);
+    if (!existingIds.has(sid)) {
+        pending.push(s);
+    }
+});
+
+
             await renderExamInfo(call);
             renderPending();
             renderApproved();

@@ -35,15 +35,9 @@ Route::view('/teacher/profile', 'teacher.profile');
 Route::view('/teacher/availability', 'teacher.teacher-availability');
 Route::view('/teacher/student-evaluations', 'evaluacion.student-evaluations');
 Route::view('/teacher/exam-calls', 'exams.exam-calls');
-Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/result', function ($examCallId, $studentId) {
-    return view('exams.student-result', compact('examCallId', 'studentId'));
-});
-Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/notes', function ($examCallId, $studentId) {
-    return view('exams.student-notes', compact('examCallId', 'studentId'));
-});
-Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/remove', function ($examCallId, $studentId) {
-    return view('exams.student-remove', compact('examCallId', 'studentId'));
-});
+Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/result', function ($examCallId, $studentId) {return view('exams.student-result', compact('examCallId', 'studentId'));});
+Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/notes', function ($examCallId, $studentId) {return view('exams.student-notes', compact('examCallId', 'studentId'));});
+Route::get('/teacher/exam-calls/{examCallId}/students/{studentId}/remove', function ($examCallId, $studentId) {return view('exams.student-remove', compact('examCallId', 'studentId'));});
 Route::view('/teacher/student-evaluations/{id}', 'evaluacion.student-evaluation-show');
 Route::view('/teacher/student-evaluations/{id}/history', 'evaluacion.student-evaluation-history');
 Route::view('/teacher/student-evaluations/{id}/reports', 'evaluacion.student-reports');
@@ -54,3 +48,4 @@ Route::get('/admin/convocatorias/crear', function () {return view('admin.convoca
 Route::get('/admin/convocatorias/{id}/editar', function ($id) {return view('admin.convocatoria_edit');})->name('exam-calls.edit');
 Route::view('/teacher/student-evaluations/{id}/exams', 'exams.history');
 Route::get('/admin/convocatorias/nota', function () {return view('admin.convocatoria_note');});
+Route::get('/student/convocatorias/{id}/cancel', function ($id) {return view('student.convocatoria-cancel', compact('id'));});

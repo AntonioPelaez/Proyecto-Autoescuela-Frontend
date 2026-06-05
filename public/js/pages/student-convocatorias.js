@@ -248,9 +248,9 @@
                 await Api.confirmExamCall(id, studentId);
                 showMessage("success", "Te has inscrito en la convocatoria.");
             } else if (action === "unconfirm") {
-                await Api.unconfirmExamCall(id, studentId);
-                showMessage("success", "Has cancelado tu inscripción.");
+                window.location.href = `/student/convocatorias/${id}/cancel`;
             }
+
 
             await loadConvocatorias();
 

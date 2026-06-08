@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const tableBody = document.querySelector("#convocatorias-table tbody");
     const loader = document.getElementById("convocatorias-loader");
+
     function formatDate(value) {
         const raw = String(value || '').trim();
         if (!raw) return '—';
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (loader) loader.style.display = "block";
 
     try {
-        const convocatorias = await Api.getExamCalls(); // devuelve un array directo
+        const convocatorias = await Api.getExamCalls(); // array directo
 
         if (loader) loader.style.display = "none";
         tableBody.innerHTML = "";
@@ -53,10 +54,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Pueblo
             const townName = call.town?.name ?? '-';
 
-            // Profesores y vehículos únicos
+            // ─────────────────────────────────────────────
+            // 🔥 PROFESORES Y VEHÍCULOS (CORREGIDO)
+            // ─────────────────────────────────────────────
+
             const teachersSet = new Set();
             const vehiclesSet = new Set();
 
+            // Profesor asignado directamente a la convocatoria
+            if (call.teacher_id) teachersSet.add(call.teacher_id);
+
+            // Vehículo asignado directamente a la convocatoria
+            if (call.vehicle_id) vehiclesSet.add(call.vehicle_id);
+
+            // Si en el futuro exam_students trae teacher_id/vehicle_id, también se contarán
             if (Array.isArray(call.exam_students)) {
                 call.exam_students.forEach(s => {
                     if (s.teacher_id) teachersSet.add(s.teacher_id);
@@ -122,6 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 location.reload();
                 return;
             }
+
             if (action === "delete") {
                 if (confirm("¿Estás seguro de que deseas eliminar esta convocatoria? Esta acción no se puede deshacer.")) {
                     await Api.deleteExamCall(id);

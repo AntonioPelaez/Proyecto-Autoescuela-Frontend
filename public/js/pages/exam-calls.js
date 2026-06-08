@@ -338,64 +338,43 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderRows(manualBody, rows);
     }
 
-    async function renderExamInfo(call) {
-        const c = normalizeObject(call);
+   async function renderExamInfo(call) {
+    const c = normalizeObject(call);
 
-        if (!c) {
-            dtEl.textContent = "Selecciona una convocatoria";
-            locEl.textContent = "—";
-            profEl.textContent = "—";
-            vehicleEl.textContent = "—";
-            seatsEl.textContent = "—";
-            countEl.textContent = 0;
-            return;
-        }
-
-        // Fecha y hora
-        dtEl.textContent = `${fmtDate(c.exam_date)} ${fmtTime(c.start_time)}`;
-
-        // Localidad
-        locEl.textContent = c?.town?.name || c?.town || c?.city || "—";
-
-        // 🔥 PROFESOR Y VEHÍCULO DESDE EL PRIMER ALUMNO
-        const first = Array.isArray(c.exam_students)
-            ? c.exam_students[0]
-            : null;
-
-        const teacher =
-            fullName(first?.teacher) ||
-            first?.teacher_name ||
-            (await resolveTeacher(first)) ||
-            "—";
-
-        const vehicle =
-            formatVehicle(first?.vehicle) ||
-            first?.vehicle_plate ||
-            (await resolveVehicle(first)) ||
-            "—";
-
-        profEl.textContent = teacher;
-        vehicleEl.textContent = vehicle;
-
-        // Plazas
-        const cap = Number(
-            c?.capacity ??
-                c?.plazas ??
-                c?.slots ??
-                c?.max_students ??
-                c?.total_seats ??
-                c?.seats ??
-                null,
-        );
-
-        const remaining = Number.isFinite(cap)
-            ? Math.max(cap - (approved?.length || 0), 0)
-            : null;
-
-        seatsEl.textContent =
-            remaining !== null ? `${remaining} de ${cap}` : "—";
-        countEl.textContent = approved?.length || 0;
+    if (!c) {
+        dtEl.textContent = "Selecciona una convocatoria";
+        locEl.textContent = "—";
+        profEl.textContent = "—";
+        vehicleEl.textContent = "—";
+        seatsEl.textContent = "—";
+        countEl.textContent = 0;
+        return;
     }
+
+    // Fecha y hora
+    dtEl.textContent = `${fmtDate(c.exam_date)} ${fmtTime(c.start_time)}`;
+
+    // Localidad
+    locEl.textContent = c?.town?.name || "—";
+
+    // PROFESOR Y VEHÍCULO DESDE examCall
+    const teacher = fullName(c.teacher) || "—";
+    const vehicle = formatVehicle(c.vehicle) || "—";
+
+    profEl.textContent = teacher;
+    vehicleEl.textContent = vehicle;
+
+    // Plazas
+    const cap = Number(c?.max_students ?? null);
+    const remaining = Number.isFinite(cap)
+        ? Math.max(cap - (approved?.length || 0), 0)
+        : null;
+
+    seatsEl.textContent =
+        remaining !== null ? `${remaining} de ${cap}` : "—";
+    countEl.textContent = approved?.length || 0;
+}
+
 
     async function loadExamCalls() {
         try {
@@ -470,15 +449,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         try {
             const callRes = await Api.getExamCall(id);
-            const call = callRes.data ?? callRes;
+            const call = callRes.exam_call ?? callRes;
 
             const approvedRes = await Api.getApprovedStudents(id);
             approved = Array.isArray(approvedRes) ? approvedRes : [];
+            // Evitar duplicados por ID
+const seen = new Set();
+approved = approved.filter(s => {
+    const id = String(s.student_id ?? s.student?.id ?? s.id);
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+});
 
             const pendingRes = await Api.getPendingApprovalStudents(id);
 
             pending = pendingRes.pending_inside ?? [];
+            const seenPending = new Set();
+pending = pending.filter(s => {
+    const id = String(s.student_id ?? s.student?.id ?? s.id);
+    if (seenPending.has(id)) return false;
+    seenPending.add(id);
+    return true;
+});
+
             manual = pendingRes.pending_outside ?? [];
+            const seenManual = new Set();
+manual = manual.filter(s => {
+    const id = String(s.student_id ?? s.student?.id ?? s.id);
+    if (seenManual.has(id)) return false;
+    seenManual.add(id);
+    return true;
+});
+
+
+
 
             await renderExamInfo(call);
             renderPending();
@@ -507,7 +512,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         try {
             const callRes = await Api.getExamCall(id);
-            const call = callRes.data ?? callRes;
+            const call = callRes.exam_call ?? callRes;
 
             const approved = await Api.getApprovedStudents(id);
 

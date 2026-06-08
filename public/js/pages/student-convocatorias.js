@@ -130,68 +130,53 @@
         });
     }
 
-    function normalizeBoolean(value) {
-        return [1, "1", true, "true"].includes(value);
-    }
-
-    function isStudentConfirmed(studentRecord) {
-        if (!studentRecord) return false;
-        return normalizeBoolean(studentRecord.student_confirmed);
-    }
-
-    function isStudentPending(studentRecord) {
-        if (!studentRecord) return false;
-        return normalizeBoolean(studentRecord.teacher_approved) && !normalizeBoolean(studentRecord.student_confirmed);
-    }
+    // ─────────────────────────────────────────────
+    // Render fila
+    // ─────────────────────────────────────────────
 
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
         const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
-        const first = c.exam_students?.[0];
-
-        const teacherName = first?.teacher?.user
-            ? `${first.teacher.user.name} ${first.teacher.user.surname1 ?? ""}`
+        const teacherName = c.teacher?.user
+            ? `${c.teacher.user.name} ${c.teacher.user.surname1 ?? ""}`
             : "Por asignar";
 
-        const vehicleName = first?.vehicle
-            ? `${first.vehicle.brand} ${first.vehicle.model}`
+        const vehicleName = c.vehicle
+            ? `${c.vehicle.brand} ${c.vehicle.model}`
             : "Por asignar";
 
         const total = c.max_students || 0;
         const enrolled = c.exam_students?.length || 0;
         const available = Math.max(0, total - enrolled);
 
-        const studentRecord = c.exam_students?.find(s => Number(s.student_id) === Number(studentId));
-        const isEnrolled =
-    studentRecord &&
-    (normalizeBoolean(studentRecord.student_confirmed) ||
-     normalizeBoolean(studentRecord.teacher_approved));
+        let studentRecord = null;
 
-        const isConfirmed = isStudentConfirmed(studentRecord);
-        const isPending = isStudentPending(studentRecord);
+        if (Array.isArray(c.exam_students)) {
+            studentRecord = c.exam_students.find(s =>
+                Number(s.student_id) === Number(studentId)
+            ) || null;
+        }
 
         let status = "";
         let statusClass = "";
         let actionBtn = "";
 
-        if (!isEnrolled) {
+        // DISPONIBLE
+        if (!studentRecord || Number(studentRecord.exam_result_status_id) === 4) {
             status = "Disponible";
             statusClass = "badge-primary";
 
             actionBtn = available > 0
                 ? `<button class="btn btn-sm btn-success" data-action="confirm" data-id="${c.id}">Inscribirse</button>`
                 : `<span class="text-muted">Sin plazas</span>`;
+        }
 
-        } else if (isConfirmed) {
-            status = "Inscrito";
-            statusClass = "badge-success";
-            actionBtn = `
-                <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
-                    Cancelar inscripción
-                </button>
-            `;
-        } else if (isPending) {
+        // PENDIENTE
+        else if (
+            Number(studentRecord.exam_result_status_id) === 1 &&
+            Number(studentRecord.student_confirmed) === 0
+        ) {
             status = "Pendiente";
             statusClass = "badge-warning";
             actionBtn = `
@@ -199,9 +184,15 @@
                     Cancelar solicitud
                 </button>
             `;
-        } else {
-            status = "Pendiente";
-            statusClass = "badge-warning";
+        }
+
+        // INSCRITO
+        else if (
+            Number(studentRecord.exam_result_status_id) === 1 &&
+            Number(studentRecord.student_confirmed) === 1
+        ) {
+            status = "Inscrito";
+            statusClass = "badge-success";
             actionBtn = `
                 <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
                     Cancelar inscripción
@@ -237,13 +228,18 @@
         try {
             if (action === "confirm") {
                 await Api.confirmExamCall(id, studentId);
-                showMessage("success", "Te has inscrito en la convocatoria.");
-            } else if (action === "unconfirm") {
-                await Api.unconfirmExamCall(id, studentId);
-                showMessage("success", "Has cancelado tu inscripción.");
+                showMessage("success", "Solicitud enviada.");
+
+                // 🔥 FIX: recargar y re-renderizar inmediatamente
+                await loadConvocatorias();
+                applyFilters();
+                return;
             }
 
-            await loadConvocatorias();
+            if (action === "unconfirm") {
+                window.location.href = `/student/convocatorias/${id}/cancel`;
+                return;
+            }
 
         } catch (error) {
             showMessage("error", error.message || "Error al procesar la acción.");

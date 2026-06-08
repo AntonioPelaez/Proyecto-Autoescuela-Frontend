@@ -134,17 +134,9 @@
         return [1, "1", true, "true"].includes(value);
     }
 
-    function isStudentPending(studentRecord) {
-        if (!studentRecord) return false;
-        return !normalizeBoolean(studentRecord.student_confirmed);
-    }
-
-    function isStudentConfirmed(studentRecord) {
-        if (!studentRecord) return false;
-        return normalizeBoolean(studentRecord.teacher_approved) &&
-            normalizeBoolean(studentRecord.student_confirmed);
-    }
-
+    // ─────────────────────────────────────────────
+    // LÓGICA DE ESTADOS DEFINITIVA
+    // ─────────────────────────────────────────────
 
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
@@ -164,43 +156,43 @@
         const enrolled = c.exam_students?.length || 0;
         const available = Math.max(0, total - enrolled);
 
+        // ─────────────────────────────────────────────
+        // BUSCAR REGISTRO DEL ALUMNO
+        // ─────────────────────────────────────────────
         let studentRecord = null;
 
         if (Array.isArray(c.exam_students)) {
-            studentRecord = c.exam_students.find(s => Number(s.student_id) === Number(studentId)) || null;
+            studentRecord = c.exam_students.find(s =>
+                Number(s.student_id) === Number(studentId)
+            ) || null;
         }
-
-        // Si el backend mete objetos que NO son registros de alumnos, ignorarlos
-        if (studentRecord && (!studentRecord.student_id || studentRecord.student_id == null)) {
-            studentRecord = null;
-        }
-
-        const isEnrolled = !!studentRecord;
-
-        const isConfirmed = isStudentConfirmed(studentRecord);
-        const isPending = isStudentPending(studentRecord);
 
         let status = "";
         let statusClass = "";
         let actionBtn = "";
 
-        if (!isEnrolled) {
+        // ─────────────────────────────────────────────
+        // ESTADO: DISPONIBLE
+        // ─────────────────────────────────────────────
+        if (
+            !studentRecord ||
+            Number(studentRecord.exam_result_status_id) === 4
+        ) {
             status = "Disponible";
             statusClass = "badge-primary";
 
             actionBtn = available > 0
                 ? `<button class="btn btn-sm btn-success" data-action="confirm" data-id="${c.id}">Inscribirse</button>`
                 : `<span class="text-muted">Sin plazas</span>`;
+        }
 
-        } else if (isConfirmed) {
-            status = "Inscrito";
-            statusClass = "badge-success";
-            actionBtn = `
-                <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
-                    Cancelar inscripción
-                </button>
-            `;
-        } else if (isPending) {
+        // ─────────────────────────────────────────────
+        // ESTADO: PENDIENTE
+        // ─────────────────────────────────────────────
+        else if (
+            Number(studentRecord.exam_result_status_id) === 1 &&
+            Number(studentRecord.student_confirmed) === 0
+        ) {
             status = "Pendiente";
             statusClass = "badge-warning";
             actionBtn = `
@@ -208,9 +200,17 @@
                     Cancelar solicitud
                 </button>
             `;
-        } else {
-            status = "Pendiente";
-            statusClass = "badge-warning";
+        }
+
+        // ─────────────────────────────────────────────
+        // ESTADO: INSCRITO
+        // ─────────────────────────────────────────────
+        else if (
+            Number(studentRecord.exam_result_status_id) === 1 &&
+            Number(studentRecord.student_confirmed) === 1
+        ) {
+            status = "Inscrito";
+            statusClass = "badge-success";
             actionBtn = `
                 <button class="btn btn-sm btn-danger" data-action="unconfirm" data-id="${c.id}">
                     Cancelar inscripción
@@ -246,11 +246,10 @@
         try {
             if (action === "confirm") {
                 await Api.confirmExamCall(id, studentId);
-                showMessage("success", "Te has inscrito en la convocatoria.");
+                showMessage("success", "Solicitud enviada.");
             } else if (action === "unconfirm") {
                 window.location.href = `/student/convocatorias/${id}/cancel`;
             }
-
 
             await loadConvocatorias();
 

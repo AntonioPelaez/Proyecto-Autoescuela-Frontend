@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────
+/// ─────────────────────────────────────────────
 // student-convocatorias.js — Convocatorias disponibles
 // ─────────────────────────────────────────────
 
@@ -135,21 +135,20 @@
     }
 
     // ─────────────────────────────────────────────
-    // LÓGICA DE ESTADOS DEFINITIVA
+    // LÓGICA DE ESTADOS + PROFESOR/VEHÍCULO CORREGIDOS
     // ─────────────────────────────────────────────
 
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
         const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
-        const first = c.exam_students?.[0];
-
-        const teacherName = first?.teacher?.user
-            ? `${first.teacher.user.name} ${first.teacher.user.surname1 ?? ""}`
+        // 🔥 PROFESOR Y VEHÍCULO CORRECTOS (desde la convocatoria)
+        const teacherName = c.teacher?.user
+            ? `${c.teacher.user.name} ${c.teacher.user.surname1 ?? ""}`
             : "Por asignar";
 
-        const vehicleName = first?.vehicle
-            ? `${first.vehicle.brand} ${first.vehicle.model}`
+        const vehicleName = c.vehicle
+            ? `${c.vehicle.brand} ${c.vehicle.model}`
             : "Por asignar";
 
         const total = c.max_students || 0;
@@ -171,13 +170,8 @@
         let statusClass = "";
         let actionBtn = "";
 
-        // ─────────────────────────────────────────────
-        // ESTADO: DISPONIBLE
-        // ─────────────────────────────────────────────
-        if (
-            !studentRecord ||
-            Number(studentRecord.exam_result_status_id) === 4
-        ) {
+        // DISPONIBLE
+        if (!studentRecord || Number(studentRecord.exam_result_status_id) === 4) {
             status = "Disponible";
             statusClass = "badge-primary";
 
@@ -186,9 +180,7 @@
                 : `<span class="text-muted">Sin plazas</span>`;
         }
 
-        // ─────────────────────────────────────────────
-        // ESTADO: PENDIENTE
-        // ─────────────────────────────────────────────
+        // PENDIENTE
         else if (
             Number(studentRecord.exam_result_status_id) === 1 &&
             Number(studentRecord.student_confirmed) === 0
@@ -202,9 +194,7 @@
             `;
         }
 
-        // ─────────────────────────────────────────────
-        // ESTADO: INSCRITO
-        // ─────────────────────────────────────────────
+        // INSCRITO
         else if (
             Number(studentRecord.exam_result_status_id) === 1 &&
             Number(studentRecord.student_confirmed) === 1

@@ -1,4 +1,4 @@
-/// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // student-convocatorias.js — Convocatorias disponibles
 // ─────────────────────────────────────────────
 
@@ -130,19 +130,14 @@
         });
     }
 
-    function normalizeBoolean(value) {
-        return [1, "1", true, "true"].includes(value);
-    }
-
     // ─────────────────────────────────────────────
-    // LÓGICA DE ESTADOS + PROFESOR/VEHÍCULO CORREGIDOS
+    // Render fila
     // ─────────────────────────────────────────────
 
     async function renderConvocatoriaRow(c) {
         const date = new Date(c.exam_date);
         const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
-        // 🔥 PROFESOR Y VEHÍCULO CORRECTOS (desde la convocatoria)
         const teacherName = c.teacher?.user
             ? `${c.teacher.user.name} ${c.teacher.user.surname1 ?? ""}`
             : "Por asignar";
@@ -155,9 +150,6 @@
         const enrolled = c.exam_students?.length || 0;
         const available = Math.max(0, total - enrolled);
 
-        // ─────────────────────────────────────────────
-        // BUSCAR REGISTRO DEL ALUMNO
-        // ─────────────────────────────────────────────
         let studentRecord = null;
 
         if (Array.isArray(c.exam_students)) {
@@ -237,11 +229,17 @@
             if (action === "confirm") {
                 await Api.confirmExamCall(id, studentId);
                 showMessage("success", "Solicitud enviada.");
-            } else if (action === "unconfirm") {
-                window.location.href = `/student/convocatorias/${id}/cancel`;
+
+                // 🔥 FIX: recargar y re-renderizar inmediatamente
+                await loadConvocatorias();
+                applyFilters();
+                return;
             }
 
-            await loadConvocatorias();
+            if (action === "unconfirm") {
+                window.location.href = `/student/convocatorias/${id}/cancel`;
+                return;
+            }
 
         } catch (error) {
             showMessage("error", error.message || "Error al procesar la acción.");

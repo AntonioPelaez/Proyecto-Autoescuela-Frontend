@@ -223,10 +223,10 @@
         UI.setLoading(WEEK_SUMMARY_ID, false);
     }
 
-    // ---------------------------------------------------------
-    // 🔥 NUEVO: Próxima convocatoria (usa nextConvocation)
-    // ---------------------------------------------------------
-    async function loadNextExam() {
+// ---------------------------------------------------------
+// 🔥 NUEVO: Próxima convocatoria (usa nextConvocation)
+// ---------------------------------------------------------
+async function loadNextExam() {
     const box = document.getElementById(NEXT_EXAM_ID);
     if (!box) return;
 
@@ -268,33 +268,6 @@
         return label;
     }
 
-    function getStudentList(exam) {
-    if (!exam) return "-";
-
-    const rawStudents =
-        Array.isArray(exam.exam_students) && exam.exam_students.length > 0
-            ? exam.exam_students
-            : Array.isArray(exam.students) && exam.students.length > 0
-            ? exam.students
-            : Array.isArray(exam.participants) && exam.participants.length > 0
-            ? exam.participants
-            : [];
-
-    if (!rawStudents.length) return "-";
-
-    return rawStudents
-        .map((item) => {
-            const user = item?.student?.user;
-            if (!user) return "Alumno";
-
-            return (
-                `${user.name || ""} ${user.surname1 || ""} ${user.surname2 || ""}`
-            ).trim();
-        })
-        .join(", ");
-}
-
-
     try {
         const data = await Api.nextConvocation();
         const exam = normalizeExamCallPayload(data);
@@ -306,17 +279,23 @@
 
         const townLabel = await resolveTownName(exam);
 
+        // 🔥 Cálculo correcto de plazas
+        const total = Number(exam.max_students ?? 0);
+        const inscritos = Array.isArray(exam.exam_students) ? exam.exam_students.length : 0;
+        const disponibles = Math.max(total - inscritos, 0);
+
         box.innerHTML = `
-            <p><strong>Fecha:</strong> ${formatDateDMY(exam.exam_date || exam.date || exam.start_date || exam.exam_date)}</p>
+            <p><strong>Fecha:</strong> ${formatDateDMY(exam.exam_date || exam.date || exam.start_date)}</p>
             <p><strong>Hora:</strong> ${exam.start_time || exam.time || exam.slot_time || "-"}</p>
             <p><strong>Población:</strong> ${townLabel}</p>
-            <p><strong>Alumnos:</strong> ${getStudentList(exam)}</p>
+            <p><strong>Plazas:</strong> ${disponibles} de ${total}</p>
         `;
     } catch (e) {
         console.error(e);
         box.innerHTML = `<p class="text-danger">Error cargando la próxima convocatoria.</p>`;
     }
 }
+
 async function loadTeacherStats() {
     const box = document.getElementById(TEACHER_STATS_ID);
     if (!box) return;

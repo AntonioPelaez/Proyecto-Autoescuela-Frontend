@@ -10,7 +10,6 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">Gastos por vehículo</h2>
 
-        {{-- Botón CREAR GASTO --}}
         <a href="{{ route('admin.expenses.create') }}" class="btn btn-primary">
             Crear gasto
         </a>

@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Crear gasto')
+@section('title', 'Crear gastos')
 @section('main-id', 'admin-expenses-create')
 
 @section('content')
 
 <div class="admin-panel">
 
-    <h2 class="mb-4">Crear gasto</h2>
+    <h2 class="mb-4">Crear gastos</h2>
 
-    {{-- Paso 1: Vehículo --}}
+    {{-- Vehículo --}}
     <div class="card card-body mb-4">
         <h5>Selecciona vehículo</h5>
         <select id="vehicle-select" class="form-select">
@@ -17,7 +17,7 @@
         </select>
     </div>
 
-    {{-- Paso 2: Clase --}}
+    {{-- Clase --}}
     <div class="card card-body mb-4">
         <h5>Selecciona clase</h5>
         <select id="class-select" class="form-select" disabled>
@@ -25,33 +25,34 @@
         </select>
     </div>
 
-    {{-- Paso 3: Datos del gasto --}}
+    {{-- Tabla de gastos --}}
     <div class="card card-body">
-        <h5>Datos del gasto</h5>
 
-        <div class="mb-3">
-            <label class="form-label">Tipo de gasto</label>
-            <select id="expense-type" class="form-select">
-                <option disabled selected>Selecciona tipo</option>
-            </select>
+        <h5 class="mb-3">Gastos de esta clase</h5>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Tipo de gasto</th>
+                        <th>Cantidad (€)</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-rows">
+                    {{-- El JS rellenará esta tabla --}}
+                </tbody>
+            </table>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Cantidad (€)</label>
-            <input type="number" step="0.01" class="form-control" id="amount">
-        </div>
+        <button id="save-expenses" class="btn btn-success w-100 mt-3">Guardar gastos</button>
 
-        <div class="mb-3">
-            <label class="form-label">Notas</label>
-            <textarea class="form-control" id="notes"></textarea>
-        </div>
-
-        <button class="btn btn-success w-100">Guardar gasto</button>
     </div>
 
 </div>
 
 @endsection
+
 @section('scripts')
 <script src="{{ asset('js/pages/admin-expenses-create.js') }}"></script>
 @endsection

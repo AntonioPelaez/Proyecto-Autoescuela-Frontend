@@ -6,9 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let filteredClasses = [];
 
-    //
     // 1. Cargar vehículos
-    //
     try {
         const vehiclesResponse = await Api.getVehicles();
         const vehicles = vehiclesResponse.vehicles || [];
@@ -25,9 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         vehicleSelect.innerHTML = `<option>Error cargando vehículos</option>`;
     }
 
-    //
-    // 2. Cuando se elige vehículo → cargar clases
-    //
+    // 2. Cargar clases según vehículo
     vehicleSelect.addEventListener("change", async () => {
 
         const vehicleId = vehicleSelect.value;
@@ -63,9 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    //
-    // 3. Cuando se elige clase → mostrar gastos estilo “poblaciones”
-    //
+    // 3. Mostrar gastos estilo “poblaciones”
     classSelect.addEventListener("change", () => {
         const classId = classSelect.value;
 
@@ -75,9 +69,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const horaInicio = selectedClass.start_time;
         const horaFin = selectedClass.end_time;
 
-        //
-        // Tipos de gasto reales de tu tabla expense_types
-        //
         const expenseTypes = [
             "Lavado de coches",
             "Reparación del chasis",
@@ -97,9 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             "Sustitución del aceite del coche"
         ];
 
-        //
-        // Construir filas estilo “poblaciones”
-        //
         const rows = expenseTypes.map((name, index) => `
             <tr>
                 <td>${name}</td>
@@ -112,9 +100,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             </tr>
         `).join("");
 
-        //
-        // Render final
-        //
         expensesContainer.innerHTML = `
             <div class="card card-body">
                 <h5>Gastos de la clase del ${fecha} (${horaInicio} – ${horaFin})</h5>

@@ -38,33 +38,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         UI.setLoading(true);
 
-        try {
-            await Api.createStudentSkillEvaluation({
-                id: classId,
-                ready_for_exam: readyForExam,
-                notes: reportText,
+       try {
+    await Api.createStudentSkillEvaluation({
+        id: classId,
+        ready_for_exam: readyForExam,
+        notes: reportText,
+        start_km: km_start,
+        end_km: km_end,
+        skills: scores.map(s => ({
+            driving_skill_id: s.skill_id,
+            score: s.score
+        }))
+    });
 
-                // 🔥 NOMBRES EXACTOS QUE ESPERA TU BACKEND
-                start_km: km_start,
-                end_km: km_end,
+    sessionStorage.removeItem(`class_eval_${classId}`);
 
-                skills: scores.map(s => ({
-                    driving_skill_id: s.skill_id,
-                    score: s.score
-                }))
-            });
+    UI.showToast("Evaluación guardada correctamente", "info");
+    window.location.href = "/teacher/classes";
 
-            sessionStorage.removeItem(`class_eval_${classId}`);
+} catch (err) {
+    console.error(err);
+    UI.showToast(err.message || "Error guardando evaluación", "error");
+}
 
-            UI.showToast("Evaluación guardada correctamente", "info");
-            window.location.href = "/teacher/classes";
-
-        } catch (err) {
-            console.error(err);
-            UI.showToast(err.message || "Error guardando evaluación", "error");
-        } finally {
-            UI.setLoading(false);
-        }
     });
 
 });

@@ -26,8 +26,11 @@
                     <a href="/admin/students" class="role-menu-link {{ request()->is('admin/students') ? 'is-active' : '' }}">Alumnos</a>
                     <a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>
 
-                    {{-- 🔥 NUEVO: Gastos --}}
+                    {{-- Gastos generales --}}
                     <a href="/admin/expenses" class="role-menu-link {{ request()->is('admin/expenses') ? 'is-active' : '' }}">Gastos</a>
+
+                    {{-- 🔥 Gastos gasolina (correcto para tu estructura) --}}
+                    <a href="/admin/fuel" class="role-menu-link {{ request()->is('admin/fuel') ? 'is-active' : '' }}">Gastos gasolina</a>
 
                     <a href="/admin/slots" class="role-menu-link {{ request()->is('admin/slots') ? 'is-active' : '' }}">Huecos ofertados</a>
                     <a href="/admin/bookings" class="role-menu-link {{ request()->is('admin/bookings') ? 'is-active' : '' }}">Clases reservadas</a>

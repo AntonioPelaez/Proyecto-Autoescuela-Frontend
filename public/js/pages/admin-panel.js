@@ -11,14 +11,59 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    await loadPanelSummary();
+    // 🔥 Primero cargamos el panel
+    const vehicles = await loadPanelSummary();
 
+    // 🔥 Después rellenamos el select (fuera del scope de loadPanelSummary)
+    if (vehicles && vehicles.length) {
+        const select = document.getElementById("vehicle-select");
+        select.innerHTML = `<option value="">-- Selecciona un vehículo --</option>`;
+
+        vehicles.forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.id;
+            opt.textContent = `${v.plate_number} — ${v.brand} ${v.model}`;
+            select.appendChild(opt);
+        });
+    }
+
+    // 🔥 Listener para mostrar gasto mensual
+    document.getElementById("vehicle-select").addEventListener("change", async (e) => {
+        const vehicleId = e.target.value;
+        const box = document.getElementById("admin-gasoline-monthly");
+
+        if (!vehicleId) {
+            box.innerHTML = "";
+            return;
+        }
+
+        const today = new Date();
+        const month = today.toISOString().slice(0, 7); // "2026-06"
+
+        UI.setLoading("admin-gasoline-monthly", true);
+
+        try {
+            const data = await Api.getDashboardCosteMensual(vehicleId, month);
+
+            box.innerHTML = `
+                <p><strong>${data.fuel_expenses.toFixed(2)} €</strong> gastados en gasolina este mes.</p>
+            `;
+        } catch (err) {
+            console.error(err);
+            box.innerHTML = `<p class="text-danger">Error cargando gasto mensual.</p>`;
+        } finally {
+            UI.setLoading("admin-gasoline-monthly", false);
+        }
+    });
+
+    // ─────────────────────────────────────────────
+    // FUNCIÓN PRINCIPAL DEL PANEL
+    // ─────────────────────────────────────────────
     async function loadPanelSummary() {
         showState('', '');
         UI.setLoading('admin-management-body', true);
-UI.setLoading('admin-operations-body', true);
-UI.setLoading('admin-incidents-summary', true);
-
+        UI.setLoading('admin-operations-body', true);
+        UI.setLoading('admin-incidents-summary', true);
 
         const today = new Date();
         const todayYmd = formatDateYYYYMMDD(today);
@@ -38,14 +83,16 @@ UI.setLoading('admin-incidents-summary', true);
             Api.getVehicles(),
             Api.getAdminClasses(),
             Api.getIncidents(),
-             Api.getWeeklyAvailabilities({ day_of_week: today.getDay() }),
+            Api.getWeeklyAvailabilities({ day_of_week: today.getDay() }),
         ]);
 
         const failedSections = [];
         const managementRows = [];
         const operationsRows = [];
         let incidents = [];
+        let vehicles = [];
 
+        // ─────────── POBLACIONES ───────────
         if (townsResult.status === 'fulfilled') {
             const towns = toArray(townsResult.value);
             const active = towns.filter((town) => asBool(town.is_active ?? town.active ?? 0)).length;
@@ -62,6 +109,7 @@ UI.setLoading('admin-incidents-summary', true);
             managementRows.push(makeUnavailableRow('Poblaciones', '/admin/towns'));
         }
 
+        // ─────────── PROFESORES ───────────
         if (teachersResult.status === 'fulfilled') {
             const teachers = toArray(teachersResult.value);
             const active = teachers.filter((teacher) => asBool(teacher.is_active_for_booking ?? teacher.is_active ?? teacher.active ?? 0)).length;
@@ -78,6 +126,7 @@ UI.setLoading('admin-incidents-summary', true);
             managementRows.push(makeUnavailableRow('Profesores', '/admin/professors'));
         }
 
+        // ─────────── ALUMNOS ───────────
         if (studentsResult.status === 'fulfilled') {
             const students = toArray(studentsResult.value);
             const withTown = students.filter((student) => Number(student.town_id || student.townId || 0) > 0).length;
@@ -94,11 +143,14 @@ UI.setLoading('admin-incidents-summary', true);
             managementRows.push(makeUnavailableRow('Alumnos', '/admin/students'));
         }
 
+        // ─────────── VEHÍCULOS ───────────
         if (vehiclesResult.status === 'fulfilled') {
             const payload = vehiclesResult.value;
-            const vehicles = toArray(payload.vehicles || payload);
+            vehicles = toArray(payload.vehicles || payload);
+
             const active = vehicles.filter((vehicle) => asBool(vehicle.is_active ?? vehicle.active ?? 0)).length;
             const inactive = Math.max(0, vehicles.length - active);
+
             managementRows.push({
                 section: 'Vehiculos',
                 total: vehicles.length,
@@ -111,10 +163,12 @@ UI.setLoading('admin-incidents-summary', true);
             managementRows.push(makeUnavailableRow('Vehiculos', '/admin/vehicles'));
         }
 
+        // ─────────── HUECOS ───────────
         if (slotsResult.status === 'fulfilled') {
-           const slots = toArray(slotsResult.value.data || []);
-const available = slots.length;
-const reserved = 0;
+            const slots = toArray(slotsResult.value.data || []);
+            const available = slots.length;
+            const reserved = 0;
+
             operationsRows.push({
                 section: 'Huecos ofertados (hoy)',
                 total: slots.length,
@@ -127,6 +181,7 @@ const reserved = 0;
             operationsRows.push(makeUnavailableRow('Huecos ofertados (hoy)', '/admin/slots'));
         }
 
+        // ─────────── RESERVAS ───────────
         if (bookingsResult.status === 'fulfilled') {
             const bookings = toArray(bookingsResult.value);
             const cancelled = bookings.filter((booking) => {
@@ -134,6 +189,7 @@ const reserved = 0;
                 return status === 'cancelled' || status === 'canceled' || status === 'cancelada';
             }).length;
             const confirmed = Math.max(0, bookings.length - cancelled);
+
             operationsRows.push({
                 section: 'Clases reservadas',
                 total: bookings.length,
@@ -146,14 +202,17 @@ const reserved = 0;
             operationsRows.push(makeUnavailableRow('Clases reservadas', '/admin/bookings'));
         }
 
+        // ─────────── INCIDENCIAS ───────────
         if (incidentsResult.status === 'fulfilled') {
             incidents = extractIncidents(incidentsResult.value);
+
             const opened = incidents.filter((incident) => String(incident.estado || incident.status || '').toLowerCase() === 'abierta').length;
             const inProgress = incidents.filter((incident) => {
                 const status = String(incident.estado || incident.status || '').toLowerCase();
                 return status === 'en_curso' || status === 'en curso';
             }).length;
             const closed = incidents.filter((incident) => String(incident.estado || incident.status || '').toLowerCase() === 'cerrada').length;
+
             operationsRows.push({
                 section: 'Incidencias',
                 total: incidents.length,
@@ -166,6 +225,7 @@ const reserved = 0;
             operationsRows.push(makeUnavailableRow('Incidencias', '/admin/incidents'));
         }
 
+        // ─────────── RENDERIZAR ───────────
         renderSummaryTable(managementBody, managementRows, 'No hay datos de gestion para mostrar.');
         renderSummaryTable(operationsBody, operationsRows, 'No hay datos operativos para mostrar.');
         renderIncidentsBreakdown(incidentsSummary, incidents);
@@ -175,7 +235,13 @@ const reserved = 0;
         } else {
             showState('success', 'Panel admin cargado correctamente.');
         }
+
+        return vehicles;
     }
+
+    // ─────────────────────────────────────────────
+    // FUNCIONES AUXILIARES
+    // ─────────────────────────────────────────────
 
     function renderSummaryTable(container, rows, emptyMessage) {
         container.replaceChildren();
@@ -274,24 +340,6 @@ const reserved = 0;
             return response.incidents;
         }
         return [];
-    }
-
-    function normalizeSlots(slots) {
-        return slots.map((slot) => {
-            const statusRaw = String(slot.status || slot.slot_status || '').toLowerCase();
-            let status = statusRaw;
-            if (!status) {
-                if (asBool(slot.is_booked ?? slot.booked ?? 0)) {
-                    status = 'booked';
-                } else if (asBool(slot.is_active ?? slot.active ?? 0)) {
-                    status = 'pending';
-                }
-            }
-
-            return {
-                status,
-            };
-        });
     }
 
     function toArray(payload) {

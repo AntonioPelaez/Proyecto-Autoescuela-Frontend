@@ -1289,4 +1289,15 @@ const Api = {
             credentials: "include",
         }).then(handleResponse);
     },
+    getDashboardGastoGasolinaTotal(month = null) {
+    const url = new URL(`${API_BASE_URL}/dashboard/gasto-gasolina-total`);
+    if (month) url.searchParams.append('month', month);
+
+    return fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+    }).then(handleResponse);
+},
+
 };

@@ -65,6 +65,22 @@
     </section>
 
     <section class="card">
+    <div class="card-header">
+        <h2>Gasto de gasolina del mes</h2>
+    </div>
+
+    <div class="card-body">
+        <label for="vehicle-select">Selecciona un vehículo:</label>
+        <select id="vehicle-select" class="form-control mb-3">
+            <option value="">-- Selecciona un vehículo --</option>
+        </select>
+
+        <div id="admin-gasoline-monthly"></div>
+    </div>
+</section>
+
+
+    <section class="card">
         <div class="card-header">
             <h2>Accesos complementarios</h2>
         </div>

@@ -12,6 +12,21 @@
         <p>Clase ID <strong id="class-id"></strong></p>
         <p id="class-info">Cargando información...</p>
 
+        {{-- 🔥 NUEVO: Kilómetros --}}
+        <div class="row mb-4">
+
+            <div class="col-md-3">
+                <label for="km-start" class="form-label">Kilómetros inicio</label>
+                <input type="number" class="form-control" id="km-start" placeholder="Ej: 12345" required>
+            </div>
+
+            <div class="col-md-3">
+                <label for="km-end" class="form-label">Kilómetros fin</label>
+                <input type="number" class="form-control" id="km-end" placeholder="Ej: 12360" required>
+            </div>
+
+        </div>
+
         <form id="skills-form">
 
             <div id="skills-container" class="row"></div>

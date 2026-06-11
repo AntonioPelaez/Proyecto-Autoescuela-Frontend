@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let filteredClasses = [];
 
+    // ---------------------------------------------------------
     // 1. Cargar vehículos
+    // ---------------------------------------------------------
     try {
         const vehiclesResponse = await Api.getVehicles();
         const vehicles = vehiclesResponse.vehicles || [];
@@ -23,7 +25,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         vehicleSelect.innerHTML = `<option>Error cargando vehículos</option>`;
     }
 
+    // ---------------------------------------------------------
+    // Función: obtener gastos reales del backend
+    // ---------------------------------------------------------
+    async function getExpensesForClass(vehicleId, classSessionId) {
+        const response = await Api.getVehicleExpenses({ vehicle_id: vehicleId });
+        const expenses = response.expenses || [];
+
+        return expenses.filter(e => e.class_session_id == classSessionId);
+    }
+
+    // ---------------------------------------------------------
     // 2. Cargar clases según vehículo
+    // ---------------------------------------------------------
     vehicleSelect.addEventListener("change", async () => {
 
         const vehicleId = vehicleSelect.value;
@@ -59,9 +73,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 3. Mostrar gastos estilo “poblaciones”
-    classSelect.addEventListener("change", () => {
+    // ---------------------------------------------------------
+    // 3. Mostrar gastos reales de la clase seleccionada
+    // ---------------------------------------------------------
+    classSelect.addEventListener("change", async () => {
+
         const classId = classSelect.value;
+        const vehicleId = vehicleSelect.value;
 
         const selectedClass = filteredClasses.find(c => c.id == classId);
 
@@ -69,6 +87,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         const horaInicio = selectedClass.start_time;
         const horaFin = selectedClass.end_time;
 
+        // Obtener gastos reales del backend
+        const expenses = await getExpensesForClass(vehicleId, classId);
+
+        // Agrupar totales por tipo de gasto
+        const totals = {};
+        expenses.forEach(e => {
+            if (!totals[e.expense_type_id]) totals[e.expense_type_id] = 0;
+            totals[e.expense_type_id] += parseFloat(e.amount);
+        });
+
+        // Lista de tipos de gasto
         const expenseTypes = [
             "Lavado de coches",
             "Reparación del chasis",
@@ -88,18 +117,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             "Sustitución del aceite del coche"
         ];
 
-        const rows = expenseTypes.map((name, index) => `
-            <tr>
-                <td>${name}</td>
-                <td>0.00 €</td>
-                <td class="text-end">
-                    <a href="/admin/expenses/${index + 1}/edit" class="btn btn-sm btn-secondary">
-                        Editar
-                    </a>
-                </td>
-            </tr>
-        `).join("");
+        // Construir filas con totales reales
+        const rows = expenseTypes.map((name, index) => {
+            const typeId = index + 1;
+            const total = totals[typeId] ? totals[typeId].toFixed(2) : "0.00";
 
+            return `
+                <tr>
+                    <td>${name}</td>
+                    <td>${total} €</td>
+                    <td class="text-end">
+                        <a href="/admin/expenses/${typeId}/edit" class="btn btn-sm btn-secondary">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        // Pintar tabla
         expensesContainer.innerHTML = `
             <div class="card card-body">
                 <h5>Gastos de la clase del ${fecha} (${horaInicio} – ${horaFin})</h5>

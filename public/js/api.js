@@ -1220,7 +1220,7 @@ const Api = {
     getVehicleExpenses(params = {}) {
         const query = new URLSearchParams(params).toString();
         return fetch(
-            `${API_BASE_URL}/vehicle-expense${query ? "?" + query : ""}`,
+            `${API_BASE_URL}/vehicle-expenses${query ? "?" + query : ""}`,
             {
                 method: "GET",
                 headers: getAuthHeaders(),
@@ -1230,15 +1230,16 @@ const Api = {
     },
 
     getVehicleExpense(id) {
-        return fetch(`${API_BASE_URL}/vehicle-expense/${id}`, {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
             method: "GET",
             headers: getAuthHeaders(),
             credentials: "include",
         }).then(handleResponse);
     },
 
+
     createVehicleExpense(data) {
-        return fetch(`${API_BASE_URL}/vehicle-expense`, {
+        return fetch(`${API_BASE_URL}/vehicle-expenses`, {
             method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
@@ -1247,7 +1248,7 @@ const Api = {
     },
 
     updateVehicleExpense(id, data) {
-        return fetch(`${API_BASE_URL}/vehicle-expense/${id}`, {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
             method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
@@ -1256,7 +1257,7 @@ const Api = {
     },
 
     deleteVehicleExpense(id) {
-        return fetch(`${API_BASE_URL}/vehicle-expense/${id}`, {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders(),
             credentials: "include",

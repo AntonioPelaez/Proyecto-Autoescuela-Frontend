@@ -60,8 +60,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 : classesResponse.data || [];
 
             // Obtener gastos del vehículo
-            const expensesResponse = await Api.getVehicleExpenses(vehicleId);
-            const expenses = expensesResponse.data || [];
+            const expensesResponse = await Api.getVehicleExpenses({ vehicle_id: vehicleId });
+            const expenses = expensesResponse.expenses || [];
 
             // Filtrar clases SIN gastos
             const classesSinGastos = classes.filter(c => {
@@ -110,44 +110,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     //
     // 4. Guardar (simulado, sin popups)
     //
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", async () => {
 
-        // Mensaje discreto en pantalla
-        const msg = document.createElement("div");
-        msg.textContent = "Guardando gastos...";
-        msg.style.position = "fixed";
-        msg.style.bottom = "20px";
-        msg.style.right = "20px";
-        msg.style.background = "#198754";
-        msg.style.color = "white";
-        msg.style.padding = "10px 15px";
-        msg.style.borderRadius = "6px";
-        msg.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
-        msg.style.zIndex = "9999";
-        document.body.appendChild(msg);
+    const vehicleId = vehicleSelect.value;
+    const classSessionId = classSelect.value;
 
-        const gastos = [];
+    if (!vehicleId || !classSessionId) {
+        alert("Selecciona vehículo y clase antes de guardar.");
+        return;
+    }
 
-        document.querySelectorAll("input[data-type-id]").forEach(input => {
-            const typeId = input.dataset.typeId;
-            const amount = input.value;
-            const desc = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
+    const gastos = [];
 
-            if (amount && amount > 0) {
-                gastos.push({
-                    expense_type_id: typeId,
-                    amount: amount,
-                    description: desc
-                });
-            }
-        });
+    document.querySelectorAll("input[data-type-id]").forEach(input => {
+        const typeId = input.dataset.typeId;
+        const amount = input.value;
+        const desc = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
 
-        console.log("Gastos que se enviarían al backend:", gastos);
-
-        // Simulación de guardado
-        setTimeout(() => {
-            window.location.href = "/admin/expenses";
-        }, 1200);
+        if (amount && amount > 0) {
+            gastos.push({
+                vehicle_id: vehicleId,
+                class_session_id: classSessionId,
+                expense_type_id: typeId,
+                amount: amount,
+                description: desc
+            });
+        }
     });
+
+    // Enviar cada gasto al backend
+    for (const gasto of gastos) {
+        try {
+            await Api.createVehicleExpense(gasto);
+        } catch (err) {
+            console.error("Error guardando gasto:", err);
+        }
+    }
+
+    // Redirigir
+    window.location.href = "/admin/expenses";
+});
+
 
 });

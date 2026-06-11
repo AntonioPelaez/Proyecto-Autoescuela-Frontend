@@ -35,5 +35,9 @@
 @endsection
 
 @section('scripts')
+<script>
+    window.classSessionId = @json($id);
+</script>
 <script src="{{ asset('js/pages/admin-expenses-edit.js') }}"></script>
 @endsection
+

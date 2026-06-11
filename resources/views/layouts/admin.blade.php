@@ -27,7 +27,7 @@
                     <a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>
 
                     {{-- Gastos generales --}}
-                    <a href="/admin/expenses" class="role-menu-link {{ request()->is('admin/expenses') ? 'is-active' : '' }}">Gastos</a>
+                    <a href="/admin/expenses" class="role-menu-link {{ request()->is('admin/expenses') ? 'is-active' : '' }}">Gastos de mantenimiento de vehículos</a>
 
                     {{-- 🔥 Gastos gasolina (correcto para tu estructura) --}}
                     <a href="/admin/fuel" class="role-menu-link {{ request()->is('admin/fuel') ? 'is-active' : '' }}">Gastos gasolina</a>

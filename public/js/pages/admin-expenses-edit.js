@@ -31,7 +31,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         const response = await Api.getVehicleExpense(classSessionId);
+
 existingExpenses = response.expenses || [];
+window.vehicleId = response.vehicle_id; // 🔥 AÑADIDO
+
+
 
     } catch (e) {
         console.error("Error cargando gastos existentes:", e);
@@ -49,28 +53,32 @@ existingExpenses.forEach(exp => {
     // ---------------------------------------------------------
     expenseTypes.forEach((name, index) => {
 
-        const typeId = index + 1;
+    const typeId = index + 1;
 
-        const row = document.createElement("tr");
+    const row = document.createElement("tr");
 
-        const existing = expenseMap[typeId] || { amount: "", description: "" };
+    const existing = expenseMap[typeId] || {};
 
-        row.innerHTML = `
-            <td>${name}</td>
-            <td>
-                <input type="number" step="0.01" class="form-control"
-                       data-type-id="${typeId}"
-                       value="${existing.amount}">
-            </td>
-            <td>
-                <input type="text" class="form-control"
-                       data-desc-id="${typeId}"
-                       value="${existing.description}">
-            </td>
-        `;
+    const amountValue = existing.amount ?? "";
+    const descValue   = existing.description ?? "";
 
-        expenseRows.appendChild(row);
-    });
+    row.innerHTML = `
+        <td>${name}</td>
+        <td>
+            <input type="number" step="0.01" class="form-control"
+                   data-type-id="${typeId}"
+                   value="${amountValue}">
+        </td>
+        <td>
+            <input type="text" class="form-control"
+                   data-desc-id="${typeId}"
+                   value="${descValue}">
+        </td>
+    `;
+
+    expenseRows.appendChild(row);
+});
+
 
     // ---------------------------------------------------------
     // 3. Guardar cambios reales
@@ -81,8 +89,11 @@ existingExpenses.forEach(exp => {
 
         for (let input of document.querySelectorAll("input[data-type-id]")) {
 
-            const typeId = Number(input.dataset.typeId);
-            const amount = Number(input.value);
+            const normalize = v => (v === null || v === undefined || v === "null") ? "" : v;
+
+const amountValue = normalize(existing.amount);
+const descValue   = normalize(existing.description);
+
             const desc = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
 
             // Si no hay cantidad → NO hacemos nada
@@ -102,7 +113,7 @@ existingExpenses.forEach(exp => {
                 await Api.createVehicleExpense({
                     class_session_id: classSessionId,
                     expense_type_id: typeId,
-                    vehicle_id: existingExpenses[0]?.vehicle_id ?? 1, // o el que corresponda
+                    vehicle_id: window.vehicleId,
                     amount: amount,
                     description: desc
                 });

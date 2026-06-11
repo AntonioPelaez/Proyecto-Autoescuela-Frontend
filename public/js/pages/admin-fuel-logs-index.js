@@ -3,14 +3,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const monthSelect = document.getElementById("month-select");
     const tableBody = document.getElementById("fuel-logs-table");
 
-    monthSelect.addEventListener("change", async () => {
+    monthSelect.addEventListener("change", loadFuelLogs);
+
+    async function loadFuelLogs() {
 
         const month = monthSelect.value;
         if (!month) return;
 
         try {
             const response = await Api.getFuelLogs({ month });
-            const logs = response.data || [];
+            const logs = response.fuel_logs || [];
 
             if (logs.length === 0) {
                 tableBody.innerHTML = `
@@ -25,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <tr>
                     <td>${l.vehicle.brand} ${l.vehicle.model} — ${l.vehicle.plate_number}</td>
                     <td>${l.liters} L</td>
-                    <td>${l.kilometers} km</td>
+                    <td>${l.kilometers ?? 0} km</td>
                     <td class="text-end">
                         <a href="/admin/fuel/${l.id}/edit" class="btn btn-sm btn-secondary">Editar</a>
                     </td>
@@ -40,6 +42,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </tr>
             `;
         }
-    });
+    }
 
 });

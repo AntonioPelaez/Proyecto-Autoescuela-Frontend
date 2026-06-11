@@ -46,8 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await Api.getDashboardCosteMensual(vehicleId, month);
 
             box.innerHTML = `
-                <p><strong>${data.fuel_expenses.toFixed(2)} €</strong> gastados en gasolina este mes.</p>
-            `;
+    <p><strong>${(Number(data.fuel_expenses) || 0).toFixed(2)} €</strong> gastados en gasolina este mes.</p>
+`;
+
         } catch (err) {
             console.error(err);
             box.innerHTML = `<p class="text-danger">Error cargando gasto mensual.</p>`;

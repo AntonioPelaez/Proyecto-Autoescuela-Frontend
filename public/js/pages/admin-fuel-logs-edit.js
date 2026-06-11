@@ -1,3 +1,5 @@
+console.log("🔥 JS CORRECTO CARGADO");
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     const title = document.getElementById("edit-title");
@@ -9,25 +11,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const amountInput = document.getElementById("amount");
     const notesInput = document.getElementById("notes");
 
-    // -------------------------------
-    // LOADERS IGUALES AL DE VEHÍCULOS
-    // -------------------------------
+    // Loaders
+    const loaderVehicles = document.getElementById("loader-vehicles");
+    const loaderLiters = document.getElementById("loader-liters");
+    const loaderKm = document.getElementById("loader-km");
+    const loaderAmount = document.getElementById("loader-amount");
+    const loaderNotes = document.getElementById("loader-notes");
 
-    // SELECT → usa <option>
-    vehicleSelect.innerHTML = `<option>Cargando vehículos...</option>`;
+    // -------------------------------
+    // MOSTRAR LOADERS
+    // -------------------------------
+    loaderVehicles.classList.remove("d-none");
+    loaderLiters.classList.remove("d-none");
+    loaderKm.classList.remove("d-none");
+    loaderAmount.classList.remove("d-none");
+    loaderNotes.classList.remove("d-none");
 
-    // INPUTS → usan value + readOnly
-    litersInput.value = "Cargando litros...";
     litersInput.readOnly = true;
-
-    kmInput.value = "Cargando kilómetros...";
     kmInput.readOnly = true;
-
-    amountInput.value = "Cargando monto...";
     amountInput.readOnly = true;
-
-    // TEXTAREA → usa value + readOnly
-    notesInput.value = "Cargando notas...";
     notesInput.readOnly = true;
 
     let fuelLog = null;
@@ -39,28 +41,28 @@ document.addEventListener("DOMContentLoaded", async () => {
         const response = await Api.getFuelLog(FUEL_LOG_ID);
         fuelLog = response.data || response;
 
-        // Mes (NO lleva loader)
         const monthValue =
             fuelLog.month ||
             fuelLog.date?.substring(0, 7) ||
             "";
         monthInput.value = monthValue;
 
-        // Litros
         litersInput.readOnly = false;
         litersInput.value = fuelLog.liters ?? "";
 
-        // Km
         kmInput.readOnly = false;
         kmInput.value = fuelLog.kilometers ?? "";
 
-        // Monto
         amountInput.readOnly = false;
         amountInput.value = fuelLog.amount ?? "";
 
-        // Notas
         notesInput.readOnly = false;
         notesInput.value = fuelLog.notes ?? "";
+
+        loaderLiters.classList.add("d-none");
+        loaderKm.classList.add("d-none");
+        loaderAmount.classList.add("d-none");
+        loaderNotes.classList.add("d-none");
 
     } catch (err) {
         console.error(err);
@@ -91,6 +93,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             vehicleSelect.value = fuelLog.vehicle_id;
         }
+
+        loaderVehicles.classList.add("d-none");
 
         const selected = vehicles.find(v => v.id == fuelLog.vehicle_id);
 

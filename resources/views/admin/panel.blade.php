@@ -66,7 +66,7 @@
 
     <section class="card">
     <div class="card-header">
-        <h2>Gasto de gasolina del mes</h2>
+        <h2>Rentabilidad del vehículo</h2>
     </div>
 
     <div class="card-body">

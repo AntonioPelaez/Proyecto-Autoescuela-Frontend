@@ -42,12 +42,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         UI.setLoading("admin-gasoline-monthly", true);
 
-        try {
-            const data = await Api.getDashboardCosteMensual(vehicleId, month);
+       try {
+    const data = await Api.getDashboardCosteMensual(vehicleId, month);
+    const ingresos = await Api.getDashboardIngresosMensuales(vehicleId, month);
 
-            box.innerHTML = `
-    <p><strong>${(Number(data.fuel_expenses) || 0).toFixed(2)} €</strong> gastados en gasolina este mes.</p>
-`;
+    const gasolina = Number(data.fuel_expenses) || 0;
+    const menores  = Number(data.other_expenses) || 0;
+    const total    = gasolina + menores;
+    const income   = Number(ingresos.income) || 0;
+
+    const rentable = income - total > 0;
+
+    box.innerHTML = `
+        <p><strong>${gasolina.toFixed(2)} €</strong> gastados en gasolina este mes.</p>
+        <p><strong>${menores.toFixed(2)} €</strong> gastados en mantenimiento menor.</p>
+        <p><strong>${total.toFixed(2)} €</strong> gasto total del mes.</p>
+        <p><strong>${income.toFixed(2)} €</strong> ingresados por clases.</p>
+
+        <p style="font-size:1.2rem; font-weight:bold; color:${rentable ? 'green' : 'red'};">
+            ${rentable ? '🚀 RENTABLE' : '⚠️ NO RENTABLE'}
+        </p>
+    `;
+
 
         } catch (err) {
             console.error(err);

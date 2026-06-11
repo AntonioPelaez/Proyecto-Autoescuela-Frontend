@@ -1299,5 +1299,11 @@ const Api = {
         credentials: 'include'
     }).then(handleResponse);
 },
-
+getDashboardIngresosMensuales(vehicleId, month) {
+    return fetch(`${API_BASE_URL}/dashboard/${vehicleId}/ingresos-mensuales?month=${month}`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+        credentials: "include",
+    }).then(handleResponse);
+},
 };

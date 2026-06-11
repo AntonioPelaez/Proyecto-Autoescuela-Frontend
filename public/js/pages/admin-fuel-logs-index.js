@@ -3,22 +3,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const monthSelect = document.getElementById("month-select");
     const tableBody = document.getElementById("fuel-logs-table");
 
+    const initialMessage = document.getElementById("initial-message");
+    const loaderTable = document.getElementById("loader-table");
+
     const chartMonthsWrapper = document.getElementById("chart-months-wrapper");
     const loaderMonths = document.getElementById("loader-months");
-    const loaderTable = document.getElementById("loader-table");
     const loaderCars = document.getElementById("loader-cars");
 
     let chartMonths = null;
     let chartCars = null;
 
-    // -------------------------------
-    // CARGAR GRÁFICA GLOBAL AL INICIO
-    // -------------------------------
     loadGlobalVehicleChart();
 
-    // -------------------------------
-    // EVENTO CAMBIO DE MES
-    // -------------------------------
     monthSelect.addEventListener("change", loadFuelLogsByMonth);
 
     async function loadFuelLogsByMonth() {
@@ -26,7 +22,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const month = monthSelect.value;
         if (!month) return;
 
+        // Mostrar loader en el sitio exacto del mensaje inicial
+        initialMessage.classList.add("d-none");
         loaderTable.classList.remove("d-none");
+
         chartMonthsWrapper.classList.remove("d-none");
         loaderMonths.classList.remove("d-none");
 
@@ -37,13 +36,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? response
                 : (response.fuel_logs || response.data || []);
 
-            // -------------------------------
-            // TABLA
-            // -------------------------------
             if (logs.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="text-muted">No hay registros este mes.</td>
+                        <td colspan="4" class="text-muted text-center">No hay registros este mes.</td>
                     </tr>
                 `;
             } else {
@@ -61,9 +57,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             loaderTable.classList.add("d-none");
 
-            // -------------------------------
-            // GRÁFICA DEL MES (POR COCHE)
-            // -------------------------------
             setTimeout(() => {
                 renderChartMonths(logs, month);
             }, 50);
@@ -73,17 +66,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             loaderTable.classList.add("d-none");
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-danger">Error cargando datos.</td>
+                    <td colspan="4" class="text-danger text-center">Error cargando datos.</td>
                 </tr>
             `;
         }
     }
 
-    // -------------------------------
-    // GRÁFICA GLOBAL (NO DEPENDE DEL MES)
-    // -------------------------------
     async function loadGlobalVehicleChart() {
-
         try {
             const response = await Api.getFuelLogs({});
             const logs = Array.isArray(response)
@@ -112,14 +101,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // -------------------------------
-    // GRÁFICA 1: Consumo del mes POR COCHE
-    // -------------------------------
     function renderChartMonths(logs, month) {
         const ctx = document.getElementById("chart-months");
         if (!ctx) return;
 
-        // Agrupar litros por vehículo
         const totals = {};
 
         logs.forEach(l => {
@@ -151,9 +136,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // -------------------------------
-    // GRÁFICA 2: Consumo total por vehículo (histórico)
-    // -------------------------------
     function renderChartCars(labels, liters) {
         const ctx = document.getElementById("chart-cars");
         if (!ctx) return;

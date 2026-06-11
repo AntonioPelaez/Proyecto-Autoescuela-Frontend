@@ -35,6 +35,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         return expenses.filter(e => e.class_session_id == classSessionId);
     }
 
+    function formatDate(dateStr) {
+		if (!dateStr) return '-';
+		try {
+			const date = new Date(dateStr);
+			const day = String(date.getDate()).padStart(2, '0');
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const year = date.getFullYear();
+			return `${day}/${month}/${year}`;
+		} catch (_) {
+			return dateStr;
+		}
+	}
+
     // ---------------------------------------------------------
     // 2. Cargar clases según vehículo
     // ---------------------------------------------------------
@@ -61,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const fecha = c.session_date || "Sin fecha";
                 const opt = document.createElement("option");
                 opt.value = c.id;
-                opt.textContent = `${fecha} — ${c.start_time} a ${c.end_time}`;
+                opt.textContent = `${formatDate(fecha)} — ${c.start_time} a ${c.end_time}`;
                 classSelect.appendChild(opt);
             });
 

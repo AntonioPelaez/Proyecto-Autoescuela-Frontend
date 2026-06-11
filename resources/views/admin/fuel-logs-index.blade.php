@@ -25,10 +25,6 @@
     <div class="card card-body mb-4">
         <h5 class="mb-3">Coches con consumo este mes</h5>
 
-        <div id="loader-table" class="text-center py-3 d-none">
-            Cargando datos...
-        </div>
-
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
@@ -39,34 +35,39 @@
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody id="fuel-logs-table">
-                    <tr>
-                        <td colspan="4" class="text-muted">Selecciona un mes.</td>
+
+                    {{-- Mensaje inicial --}}
+                    <tr id="initial-message">
+                        <td colspan="4" class="text-muted text-center">
+                            Selecciona un mes.
+                        </td>
                     </tr>
+
+                    {{-- Loader en el mismo sitio --}}
+                    <tr id="loader-table" class="d-none">
+                        <td colspan="4" class="text-center">
+                            Cargando datos...
+                        </td>
+                    </tr>
+
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Gráfica 1: consumo del mes seleccionado --}}
+    {{-- Gráfica 1 --}}
     <div class="card card-body mb-4 d-none" id="chart-months-wrapper">
         <h5>Consumo de gasolina del mes seleccionado</h5>
-
-        <div id="loader-months" class="text-center py-3 d-none">
-            Cargando gráfica...
-        </div>
-
+        <div id="loader-months" class="text-center py-3 d-none">Cargando gráfica...</div>
         <canvas id="chart-months"></canvas>
     </div>
 
-    {{-- Gráfica 2: consumo total por vehículo (histórico) --}}
+    {{-- Gráfica 2 --}}
     <div class="card card-body">
         <h5>Consumo total por vehículo (histórico)</h5>
-
-        <div id="loader-cars" class="text-center py-3">
-            Cargando gráfica...
-        </div>
-
+        <div id="loader-cars" class="text-center py-3">Cargando gráfica...</div>
         <canvas id="chart-cars"></canvas>
     </div>
 

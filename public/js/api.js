@@ -1237,7 +1237,6 @@ const Api = {
         }).then(handleResponse);
     },
 
-
     createVehicleExpense(data) {
         return fetch(`${API_BASE_URL}/vehicle-expenses`, {
             method: "POST",

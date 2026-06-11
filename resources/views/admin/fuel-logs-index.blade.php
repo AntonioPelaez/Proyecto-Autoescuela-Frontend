@@ -25,6 +25,10 @@
     <div class="card card-body mb-4">
         <h5 class="mb-3">Coches con consumo este mes</h5>
 
+        <div id="loader-table" class="text-center py-3 d-none">
+            Cargando datos...
+        </div>
+
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
@@ -44,16 +48,26 @@
         </div>
     </div>
 
-    {{-- Gráfica 1: consumo por meses --}}
-    <div class="card card-body mb-4">
-        <h5>Consumo de gasolina por meses</h5>
-        <canvas id="chart-months" height="120"></canvas>
+    {{-- Gráfica 1: consumo del mes seleccionado --}}
+    <div class="card card-body mb-4 d-none" id="chart-months-wrapper">
+        <h5>Consumo de gasolina del mes seleccionado</h5>
+
+        <div id="loader-months" class="text-center py-3 d-none">
+            Cargando gráfica...
+        </div>
+
+        <canvas id="chart-months"></canvas>
     </div>
 
-    {{-- Gráfica 2: consumo por coche del mes --}}
+    {{-- Gráfica 2: consumo total por vehículo (histórico) --}}
     <div class="card card-body">
-        <h5>Consumo por coche del mes seleccionado</h5>
-        <canvas id="chart-cars" height="120"></canvas>
+        <h5>Consumo total por vehículo (histórico)</h5>
+
+        <div id="loader-cars" class="text-center py-3">
+            Cargando gráfica...
+        </div>
+
+        <canvas id="chart-cars"></canvas>
     </div>
 
 </div>

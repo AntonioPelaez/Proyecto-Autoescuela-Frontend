@@ -4,14 +4,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const infoEl = document.getElementById("class-info");
     const skillsContainer = document.getElementById("skills-container");
     const form = document.getElementById("skills-form");
+
     const formatDate = (isoDate) => {
-    const d = new Date(isoDate);
-    return d.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-    });
-};
+        const d = new Date(isoDate);
+        return d.toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        });
+    };
+
     try {
         // 1. Obtener datos de la clase
         let classData = await Api.getTeacherBookings();
@@ -43,19 +45,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         const skills = await Api.getDrivingSkills();
 
         skillsContainer.innerHTML = skills.map(skill => `
-    <div class="col-md-3">
-        <label><strong>${skill.name}</strong></label>
-        <select class="form-control skill-score"
-                data-skill-id="${skill.id}"
-                required>
-            <option value="" disabled selected>Selecciona una puntuación</option>
-            ${Array.from({ length: 11 }, (_, i) => `
-                <option value="${i}">${i}</option>
-            `).join("")}
-        </select>
-    </div>
-`).join("");
-
+            <div class="col-md-3">
+                <label><strong>${skill.name}</strong></label>
+                <select class="form-control skill-score"
+                        data-skill-id="${skill.id}"
+                        required>
+                    <option value="" disabled selected>Selecciona una puntuación</option>
+                    ${Array.from({ length: 11 }, (_, i) => `
+                        <option value="${i}">${i}</option>
+                    `).join("")}
+                </select>
+            </div>
+        `).join("");
 
     } catch (err) {
         console.error(err);
@@ -66,6 +67,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     form.addEventListener("submit", (e) => {
         e.preventDefault();
 
+        // 🔥 NUEVO: recoger kilómetros
+        const kmStart = Number(document.getElementById("km-start").value);
+        const kmEnd = Number(document.getElementById("km-end").value);
+
+        if (!kmStart || !kmEnd) {
+            alert("Debes introducir los kilómetros de inicio y fin.");
+            return;
+        }
+
+        if (kmEnd < kmStart) {
+            alert("Los kilómetros finales no pueden ser menores que los iniciales.");
+            return;
+        }
+
         const scores = [...document.querySelectorAll(".skill-score")].map(input => ({
             skill_id: input.dataset.skillId,
             score: parseInt(input.value, 10)
@@ -73,7 +88,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         sessionStorage.setItem(
             `class_eval_${classId}`,
-            JSON.stringify({ scores })
+            JSON.stringify({
+                scores,
+                km_start: kmStart,
+                km_end: kmEnd
+            })
         );
 
         window.location.href = `/teacher/classes/${classId}/evaluate-report`;

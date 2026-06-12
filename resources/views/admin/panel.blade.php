@@ -65,6 +65,36 @@
     </section>
 
     <section class="card">
+    <div class="card-header">
+        <h2>Rentabilidad del vehículo</h2>
+    </div>
+
+    <div class="card-body">
+        <label for="vehicle-select">Selecciona un vehículo:</label>
+        <select id="vehicle-select" class="form-control mb-3">
+            <option value="">-- Selecciona un vehículo --</option>
+        </select>
+        <div class="row mb-3">
+    <div class="col">
+        <label for="date-from">Desde:</label>
+        <input type="date" id="date-from" class="form-control">
+    </div>
+    <div class="col">
+        <label for="date-to">Hasta:</label>
+        <input type="date" id="date-to" class="form-control">
+    </div>
+</div>
+
+<button id="filter-profitability" class="btn btn-primary mb-3">
+    Filtrar rentabilidad
+</button>
+
+        <div id="admin-gasoline-monthly"></div>
+    </div>
+</section>
+
+
+    <section class="card">
         <div class="card-header">
             <h2>Accesos complementarios</h2>
         </div>

@@ -10,7 +10,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
-    {{-- 🔥 IMPORTANTE: permite cargar estilos personalizados de cada vista --}}
     @yield('styles')
 </head>
 <body class="page-role page-role-admin">
@@ -26,12 +25,17 @@
                     <a href="/admin/professors" class="role-menu-link {{ request()->is('admin/professors') ? 'is-active' : '' }}">Profesores</a>
                     <a href="/admin/students" class="role-menu-link {{ request()->is('admin/students') ? 'is-active' : '' }}">Alumnos</a>
                     <a href="/admin/vehicles" class="role-menu-link {{ request()->is('admin/vehicles') ? 'is-active' : '' }}">Vehículos</a>
+
+                    {{-- Gastos generales --}}
+                    <a href="/admin/expenses" class="role-menu-link {{ request()->is('admin/expenses') ? 'is-active' : '' }}">Gastos de mantenimiento de vehículos</a>
+
+                    {{-- 🔥 Gastos gasolina (correcto para tu estructura) --}}
+                    <a href="/admin/fuel" class="role-menu-link {{ request()->is('admin/fuel') ? 'is-active' : '' }}">Gastos gasolina</a>
+
                     <a href="/admin/slots" class="role-menu-link {{ request()->is('admin/slots') ? 'is-active' : '' }}">Huecos ofertados</a>
                     <a href="/admin/bookings" class="role-menu-link {{ request()->is('admin/bookings') ? 'is-active' : '' }}">Clases reservadas</a>
                     <a href="/admin/incidents" class="role-menu-link {{ request()->is('admin/incidents') ? 'is-active' : '' }}">Incidencias</a>
-
                     <a href="/admin/convocatorias" class="role-menu-link {{ request()->is('admin/convocatorias') ? 'is-active' : '' }}">Convocatorias</a>
-
                     <a href="/admin/help" class="role-menu-link {{ request()->is('admin/help') ? 'is-active' : '' }}">Ayuda</a>
                 </nav>
 
@@ -54,7 +58,6 @@
     <script src="{{ asset('js/ui.js') }}" defer></script>
     <script src="{{ asset('js/logout.js') }}" defer></script>
 
-    {{-- Scripts específicos de cada vista --}}
     @yield('scripts')
 
 </body>

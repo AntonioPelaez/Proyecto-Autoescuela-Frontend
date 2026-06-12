@@ -5,15 +5,20 @@
 const API_BASE_URL = `http://localhost:8000/api`;
 
 function getAuthHeaders() {
-    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
-    const token = localStorage.getItem('token');
+    const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+    };
+    const token = localStorage.getItem("token");
     if (token) {
-        headers['Authorization'] = 'Bearer ' + token;
+        headers["Authorization"] = "Bearer " + token;
         if (window.__DEBUG_API) {
-            console.log('[API] Token enviado:', token.substring(0, 20) + '...');
+            console.log("[API] Token enviado:", token.substring(0, 20) + "...");
         }
     } else {
-        console.warn('[API] No hay token en localStorage. Usuario no autenticado.');
+        console.warn(
+            "[API] No hay token en localStorage. Usuario no autenticado.",
+        );
     }
     return headers;
 }
@@ -24,7 +29,7 @@ function getAuthHeaders() {
  */
 async function handleResponse(response) {
     let data;
-    let rawText = '';
+    let rawText = "";
     try {
         rawText = await response.text();
         data = rawText ? JSON.parse(rawText) : {};
@@ -33,22 +38,25 @@ async function handleResponse(response) {
     }
 
     if (!response.ok) {
-        const validationDetails = data && typeof data === 'object' && data.errors
-            ? Object.values(data.errors).flat().join(' ')
-            : '';
-        const normalizedMessage = data && typeof data === 'object'
-            ? (data.message || data.error || validationDetails)
-            : '';
+        const validationDetails =
+            data && typeof data === "object" && data.errors
+                ? Object.values(data.errors).flat().join(" ")
+                : "";
+        const normalizedMessage =
+            data && typeof data === "object"
+                ? data.message || data.error || validationDetails
+                : "";
 
         // Extrae mensaje de error y detalles si existen
         const error = {
             status: response.status,
             statusText: response.statusText,
-            message: normalizedMessage || rawText || 'Error en la petición API',
-            errors: data && typeof data === 'object' ? data.errors || null : null,
-            error: data && typeof data === 'object' ? data.error || null : null,
+            message: normalizedMessage || rawText || "Error en la petición API",
+            errors:
+                data && typeof data === "object" ? data.errors || null : null,
+            error: data && typeof data === "object" ? data.error || null : null,
             raw: data,
-            rawText
+            rawText,
         };
         // Permite capturar el error como objeto
         throw error;
@@ -56,10 +64,13 @@ async function handleResponse(response) {
     return data;
 }
 async function downloadTicketPDF(paymentIntentId) {
-    const response = await fetch(`${API_BASE_URL}/payments/${paymentIntentId}/ticket`, {
-        method: "GET",
-        headers: getAuthHeaders()
-    });
+    const response = await fetch(
+        `${API_BASE_URL}/payments/${paymentIntentId}/ticket`,
+        {
+            method: "GET",
+            headers: getAuthHeaders(),
+        },
+    );
 
     if (!response.ok) {
         throw new Error("No se pudo descargar el ticket");
@@ -81,7 +92,7 @@ async function downloadTicketPDF(paymentIntentId) {
 function buildDefaultTimeSlots() {
     const slots = [];
     for (let hour = 8; hour <= 21; hour += 1) {
-        const hh = String(hour).padStart(2, '0');
+        const hh = String(hour).padStart(2, "0");
         const value = `${hh}:00`;
         slots.push({ time: value, display: value });
     }
@@ -91,16 +102,19 @@ function buildDefaultTimeSlots() {
 function normalizeTimeSlots(raw) {
     const source = Array.isArray(raw)
         ? raw
-        : (Array.isArray(raw && raw.data) ? raw.data : []);
+        : Array.isArray(raw && raw.data)
+          ? raw.data
+          : [];
 
     const normalized = source
         .map((item) => {
             if (!item) return null;
-            if (typeof item === 'string') {
+            if (typeof item === "string") {
                 return { time: item, display: item };
             }
 
-            const time = item.time || item.start_time || item.hour || item.value || null;
+            const time =
+                item.time || item.start_time || item.hour || item.value || null;
             if (!time) return null;
 
             const display = item.display || item.label || time;
@@ -116,41 +130,36 @@ const Api = {
     // ─────────── AUTENTICACIÓN ───────────
     login(email, password) {
         return fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
-
         }).then(handleResponse);
     },
     register(data) {
         return fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     logout() {
         return fetch(`${API_BASE_URL}/auth/logout`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
-
         }).then(handleResponse);
     },
     forgotPassword(email) {
         return fetch(`${API_BASE_URL}/auth/forgot-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
-
         }).then(handleResponse);
     },
     resetPassword(data) {
         return fetch(`${API_BASE_URL}/auth/reset-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
 
@@ -158,147 +167,163 @@ const Api = {
     getMe() {
         return fetch(`${API_BASE_URL}/me`, {
             headers: getAuthHeaders(),
-
         }).then(handleResponse);
     },
 
     // ─────────── CRUD PUEBLOS ───────────
     getTowns() {
-        return fetch(`${API_BASE_URL}/towns`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/towns`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getTown(id) {
         return fetch(`${API_BASE_URL}/towns/${id}`, {}).then(handleResponse);
     },
     createTown(data) {
         return fetch(`${API_BASE_URL}/towns`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
         }).then(handleResponse);
     },
     updateTown(id, data) {
         return fetch(`${API_BASE_URL}/towns/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
         }).then(handleResponse);
     },
     deleteTown(id) {
         return fetch(`${API_BASE_URL}/towns/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+            method: "DELETE",
+            headers: getAuthHeaders(),
         }).then(handleResponse);
     },
     toggleTown(id) {
         return fetch(`${API_BASE_URL}/towns/${id}/toggle`, {
-            method: 'POST',
-            headers: getAuthHeaders()
+            method: "POST",
+            headers: getAuthHeaders(),
         }).then(handleResponse);
     },
 
     // ─────────── CRUD USUARIOS ───────────
     getUsers() {
-        return fetch(`${API_BASE_URL}/users`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/users`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getUser(id) {
-        return fetch(`${API_BASE_URL}/users/${id}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/users/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     createUser(data) {
         return fetch(`${API_BASE_URL}/users`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     updateUser(id, data) {
         return fetch(`${API_BASE_URL}/users/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     deleteUser(id) {
         return fetch(`${API_BASE_URL}/users/${id}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: getAuthHeaders(),
-
         }).then(handleResponse);
     },
 
     // ─────────── CRUD PROFESORES ───────────
     getTeachers() {
-        return fetch(`${API_BASE_URL}/teachers`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getTeacher(id) {
-        return fetch(`${API_BASE_URL}/teachers/${id}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     createTeacher(data) {
         return fetch(`${API_BASE_URL}/teachers`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     updateTeacher(id, data) {
         return fetch(`${API_BASE_URL}/teachers/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     deleteTeacher(id) {
         return fetch(`${API_BASE_URL}/teachers/${id}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: getAuthHeaders(),
-
         }).then(handleResponse);
     },
     toggleProfessor(id) {
         return fetch(`${API_BASE_URL}/teachers/${id}/toggle`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
-
         }).then(handleResponse);
     },
     getTeacherNotes(id) {
-        return fetch(`${API_BASE_URL}/teachers/${id}/notes`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers/${id}/notes`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     saveTeacherNotes(id, notes) {
         return fetch(`${API_BASE_URL}/teachers/${id}/notes`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(notes),
-
         }).then(handleResponse);
     },
     getTeacherVehicles(id) {
-        return fetch(`${API_BASE_URL}/teachers/${id}/vehicles`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers/${id}/vehicles`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     assignTeacherVehicle(id, data) {
         return fetch(`${API_BASE_URL}/teachers/${id}/vehicles/assign`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     removeTeacherVehicle(id, vehicleId) {
-        return fetch(`${API_BASE_URL}/teachers/${id}/vehicles/${vehicleId}/remove`, {
-            method: 'DELETE',
-            headers: getAuthHeaders(),
-
-        }).then(handleResponse);
+        return fetch(
+            `${API_BASE_URL}/teachers/${id}/vehicles/${vehicleId}/remove`,
+            {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+            },
+        ).then(handleResponse);
     },
     getTeacherBookings(params = {}) {
         const query = new URLSearchParams(params).toString();
-        return fetch(`${API_BASE_URL}/teachers/reservas${query ? '?' + query : ''}`, {
-            headers: getAuthHeaders(),
-            credentials: 'include'
-        }).then(handleResponse);
+        return fetch(
+            `${API_BASE_URL}/teachers/reservas${query ? "?" + query : ""}`,
+            {
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
     },
     /**
      * Obtiene los horarios disponibles para el profesor autenticado en una fecha
@@ -307,7 +332,12 @@ const Api = {
     getTimeSlots(params = {}) {
         try {
             // Obtener teacher_id del usuario autenticado
-            const user = (window.Auth && typeof window.Auth.getUser === 'function') ? window.Auth.getUser() : (typeof Auth !== 'undefined' ? Auth.getUser() : null);
+            const user =
+                window.Auth && typeof window.Auth.getUser === "function"
+                    ? window.Auth.getUser()
+                    : typeof Auth !== "undefined"
+                      ? Auth.getUser()
+                      : null;
             const teacher_id = user && Number(user.teacher_profile_id);
             const date = params.date || null;
             if (!teacher_id || isNaN(teacher_id) || teacher_id <= 0) {
@@ -318,12 +348,12 @@ const Api = {
                 return Promise.resolve(buildDefaultTimeSlots());
             }
             const url = new URL(`${API_BASE_URL}/availability-hours`);
-            url.searchParams.append('teacher_id', teacher_id);
-            url.searchParams.append('date', date);
+            url.searchParams.append("teacher_id", teacher_id);
+            url.searchParams.append("date", date);
             return fetch(url, {
-                method: 'GET',
+                method: "GET",
                 headers: getAuthHeaders(),
-                credentials: 'include'
+                credentials: "include",
             })
                 .then(handleResponse)
                 .then(normalizeTimeSlots)
@@ -337,137 +367,164 @@ const Api = {
     },
 
     updateTeacherPassword(id, data) {
-    return fetch(`${API_BASE_URL}/teachers/${id}/password`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data)
-    }).then(handleResponse);
-},
-
+        return fetch(`${API_BASE_URL}/teachers/${id}/password`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        }).then(handleResponse);
+    },
 
     // ─────────── CRUD VEHÍCULOS ───────────
     getVehicles() {
-        return fetch(`${API_BASE_URL}/vehicles`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/vehicles`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getVehicle(id) {
-        return fetch(`${API_BASE_URL}/vehicles/${id}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/vehicles/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     createVehicle(data) {
         return fetch(`${API_BASE_URL}/vehicles`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     updateVehicle(id, data) {
         return fetch(`${API_BASE_URL}/vehicles/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     deleteVehicle(id) {
         return fetch(`${API_BASE_URL}/vehicles/${id}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: getAuthHeaders(),
-
+        }).then(handleResponse);
+    },
+    // HISTORIAL DE VEHICULOS
+    historyVehicles(vehicleID) {
+        return fetch(`${API_BASE_URL}/vehicles/${vehicleID}/history`, {
+            method: "GET",
+            headers: getAuthHeaders(),
         }).then(handleResponse);
     },
 
     // ─────────── CRUD ESTUDIANTES ───────────
     getStudents() {
-        return fetch(`${API_BASE_URL}/students`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/students`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getStudent(id) {
-        return fetch(`${API_BASE_URL}/students/${id}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/students/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     createStudent(data) {
         return fetch(`${API_BASE_URL}/students`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     updateStudent(id, data) {
         return fetch(`${API_BASE_URL}/students/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-
         }).then(handleResponse);
     },
     deleteStudent(id) {
         return fetch(`${API_BASE_URL}/students/${id}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: getAuthHeaders(),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     getStudentNotes(id) {
-        return fetch(`${API_BASE_URL}/students/${id}/notes`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/students/${id}/notes`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     saveStudentNotes(id, notes) {
         return fetch(`${API_BASE_URL}/students/${id}/notes`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(notes),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
 
     changeStudentPassword(id, data) {
-    return fetch(`${API_BASE_URL}/students/${id}/password`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    }).then(handleResponse);
-},
-
+        return fetch(`${API_BASE_URL}/students/${id}/password`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        }).then(handleResponse);
+    },
 
     // ─────────── CLASES Y RESERVAS ───────────
     getMyClasses() {
-        return fetch(`${API_BASE_URL}/my-classes`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/my-classes`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getAdminClasses(params = {}) {
         const query = new URLSearchParams(params).toString();
-        return fetch(`${API_BASE_URL}/admin/classes${query ? '?' + query : ''}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(
+            `${API_BASE_URL}/admin/classes${query ? "?" + query : ""}`,
+            { headers: getAuthHeaders(), credentials: "include" },
+        ).then(handleResponse);
     },
     cancelAdminBooking(id) {
         return fetch(`${API_BASE_URL}/class-sessions/cancel`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify({ id }),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     reassignAdminBooking(classSessionId, teacherId, vehicleId) {
-        const body = { class_session_id: classSessionId, teacher_id: teacherId };
+        const body = {
+            class_session_id: classSessionId,
+            teacher_id: teacherId,
+        };
         if (vehicleId) body.vehicle_id = vehicleId;
         return fetch(`${API_BASE_URL}/class-sessions/reassign-teacher`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(body),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     getDayClassSessions() {
-        return fetch(`${API_BASE_URL}/class-sessions/day`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/class-sessions/day`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getAvailabilityHours(params = {}) {
         const { town_id, teacher_id, date } = params;
         const url = new URL(`${API_BASE_URL}/availability-hours`);
 
-        if (town_id) url.searchParams.append('town_id', town_id);
-        if (teacher_id) url.searchParams.append('teacher_id', teacher_id);
-        if (date) url.searchParams.append('date', date);
+        if (town_id) url.searchParams.append("town_id", town_id);
+        if (teacher_id) url.searchParams.append("teacher_id", teacher_id);
+        if (date) url.searchParams.append("date", date);
 
         return fetch(url, {
-            method: 'GET',
+            method: "GET",
             headers: getAuthHeaders(),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     getAvailabilitySlots(params = {}) {
@@ -475,187 +532,771 @@ const Api = {
         const url = new URL(`${API_BASE_URL}/availability-slots`);
 
         if (town_id) {
-            url.searchParams.append('town_id', town_id);
+            url.searchParams.append("town_id", town_id);
         }
         if (date) {
-            url.searchParams.append('date', date);
+            url.searchParams.append("date", date);
         }
 
         return fetch(url, {
-            method: 'GET',
+            method: "GET",
             headers: getAuthHeaders(),
-            cache: 'no-store',
-            credentials: 'include'
+            cache: "no-store",
+            credentials: "include",
         }).then(handleResponse);
     },
     getAvailabilitySlot(id) {
         return fetch(`${API_BASE_URL}/availability-slots/${id}`, {
             headers: getAuthHeaders(),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     createAvailabilitySlot(data) {
         return fetch(`${API_BASE_URL}/availability-slots`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     updateAvailabilitySlot(id, data) {
         return fetch(`${API_BASE_URL}/availability-slots/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     updateSlotStatus(id, status) {
         return fetch(`${API_BASE_URL}/availability-slots/${id}/status`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify({ status }),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
 
     createClassSession(data) {
         return fetch(`${API_BASE_URL}/class-sessions`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
-        }).then(handleResponse).catch((error) => {
-            error.requestBody = data;
-            throw error;
-        });
+            credentials: "include",
+        })
+            .then(handleResponse)
+            .catch((error) => {
+                error.requestBody = data;
+                throw error;
+            });
     },
     cancelClassSession(data) {
         return fetch(`${API_BASE_URL}/class-sessions/cancel`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     confirmClassSession(id) {
-    return fetch(`${API_BASE_URL}/class-sessions/confirm`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ id }),   // ✔ AHORA SÍ ENVÍAS { id: 12 }
-        credentials: 'include',
-    }).then(handleResponse);
-},
-
+        return fetch(`${API_BASE_URL}/class-sessions/confirm`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ id }), // ✔ AHORA SÍ ENVÍAS { id: 12 }
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
     completeClassSession(id) {
-    return fetch(`${API_BASE_URL}/class-sessions/complete`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({id}),
-        credentials: 'include',
-    }).then(handleResponse);
-},
-
+        return fetch(`${API_BASE_URL}/class-sessions/complete`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ id }),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
     // ─────────── EXCEPCIONES DE DISPONIBILIDAD ───────────
     getTeacherAvailabilityExceptions() {
-        return fetch(`${API_BASE_URL}/teachers/availability-exceptions`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers/availability-exceptions`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     getTeacherAvailabilityException(id) {
-        return fetch(`${API_BASE_URL}/teachers/availability-exceptions/${id}`, { headers: getAuthHeaders(), credentials: 'include' }).then(handleResponse);
+        return fetch(`${API_BASE_URL}/teachers/availability-exceptions/${id}`, {
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
     },
     createTeacherAvailabilityException(data) {
         return fetch(`${API_BASE_URL}/teachers/availability-exceptions`, {
-            method: 'POST',
+            method: "POST",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     updateTeacherAvailabilityException(id, data) {
         return fetch(`${API_BASE_URL}/teachers/availability-exceptions/${id}`, {
-            method: 'PUT',
+            method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
     deleteTeacherAvailabilityException(id) {
         return fetch(`${API_BASE_URL}/teachers/availability-exceptions/${id}`, {
-            method: 'DELETE',
+            method: "DELETE",
             headers: getAuthHeaders(),
-            credentials: 'include'
+            credentials: "include",
         }).then(handleResponse);
     },
 
-
     // ─────────── CRUD INCIDENTS ───────────
-getIncidentTypes() {
-    return fetch(`${API_BASE_URL}/incidents/tipos/list`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
+    getIncidentTypes() {
+        return fetch(`${API_BASE_URL}/incidents/tipos/list`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
-getIncidents(params = {}) {
-    const query = new URLSearchParams(params).toString();
-    return fetch(`${API_BASE_URL}/incidents${query ? '?' + query : ''}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
+    getIncidents(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return fetch(`${API_BASE_URL}/incidents${query ? "?" + query : ""}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
-getIncident(id) {
-    return fetch(`${API_BASE_URL}/incidents/${id}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
+    getIncident(id) {
+        return fetch(`${API_BASE_URL}/incidents/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
-createIncident(data) {
-    return fetch(`${API_BASE_URL}/incidents`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
+    createIncident(data) {
+        return fetch(`${API_BASE_URL}/incidents`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
-updateIncident(id, data) {
-    return fetch(`${API_BASE_URL}/incidents/${id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
+    updateIncident(id, data) {
+        return fetch(`${API_BASE_URL}/incidents/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
 
-deleteIncident(id) {
-    return fetch(`${API_BASE_URL}/incidents/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getWeeklyAvailabilities(params = {}) {
-    const url = new URL(`${API_BASE_URL}/teacher-weekly-availabilities`);
+    deleteIncident(id) {
+        return fetch(`${API_BASE_URL}/incidents/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getWeeklyAvailabilities(params = {}) {
+        const url = new URL(`${API_BASE_URL}/teacher-weekly-availabilities`);
 
-    if (params.teacher_profile_id) {
-        url.searchParams.append('teacher_profile_id', params.teacher_profile_id);
-    }
-    if (params.town_id) {
-        url.searchParams.append('town_id', params.town_id);
-    }
-    if (params.day_of_week !== undefined && params.day_of_week !== null) {
-        url.searchParams.append('day_of_week', params.day_of_week);
-    }
-    if (params.is_active !== undefined && params.is_active !== null) {
-        url.searchParams.append('is_active', params.is_active);
-    }
+        if (params.teacher_profile_id) {
+            url.searchParams.append(
+                "teacher_profile_id",
+                params.teacher_profile_id,
+            );
+        }
+        if (params.town_id) {
+            url.searchParams.append("town_id", params.town_id);
+        }
+        if (params.day_of_week !== undefined && params.day_of_week !== null) {
+            url.searchParams.append("day_of_week", params.day_of_week);
+        }
+        if (params.is_active !== undefined && params.is_active !== null) {
+            url.searchParams.append("is_active", params.is_active);
+        }
+
+        return fetch(url, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getTeacherStats(id) {
+        return fetch(`${API_BASE_URL}/teachers/${id}/stats`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    createWeeklyAvailability(data) {
+        return fetch(`${API_BASE_URL}/teacher-weekly-availabilities`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    updateWeeklyAvailability(id, data) {
+        return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    deleteWeeklyAvailability(id) {
+        return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    toggleWeeklyAvailability(id) {
+        return fetch(
+            `${API_BASE_URL}/teacher-weekly-availabilities/${id}/toggle`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    // ─────────── PAYMENT INTENTS ───────────
+    createPaymentIntent(data) {
+        return fetch(`${API_BASE_URL}/payments`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    confirmPaymentIntent(paymentIntentId) {
+        return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/confirm`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({}),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    cancelPaymentIntent(paymentIntentId) {
+        return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/cancel`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({}),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ─────────── WALLET (MONEDERO) ───────────
+    payWithWallet(data) {
+        return fetch(`${API_BASE_URL}/payments/wallet`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    rechargeWallet(amount) {
+        return fetch(`${API_BASE_URL}/payments/recharge`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ amount }),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    withdrawWallet(amount) {
+        return fetch(`${API_BASE_URL}/payments/withdraw`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ amount }),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    withdrawBalance(amount) {
+        return this.withdrawWallet(amount);
+    },
+    totalSpent(studentId) {
+        return fetch(`${API_BASE_URL}/payments/student/${studentId}/spent`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ─────────── STUDENT SKILL EVALUATIONS ───────────
+    getStudentSkillEvaluations() {
+        return fetch(`${API_BASE_URL}/student-skill-evaluations`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getStudentSkillEvaluationHistory(studentProfileId) {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/history/${studentProfileId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getStudentSkillEvaluationProgress(studentProfileId) {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/progress/${studentProfileId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getStudentSkillEvaluationReport(studentId) {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/report/${studentId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getStudentSkillEvaluationSummary(studentId) {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/summary/${studentId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    getTeacherStudentEvaluations() {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/teacher/students/evaluations`,
+            {
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    getClassSession(id) {
+        return fetch(`${API_BASE_URL}/class-sessions/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getDrivingSkills() {
+        return fetch(`${API_BASE_URL}/driving-skills`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    createStudentSkillEvaluation(data) {
+        return fetch(`${API_BASE_URL}/class-sessions/complete`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getStudentSkillEvaluationReport(sessionId) {
+        return fetch(
+            `${API_BASE_URL}/student-skill-evaluations/class/${sessionId}/report`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    // ─────────── EXAM CALLS (CONVOCATORIAS DE EXAMEN) ───────────
+    getExamCalls() {
+        return fetch(`${API_BASE_URL}/exam-calls`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getExamCall(id) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    createExamCall(data) {
+        return fetch(`${API_BASE_URL}/exam-calls`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    updateExamCall(id, data) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    cancelExamCall(id) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}/cancel`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    completeExamCall(id, data = {}) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}/complete`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getExamCallStudents(id) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}/students`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    updateExamStudentResult(examCallId, studentId, data) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/result`,
+            {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getReadyForExamStudents() {
+        return fetch(`${API_BASE_URL}/exam-calls/ready-for-exam`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getExamStatistics(teacherId) {
+        return fetch(`${API_BASE_URL}/exam-calls/teacher/${teacherId}/stats`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ─────────── ESTADOS DE EXAMEN ───────────
+    getExamResultStatuses() {
+        return fetch(`${API_BASE_URL}/exam-result-statuses`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getExamCallStatuses() {
+        return fetch(`${API_BASE_URL}/exam-call-statuses`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getStudentExamHistory(studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/student/${studentId}/history`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    toggleConvocation(id) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}/toggle`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    nextConvocation() {
+        return fetch(`${API_BASE_URL}/exam-calls/next-convocations`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    confirmExamCall(id, studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${id}/students/${studentId}/confirm`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    unconfirmExamCall(id, studentId, data = {}) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${id}/students/${studentId}/unconfirm`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    getStudentConvocationHistory(studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/student/${studentId}/convocations`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    deleteExamCall(id) {
+        return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ✔ APROBAR alumno (profesor)
+    approveExamCall(examCallId, studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/approved`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    // ✔ DESAPROBAR alumno (profesor)
+    rejectExamCall(examCallId, studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/unapproved`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    // ─────────── EXAM CALLS: APROBACIONES DEL PROFESOR ───────────
+
+    getApprovedStudents(examCallId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/approved-students/${examCallId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getPendingApprovalStudents(examCallId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/pending-approval-students/${examCallId}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    addApprovedStudent(examCallId, studentId) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/add-approved`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({}),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    removeApprovedStudent(examCallId, studentId, data = {}) {
+        return fetch(
+            `${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/remove-approved`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+    // CARGA DE TIPOS DE GASTOS MENORES
+    getExpenseTypes() {
+        return fetch(`${API_BASE_URL}/expense-types`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ─────────── FUEL LOGS (REPOSTAJES) ───────────
+    getFuelLogs(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return fetch(`${API_BASE_URL}/fuel-logs${query ? "?" + query : ""}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    getFuelLog(id) {
+        return fetch(`${API_BASE_URL}/fuel-logs/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    createFuelLog(data) {
+        return fetch(`${API_BASE_URL}/fuel-logs`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    updateFuelLog(id, data) {
+        return fetch(`${API_BASE_URL}/fuel-logs/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    deleteFuelLog(id) {
+        return fetch(`${API_BASE_URL}/fuel-logs/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // ─────────── VEHICLE EXPENSES (GASTOS MENORES) ───────────
+    getVehicleExpenses(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return fetch(
+            `${API_BASE_URL}/vehicle-expenses${query ? "?" + query : ""}`,
+            {
+                method: "GET",
+                headers: getAuthHeaders(),
+                credentials: "include",
+            },
+        ).then(handleResponse);
+    },
+
+    getVehicleExpense(id) {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    createVehicleExpense(data) {
+        return fetch(`${API_BASE_URL}/vehicle-expenses`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    updateVehicleExpense(id, data) {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+
+    deleteVehicleExpense(id) {
+        return fetch(`${API_BASE_URL}/vehicle-expenses/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    // CUADRO DE MANDO
+    getDashboardResumenGeneral(vehicleId, params = {}) {
+        const url = new URL(`${API_BASE_URL}/dashboard/${vehicleId}/resumen-general`);
+        // params: { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' }
+        if (params.from) url.searchParams.append('from', params.from);
+        if (params.to) url.searchParams.append('to', params.to);
+
+        return fetch(url, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getDashboardCosteMensual(vehicleId, month = null) {
+        const url = new URL(
+            `${API_BASE_URL}/dashboard/${vehicleId}/coste-mensual`,
+        );
+        if (month) url.searchParams.append("month", month);
+
+        return fetch(url, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getDashboardInformeSimple(vehicleId) {
+        return fetch(`${API_BASE_URL}/dashboard/${vehicleId}/informe-simple`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            credentials: "include",
+        }).then(handleResponse);
+    },
+    getDashboardGastoGasolinaTotal(month = null) {
+    const url = new URL(`${API_BASE_URL}/dashboard/gasto-gasolina-total`);
+    if (month) url.searchParams.append('month', month);
 
     return fetch(url, {
         method: 'GET',
@@ -663,388 +1304,11 @@ getWeeklyAvailabilities(params = {}) {
         credentials: 'include'
     }).then(handleResponse);
 },
-
-getTeacherStats(id) {
-    return fetch(`${API_BASE_URL}/teachers/${id}/stats`, {
-        method: 'GET',
+getDashboardIngresosMensuales(vehicleId, month) {
+    return fetch(`${API_BASE_URL}/dashboard/${vehicleId}/ingresos-mensuales?month=${month}`, {
+        method: "GET",
         headers: getAuthHeaders(),
-        credentials: 'include'
+        credentials: "include",
     }).then(handleResponse);
 },
-
-createWeeklyAvailability(data) {
-    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-updateWeeklyAvailability(id, data) {
-    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-deleteWeeklyAvailability(id) {
-    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-toggleWeeklyAvailability(id) {
-    return fetch(`${API_BASE_URL}/teacher-weekly-availabilities/${id}/toggle`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-// ─────────── PAYMENT INTENTS ───────────
-createPaymentIntent(data) {
-    return fetch(`${API_BASE_URL}/payments`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-confirmPaymentIntent(paymentIntentId) {
-    return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/confirm`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({}),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-cancelPaymentIntent(paymentIntentId) {
-    return fetch(`${API_BASE_URL}/payments/${paymentIntentId}/cancel`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({}),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ─────────── WALLET (MONEDERO) ───────────
-payWithWallet(data) {
-    return fetch(`${API_BASE_URL}/payments/wallet`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-rechargeWallet(amount) {
-    return fetch(`${API_BASE_URL}/payments/recharge`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ amount }),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-withdrawWallet(amount) {
-    return fetch(`${API_BASE_URL}/payments/withdraw`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ amount }),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-withdrawBalance(amount) {
-    return this.withdrawWallet(amount);
-},
-totalSpent(studentId) {
-    return fetch(`${API_BASE_URL}/payments/student/${studentId}/spent`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ─────────── STUDENT SKILL EVALUATIONS ───────────
-getStudentSkillEvaluations() {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getStudentSkillEvaluationHistory(studentProfileId) {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/history/${studentProfileId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getStudentSkillEvaluationProgress(studentProfileId) {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/progress/${studentProfileId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getStudentSkillEvaluationReport(studentId) {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/report/${studentId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getStudentSkillEvaluationSummary(studentId) {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/summary/${studentId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getTeacherStudentEvaluations() {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/teacher/students/evaluations`, {
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getClassSession(id) {
-    return fetch(`${API_BASE_URL}/class-sessions/${id}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getDrivingSkills() {
-    return fetch(`${API_BASE_URL}/driving-skills`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-createStudentSkillEvaluation(data) {
-    return fetch(`${API_BASE_URL}/class-sessions/complete`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getStudentSkillEvaluationReport(sessionId) {
-    return fetch(`${API_BASE_URL}/student-skill-evaluations/class/${sessionId}/report`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ─────────── EXAM CALLS (CONVOCATORIAS DE EXAMEN) ───────────
-getExamCalls() {
-    return fetch(`${API_BASE_URL}/exam-calls`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getExamCall(id) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-createExamCall(data) {
-    return fetch(`${API_BASE_URL}/exam-calls`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-updateExamCall(id, data) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-cancelExamCall(id) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/cancel`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-completeExamCall(id, data = {}) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/complete`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getExamCallStudents(id) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/students`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-updateExamStudentResult(examCallId, studentId, data) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/result`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getReadyForExamStudents() {
-    return fetch(`${API_BASE_URL}/exam-calls/ready-for-exam`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getExamStatistics(teacherId) {
-    return fetch(`${API_BASE_URL}/exam-calls/teacher/${teacherId}/stats`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ─────────── ESTADOS DE EXAMEN ───────────
-getExamResultStatuses() {
-    return fetch(`${API_BASE_URL}/exam-result-statuses`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getExamCallStatuses() {
-    return fetch(`${API_BASE_URL}/exam-call-statuses`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getStudentExamHistory(studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/history`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-toggleConvocation(id) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/toggle`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-nextConvocation() {
-    return fetch(`${API_BASE_URL}/exam-calls/next-convocations`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-confirmExamCall(id, studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/students/${studentId}/confirm`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-unconfirmExamCall(id, studentId, data = {}) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}/students/${studentId}/unconfirm`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-getStudentConvocationHistory(studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/student/${studentId}/convocations`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-deleteExamCall(id) {
-    return fetch(`${API_BASE_URL}/exam-calls/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ✔ APROBAR alumno (profesor)
-approveExamCall(examCallId, studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/approved`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-// ✔ DESAPROBAR alumno (profesor)
-rejectExamCall(examCallId, studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/unapproved`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-// ─────────── EXAM CALLS: APROBACIONES DEL PROFESOR ───────────
-
-getApprovedStudents(examCallId) {
-    return fetch(`${API_BASE_URL}/exam-calls/approved-students/${examCallId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-getPendingApprovalStudents(examCallId) {
-    return fetch(`${API_BASE_URL}/exam-calls/pending-approval-students/${examCallId}`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-addApprovedStudent(examCallId, studentId) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/add-approved`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({}),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
-removeApprovedStudent(examCallId, studentId, data = {}) {
-    return fetch(`${API_BASE_URL}/exam-calls/${examCallId}/students/${studentId}/remove-approved`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-        credentials: 'include'
-    }).then(handleResponse);
-},
-
 };

@@ -49,3 +49,12 @@ Route::get('/admin/convocatorias/{id}/editar', function ($id) {return view('admi
 Route::view('/teacher/student-evaluations/{id}/exams', 'exams.history');
 Route::get('/admin/convocatorias/nota', function () {return view('admin.convocatoria_note');});
 Route::get('/student/convocatorias/{id}/cancel', function ($id) {return view('student.convocatoria-cancel', compact('id'));});
+Route::prefix('admin')->group(function () {
+    Route::get('/expenses', function () {return view('admin.expenses-index');})->name('admin.expenses.index');
+    Route::get('/expenses/create', function () {return view('admin.expenses-create');})->name('admin.expenses.create');
+    Route::get('/expenses/{id}/edit', function ($id) {return view('admin.expenses-edit', compact('id'));})->name('admin.expenses.edit');
+});
+Route::get('/admin/fuel', function () {return view('admin.fuel-logs-index');})->name('admin.fuel.index');
+Route::get('/admin/fuel/create', function () {return view('admin.fuel-logs-create');})->name('admin.fuel.create');
+Route::get('/admin/fuel/{id}/edit', function ($id) {return view('admin.fuel-logs-edit', ['id' => $id]);})->name('admin.fuel.edit');
+

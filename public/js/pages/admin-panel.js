@@ -29,49 +29,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 🔥 Listener para mostrar gasto mensual
     document.getElementById("vehicle-select").addEventListener("change", async (e) => {
-        const vehicleId = e.target.value;
-        const box = document.getElementById("admin-gasoline-monthly");
+    const vehicleId = e.target.value;
+    const box = document.getElementById("admin-gasoline-monthly");
 
-        if (!vehicleId) {
-            box.innerHTML = "";
-            return;
-        }
+    if (!vehicleId) {
+        box.innerHTML = "";
+        return;
+    }
 
-        const today = new Date();
-        const month = today.toISOString().slice(0, 7); // "2026-06"
+    UI.setLoading("admin-gasoline-monthly", true);
 
-        UI.setLoading("admin-gasoline-monthly", true);
+    try {
+        const resumen = await Api.getDashboardResumenGeneral(vehicleId);
 
-       try {
-    const data = await Api.getDashboardCosteMensual(vehicleId, month);
-    const ingresos = await Api.getDashboardIngresosMensuales(vehicleId, month);
+        const gasolina = Number(resumen.fuel_expenses) || 0;
+        const menores  = Number(resumen.other_expenses) || 0;
+        const total    = Number(resumen.total_expenses) || 0;
+        const income   = Number(resumen.income) || 0;
 
-    const gasolina = Number(data.fuel_expenses) || 0;
-    const menores  = Number(data.other_expenses) || 0;
-    const total    = gasolina + menores;
-    const income   = Number(ingresos.income) || 0;
+        const rentable = resumen.is_profitable;
 
-    const rentable = income - total > 0;
+        box.innerHTML = `
+            <p><strong>${gasolina.toFixed(2)} €</strong> gastados en gasolina desde el inicio.</p>
+            <p><strong>${menores.toFixed(2)} €</strong> gastados en mantenimiento menor.</p>
+            <p><strong>${total.toFixed(2)} €</strong> gasto total acumulado.</p>
+            <p><strong>${income.toFixed(2)} €</strong> ingresados por clases.</p>
 
-    box.innerHTML = `
-        <p><strong>${gasolina.toFixed(2)} €</strong> gastados en gasolina este mes.</p>
-        <p><strong>${menores.toFixed(2)} €</strong> gastados en mantenimiento menor.</p>
-        <p><strong>${total.toFixed(2)} €</strong> gasto total del mes.</p>
-        <p><strong>${income.toFixed(2)} €</strong> ingresados por clases.</p>
+            <p style="font-size:1.2rem; font-weight:bold; color:${rentable ? 'green' : 'red'};">
+                ${rentable ? '🚀 RENTABLE (acumulado)' : '⚠️ NO RENTABLE (acumulado)'}
+            </p>
+        `;
+    } catch (err) {
+        console.error(err);
+        box.innerHTML = `<p class="text-danger">Error cargando rentabilidad.</p>`;
+    } finally {
+        UI.setLoading("admin-gasoline-monthly", false);
+    }
+});
 
-        <p style="font-size:1.2rem; font-weight:bold; color:${rentable ? 'green' : 'red'};">
-            ${rentable ? '🚀 RENTABLE' : '⚠️ NO RENTABLE'}
-        </p>
-    `;
-
-
-        } catch (err) {
-            console.error(err);
-            box.innerHTML = `<p class="text-danger">Error cargando gasto mensual.</p>`;
-        } finally {
-            UI.setLoading("admin-gasoline-monthly", false);
-        }
-    });
 
     // ─────────────────────────────────────────────
     // FUNCIÓN PRINCIPAL DEL PANEL

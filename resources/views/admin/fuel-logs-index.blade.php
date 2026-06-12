@@ -1,74 +1,76 @@
 @extends('layouts.admin')
 
-@section('title', 'Gastos gasolina')
+@section('title', 'Gasto de gasolina por periodo')
 @section('main-id', 'admin-fuel-logs-index')
 
 @section('content')
 
 <div class="admin-panel">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Gasto de gasolina por mes</h2>
+    <h2 class="mb-4">Gasto de gasolina por periodo</h2>
 
-        <a href="{{ route('admin.fuel.create') }}" class="btn btn-primary">
-            Crear registro
-        </a>
+    {{-- FILTRO POR PERIODO --}}
+    <div class="card card-body mb-4">
+        <h5 class="mb-3">Filtrar por periodo</h5>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Desde</label>
+                <input type="datetime-local" id="date-from" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Hasta</label>
+                <input type="datetime-local" id="date-to" class="form-control">
+            </div>
+        </div>
+
+        <button id="btn-filter" class="btn btn-primary mt-3 w-100">
+            Aplicar filtro
+        </button>
     </div>
 
-    {{-- Selector de mes --}}
+    {{-- TABLA --}}
     <div class="card card-body mb-4">
-        <h5>Selecciona mes</h5>
-        <input type="month" id="month-select" class="form-control">
-    </div>
+        <h5 class="mb-3">Registros</h5>
 
-    {{-- Tabla de coches del mes --}}
-    <div class="card card-body mb-4">
-        <h5 class="mb-3">Coches con consumo este mes</h5>
+        <div id="loader-table" class="text-muted small d-none mb-2">
+            Cargando registros...
+        </div>
 
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-sm align-middle">
                 <thead>
                     <tr>
                         <th>Vehículo</th>
-                        <th>Litros gastados</th>
+                        <th>Fecha</th>
+                        <th>Litros</th>
                         <th>Kilómetros</th>
+                        <th>Dinero (€)</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
-
                 <tbody id="fuel-logs-table">
-
-                    {{-- Mensaje inicial --}}
-                    <tr id="initial-message">
-                        <td colspan="4" class="text-muted text-center">
-                            Selecciona un mes.
+                    <tr>
+                        <td colspan="6" class="text-muted text-center">
+                            Selecciona un periodo y pulsa "Aplicar filtro".
                         </td>
                     </tr>
-
-                    {{-- Loader en el mismo sitio --}}
-                    <tr id="loader-table" class="d-none">
-                        <td colspan="4" class="text-center">
-                            Cargando datos...
-                        </td>
-                    </tr>
-
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Gráfica 1 --}}
-    <div class="card card-body mb-4 d-none" id="chart-months-wrapper">
-        <h5>Consumo de gasolina del mes seleccionado</h5>
-        <div id="loader-months" class="text-center py-3 d-none">Cargando gráfica...</div>
-        <canvas id="chart-months"></canvas>
+    {{-- GRÁFICA 1: Litros por vehículo en el periodo --}}
+    <div class="card card-body mb-4">
+        <h5 class="mb-3">Litros por vehículo (periodo seleccionado)</h5>
+        <canvas id="chart-cars-period" height="120"></canvas>
     </div>
 
-    {{-- Gráfica 2 --}}
+    {{-- GRÁFICA 2: Consumo total histórico --}}
     <div class="card card-body">
-        <h5>Consumo total por vehículo (histórico)</h5>
-        <div id="loader-cars" class="text-center py-3">Cargando gráfica...</div>
-        <canvas id="chart-cars"></canvas>
+        <h5 class="mb-3">Consumo total por vehículo (histórico)</h5>
+        <canvas id="chart-cars-global" height="120"></canvas>
     </div>
 
 </div>

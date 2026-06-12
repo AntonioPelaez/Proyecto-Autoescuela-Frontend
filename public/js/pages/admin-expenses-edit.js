@@ -81,19 +81,22 @@ existingExpenses.forEach(exp => {
 
 
     // ---------------------------------------------------------
-// 3. Guardar cambios reales
-// ---------------------------------------------------------
-saveBtn.addEventListener("click", async () => {
+    // 3. Guardar cambios reales
+    // ---------------------------------------------------------
+    saveBtn.addEventListener("click", async () => {
 
     try {
 
         for (let input of document.querySelectorAll("input[data-type-id]")) {
 
-            const typeId = Number(input.dataset.typeId);
-            const amount = Number(input.value);
-            const desc   = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
+            const normalize = v => (v === null || v === undefined || v === "null") ? "" : v;
 
-            // Si no hay cantidad → no hacemos nada
+const amountValue = normalize(existing.amount);
+const descValue   = normalize(existing.description);
+
+            const desc = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
+
+            // Si no hay cantidad → NO hacemos nada
             if (!amount || amount <= 0) continue;
 
             const existing = expenseMap[typeId];

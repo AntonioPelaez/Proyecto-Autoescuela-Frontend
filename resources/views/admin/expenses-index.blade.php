@@ -7,35 +7,43 @@
 
 <div class="admin-panel">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Gastos por vehículo</h2>
+    <h2 class="mb-4">Gastos de vehículos</h2>
 
-        <a href="{{ route('admin.expenses.create') }}" class="btn btn-primary">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Listado de gastos</h5>
+        <a href="{{ route('admin.expenses.create') }}" class="btn btn-primary btn-sm">
             Crear gasto
         </a>
     </div>
 
-    {{-- Paso 1: Vehículo --}}
-    <div class="card card-body mb-4">
-        <h5 class="mb-3">Paso 1: Elige Vehículo</h5>
+    <div class="card card-body">
 
-        <select id="vehicle-select" class="form-select">
-            <option value="" disabled selected>Selecciona vehículo</option>
-        </select>
-    </div>
+        <div id="loader-expenses" class="text-muted small d-none mb-2">
+            Cargando gastos...
+        </div>
 
-    {{-- Paso 2: Clase --}}
-    <div class="card card-body mb-4">
-        <h5 class="mb-3">Paso 2: Elige Clase</h5>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vehículo</th>
+                        <th>Fecha</th>
+                        <th>Importe (€)</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-table-body">
+                    <tr>
+                        <td colspan="6" class="text-muted text-center">
+                            Cargando datos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <select id="class-select" class="form-select" disabled>
-            <option value="" disabled selected>Selecciona clase</option>
-        </select>
-    </div>
-
-    {{-- Paso 3: Gastos --}}
-    <div id="vehicle-expenses-container">
-        <p class="text-muted">Selecciona vehículo y clase para ver los gastos.</p>
     </div>
 
 </div>

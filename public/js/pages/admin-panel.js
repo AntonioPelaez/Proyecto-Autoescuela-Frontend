@@ -34,6 +34,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fromRaw = document.getElementById("date-from").value; // formato dd/mm/YYYY
     const toRaw   = document.getElementById("date-to").value;   // formato dd/mm/YYYY
 
+    function toDDMMYYYY(value) {
+    if (!value) return null;
+    const [year, month, day] = value.split("-");
+    return `${day}/${month}/${year}`;
+    }
+
+    const from = toDDMMYYYY(fromRaw);
+    const to   = toDDMMYYYY(toRaw);
+
+
+
     if (!vehicleId) {
         box.innerHTML = "<p class='text-danger'>Selecciona un vehículo.</p>";
         return;
@@ -45,16 +56,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         let resumen;
 
         // 🔧 Normalizar fechas del input (dd/mm/YYYY → YYYY-MM-DD)
-        const normalizeDate = (value) => {
-            if (!value) return null;
-            const parts = value.split("/");
-            if (parts.length !== 3) return null;
-            const [day, month, year] = parts;
-            return `${year}-${month}-${day}`;
-        };
-
-        const from = normalizeDate(fromRaw);
-        const to   = normalizeDate(toRaw);
+        const from = fromRaw; // ya viene en YYYY-MM-DD
+        const to   = toRaw;
         const hasRange = Boolean(from && to);
 
         // Si hay rango válido → usarlo

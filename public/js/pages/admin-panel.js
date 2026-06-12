@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const periodoHtml = `<p><strong>Periodo:</strong> ${fromRaw} → ${toRaw}</p>`;
                     box.innerHTML = `
                         ${periodoHtml}
-                        <p class="text-warning">No existen datos para ese periodo.</p>
+                        <p class="text-red-500">No existen datos para ese periodo.</p>
                     `;
                     UI.setLoading("admin-gasoline-monthly", false);
                     return;
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             box.innerHTML = `
                 ${periodoHtml}
-                <p class="text-warning">No existen datos para ese periodo.</p>
+                <p class="text-red-500">No existen datos para ese periodo.</p>
             `;
             UI.setLoading("admin-gasoline-monthly", false);
             return;

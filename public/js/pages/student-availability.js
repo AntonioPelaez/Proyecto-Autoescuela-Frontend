@@ -38,9 +38,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     teacherSection.style.display = "none";
     summaryBox.style.display = "none";
 
-    // ============================
-    // 0) Cargar alumno
-    // ============================
     try {
         const me = await Api.getMe();
         student = {
@@ -51,9 +48,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error("Error cargando datos iniciales:", err);
     }
 
-    // ============================
-    // 1) Cargar poblaciones
-    // ============================
     loadTowns();
 
     async function loadTowns() {
@@ -83,9 +77,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // ============================
-    // 2) Cargar clases confirmadas
-    // ============================
     async function loadMyClasses() {
         try {
             const result = await Api.getMyClasses();
@@ -124,9 +115,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadMyClasses();
 
-    // ============================
-    // 3) Buscar horarios
-    // ============================
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -143,17 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadSlots(townSelect.value, dateSelect.value);
     });
 
-    // ============================
-    // FUNCIÓN CLAVE: PROFESORES LIBRES POR SLOT
-    // ============================
     function getFreeTeacherIdsForSlot(slot) {
-    return slot.free_teacher_ids || [];
-}
+        return slot.free_teacher_ids || [];
+    }
 
-
-    // ============================
-    // 4) Cargar horarios + profesores
-    // ============================
     async function loadSlots(townId, date) {
         try {
             showState(messageBox, "info", "Buscando horarios...");
@@ -182,30 +163,36 @@ document.addEventListener("DOMContentLoaded", async () => {
                 );
             }
 
-           // 🔥 Agrupar por hora de inicio
-const grouped = {};
+            // 🔥 AGRUPACIÓN CORREGIDA
+            const grouped = {};
 
-for (const s of rawSlots) {
-    const key = s.start; // solo la hora, sin profesor
+            for (const s of rawSlots) {
+                const key = s.start;
 
-    if (!grouped[key]) {
-        grouped[key] = {
-            start: s.start,
-            end: s.end,
-            teacher_ids: [],
-            free_teacher_ids: [],
-        };
-    }
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        start: s.start,
+                        end: s.end,
+                        teacher_ids: new Set(),
+                        free_teacher_ids: new Set(),
+                    };
+                }
 
-    grouped[key].teacher_ids.push(s.teacher_profile_id);
+                grouped[key].teacher_ids.add(s.teacher_profile_id);
 
-    if (!s.reserved) {
-        grouped[key].free_teacher_ids.push(s.teacher_profile_id);
-    }
-}
+                if (!s.reserved) {
+                    grouped[key].free_teacher_ids.add(s.teacher_profile_id);
+                }
+            }
 
-// 🔥 Convertir a array ordenado
-const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.start));
+            const slots = Object.values(grouped)
+                .map((s) => ({
+                    start: s.start,
+                    end: s.end,
+                    teacher_ids: [...s.teacher_ids],
+                    free_teacher_ids: [...s.free_teacher_ids],
+                }))
+                .sort((a, b) => a.start.localeCompare(b.start));
 
             allTeachers = Array.isArray(teachersResult)
                 ? teachersResult
@@ -247,7 +234,7 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
 
             for (const slot of slots) {
                 const hora = slot.start.slice(11, 16);
-                const freeTeacherIds = getFreeTeacherIdsForSlot(slot);
+                const freeTeacherIds = slot.free_teacher_ids;
                 slot._availableTeacherIds = freeTeacherIds;
 
                 const btn = document.createElement("button");
@@ -292,9 +279,6 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
         }
     }
 
-    // ============================
-    // 5) Paso 3 — SELECT de profesor
-    // ============================
     async function getTeacherStatsCached(teacherId) {
         if (teacherStatsCache.has(teacherId)) {
             return teacherStatsCache.get(teacherId);
@@ -367,9 +351,6 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
         teacherSection.style.display = "block";
     }
 
-    // ============================
-    // 6) Resumen
-    // ============================
     function clearSummary() {
         summaryDetails.innerHTML = "";
         summaryBox.style.display = "none";
@@ -404,9 +385,6 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
         summaryBox.style.display = "block";
     }
 
-    // ============================
-    // 7) Confirmar reserva
-    // ============================
     confirmForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
@@ -445,22 +423,15 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
             popup.classList.add("hidden");
             showState(messageBox, "info", "Verificando saldo...");
 
-            // Obtener saldo del estudiante
             const studentData = await Api.getMe();
             const studentBalance = parseFloat(studentData.student_profile?.wallet?.balance ?? 0);
             const classPrice = parseFloat(bookingData.price);
 
-
-
-            // Guardar datos en sessionStorage
             sessionStorage.setItem("pendingBooking", JSON.stringify(bookingData));
 
-            // Verificar saldo
             if (studentBalance >= classPrice) {
-                // Hay saldo suficiente, ir a confirmación
                 window.location.href = "/student/confirm-booking";
             } else {
-                // No hay saldo suficiente, ir a recarga
                 sessionStorage.setItem("redirectAfterRecharge", "/student/confirm-booking");
                 window.location.href = "/student/recharge-form";
             }
@@ -480,9 +451,6 @@ const slots = Object.values(grouped).sort((a, b) => a.start.localeCompare(b.star
         summaryBox.style.display = "none";
     });
 
-    // ============================
-    // 8) Cancelar selección
-    // ============================
     cancelBtn.addEventListener("click", () => {
         selectedSlot = null;
         selectedTeacher = null;

@@ -32,7 +32,14 @@
 
     {{-- TABLA --}}
     <div class="card card-body mb-4">
-        <h5 class="mb-3">Registros</h5>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Registros</h5>
+
+            <a href="{{ route('admin.fuel.create') }}" class="btn btn-primary btn-sm">
+                Crear registro
+            </a>
+        </div>
 
         <div id="loader-table" class="text-muted small d-none mb-2">
             Cargando registros...

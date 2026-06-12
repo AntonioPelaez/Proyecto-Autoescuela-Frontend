@@ -1,133 +1,67 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const expenseRows = document.getElementById("expense-rows");
-    const saveBtn = document.getElementById("save-expenses");
+    const expenseId = document.getElementById("expense_id").value;
+    const vehicleSelect = document.getElementById("vehicle_id");
 
-    const classSessionId = window.classSessionId;
-
-    const expenseTypes = [
-        "Lavado de coches",
-        "Reparación del chasis",
-        "Sustitución de la batería",
-        "Arreglo de la correa de distribución",
-        "Mantenimiento de cristales",
-        "Mantenimiento de las luces",
-        "Arreglo del panel de instrumentos",
-        "Mantenimiento de asientos y cinturones de seguridad",
-        "Sustitución de ruedas",
-        "Mantenimiento de la suspensión del coche",
-        "Mantenimiento de los frenos del coche",
-        "Mantenimiento de los pedales del coche",
-        "Mantenimiento del embrague y acelerador del coche",
-        "Mantenimiento del motor del coche",
-        "Revisión de líquidos (limpiaparabrisas y refrigerante)",
-        "Sustitución del aceite del coche"
-    ];
-
-    // ---------------------------------------------------------
-    // 1. Cargar gastos existentes desde el backend
-    // ---------------------------------------------------------
-    let existingExpenses = [];
-
+    // -----------------------------
+    // 1. Cargar vehículos
+    // -----------------------------
     try {
-        const response = await Api.getVehicleExpense(classSessionId);
+        let vehiclesResponse = await Api.getVehicles();
 
-existingExpenses = response.expenses || [];
-window.vehicleId = response.vehicle_id; // 🔥 AÑADIDO
+        const vehicles = Array.isArray(vehiclesResponse)
+            ? vehiclesResponse
+            : (vehiclesResponse.vehicles || vehiclesResponse.data || []);
 
+        vehicles.forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.id;
+            opt.textContent = `${v.brand} ${v.model} — ${v.plate_number}`;
+            vehicleSelect.appendChild(opt);
+        });
 
-
-    } catch (e) {
-        console.error("Error cargando gastos existentes:", e);
+    } catch (err) {
+        console.error("Error cargando vehículos:", err);
+        alert("Error cargando vehículos");
     }
 
-    // Convertimos a un mapa: { expense_type_id: {amount, description} }
-  const expenseMap = {};
-existingExpenses.forEach(exp => {
-    expenseMap[exp.expense_type_id] = exp; // exp incluye el ID real
-});
-
-
-    // ---------------------------------------------------------
-    // 2. Generar filas + rellenar datos existentes
-    // ---------------------------------------------------------
-    expenseTypes.forEach((name, index) => {
-
-    const typeId = index + 1;
-
-    const row = document.createElement("tr");
-
-    const existing = expenseMap[typeId] || {};
-
-    const amountValue = existing.amount ?? "";
-    const descValue   = existing.description ?? "";
-
-    row.innerHTML = `
-        <td>${name}</td>
-        <td>
-            <input type="number" step="0.01" class="form-control"
-                   data-type-id="${typeId}"
-                   value="${amountValue}">
-        </td>
-        <td>
-            <input type="text" class="form-control"
-                   data-desc-id="${typeId}"
-                   value="${descValue}">
-        </td>
-    `;
-
-    expenseRows.appendChild(row);
-});
-
-
-    // ---------------------------------------------------------
-    // 3. Guardar cambios reales
-    // ---------------------------------------------------------
-    saveBtn.addEventListener("click", async () => {
-
+    // -----------------------------
+    // 2. Cargar datos del gasto
+    // -----------------------------
     try {
+        const exp = await Api.getVehicleExpense(expenseId);
 
-        for (let input of document.querySelectorAll("input[data-type-id]")) {
+        document.getElementById("amount").value = exp.amount;
+        document.getElementById("description").value = exp.description ?? "";
+        document.getElementById("date").value = exp.created_at.substring(0, 10);
+        vehicleSelect.value = exp.vehicle_id;
 
-            const normalize = v => (v === null || v === undefined || v === "null") ? "" : v;
+    } catch (err) {
+        console.error("Error cargando gasto:", err);
+        alert("Error cargando datos del gasto");
+    }
 
-const amountValue = normalize(existing.amount);
-const descValue   = normalize(existing.description);
+    // -----------------------------
+    // 3. Guardar cambios
+    // -----------------------------
+    document.getElementById("update-expense").addEventListener("click", async () => {
 
-            const desc = document.querySelector(`input[data-desc-id="${typeId}"]`).value;
+        const data = {
+            vehicle_id: vehicleSelect.value,
+            amount: Number(document.getElementById("amount").value),
+            description: document.getElementById("description").value,
+            created_at: document.getElementById("date").value
+        };
 
-            // Si no hay cantidad → NO hacemos nada
-            if (!amount || amount <= 0) continue;
+        try {
+            await Api.updateVehicleExpense(expenseId, data);
+            alert("Gasto actualizado correctamente");
+            window.location.href = "/admin/expenses";
 
-            const existing = expenseMap[typeId];
-
-            if (existing) {
-                // 🔥 ACTUALIZAR
-                await Api.updateVehicleExpense(existing.id, {
-                    amount: amount,
-                    description: desc
-                });
-
-            } else {
-                // 🔥 CREAR
-                await Api.createVehicleExpense({
-                    class_session_id: classSessionId,
-                    expense_type_id: typeId,
-                    vehicle_id: window.vehicleId,
-                    amount: amount,
-                    description: desc
-                });
-            }
+        } catch (err) {
+            console.error("Error actualizando gasto:", err);
+            alert("Error actualizando gasto");
         }
-
-        alert("Gastos actualizados correctamente");
-        window.location.href = "/admin/expenses";
-
-    } catch (e) {
-        console.error("Error guardando gastos:", e);
-        alert("Error guardando los gastos");
-    }
-});
-
+    });
 
 });

@@ -1165,14 +1165,6 @@ const Api = {
             },
         ).then(handleResponse);
     },
-    // CARGA DE TIPOS DE GASTOS MENORES
-    getExpenseTypes() {
-        return fetch(`${API_BASE_URL}/expense-types`, {
-            method: "GET",
-            headers: getAuthHeaders(),
-            credentials: "include",
-        }).then(handleResponse);
-    },
     // ─────────── FUEL LOGS (REPOSTAJES) ───────────
     getFuelLogs(params = {}) {
         const query = new URLSearchParams(params).toString();

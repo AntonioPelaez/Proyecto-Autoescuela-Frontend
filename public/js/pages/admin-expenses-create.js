@@ -3,9 +3,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const vehicleSelect = document.getElementById("vehicle_id");
     const saveBtn = document.getElementById("save-expense");
 
-    // Cargar vehículos
+    // -----------------------------
+    // 1. Cargar vehículos
+    // -----------------------------
     try {
-        const vehicles = await Api.getVehicles();
+        let vehiclesResponse = await Api.getVehicles();
+
+        const vehicles = Array.isArray(vehiclesResponse)
+            ? vehiclesResponse
+            : (vehiclesResponse.vehicles || vehiclesResponse.data || []);
 
         vehicles.forEach(v => {
             const opt = document.createElement("option");
@@ -19,7 +25,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Error cargando vehículos");
     }
 
-    // Guardar gasto
+    // -----------------------------
+    // 2. Guardar gasto
+    // -----------------------------
     saveBtn.addEventListener("click", async () => {
 
         const data = {

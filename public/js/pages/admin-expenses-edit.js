@@ -3,16 +3,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     const expenseId = document.getElementById("expense_id").value;
     const vehicleSelect = document.getElementById("vehicle_id");
 
-    // Cargar vehículos
-    const vehicles = await Api.getVehicles();
-    vehicles.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v.id;
-        opt.textContent = `${v.brand} ${v.model} — ${v.plate_number}`;
-        vehicleSelect.appendChild(opt);
-    });
+    // -----------------------------
+    // 1. Cargar vehículos
+    // -----------------------------
+    try {
+        let vehiclesResponse = await Api.getVehicles();
 
-    // Cargar datos del gasto
+        const vehicles = Array.isArray(vehiclesResponse)
+            ? vehiclesResponse
+            : (vehiclesResponse.vehicles || vehiclesResponse.data || []);
+
+        vehicles.forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.id;
+            opt.textContent = `${v.brand} ${v.model} — ${v.plate_number}`;
+            vehicleSelect.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error("Error cargando vehículos:", err);
+        alert("Error cargando vehículos");
+    }
+
+    // -----------------------------
+    // 2. Cargar datos del gasto
+    // -----------------------------
     try {
         const exp = await Api.getVehicleExpense(expenseId);
 
@@ -26,7 +41,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert("Error cargando datos del gasto");
     }
 
-    // Guardar cambios
+    // -----------------------------
+    // 3. Guardar cambios
+    // -----------------------------
     document.getElementById("update-expense").addEventListener("click", async () => {
 
         const data = {

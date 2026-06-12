@@ -1,5 +1,3 @@
-console.log("🔥 JS PERIODO CARGADO");
-
 document.addEventListener("DOMContentLoaded", () => {
 
     const dateFrom = document.getElementById("date-from");
@@ -9,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tableBody = document.getElementById("fuel-logs-table");
 
     // -------------------------------
-    // GRÁFICA 1: periodo
+    // GRÁFICA 1: periodo (L/km)
     // -------------------------------
     const ctxPeriod = document.getElementById("chart-cars-period").getContext("2d");
     const chartPeriod = new Chart(ctxPeriod, {
@@ -17,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data: {
             labels: [],
             datasets: [{
-                label: "Litros",
+                label: "Litros por km",
                 data: [],
                 backgroundColor: "#0d6efd"
             }]
@@ -29,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // -------------------------------
-    // GRÁFICA 2: global
+    // GRÁFICA 2: global (L/km)
     // -------------------------------
     const ctxGlobal = document.getElementById("chart-cars-global").getContext("2d");
     const chartGlobal = new Chart(ctxGlobal, {
@@ -37,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data: {
             labels: [],
             datasets: [{
-                label: "Litros totales",
+                label: "Consumo L/km",
                 data: [],
                 backgroundColor: "#ffc107"
             }]
@@ -131,14 +129,15 @@ function renderTable(logs) {
 }
 
 // -------------------------------
-// GRÁFICA 1: periodo
+// GRÁFICA 1: periodo (L/km)
 // -------------------------------
 function renderChartPeriod(logs, chart) {
     const totals = {};
 
     logs.forEach(l => {
         const name = `${l.vehicle.brand} ${l.vehicle.model}`;
-        totals[name] = (totals[name] || 0) + Number(l.liters);
+        const ratio = Number(l.liters) / Number(l.kilometers || 1);
+        totals[name] = (totals[name] || 0) + ratio;
     });
 
     chart.data.labels = Object.keys(totals);
@@ -147,7 +146,7 @@ function renderChartPeriod(logs, chart) {
 }
 
 // -------------------------------
-// GRÁFICA 2: global
+// GRÁFICA 2: global (L/km)
 // -------------------------------
 async function loadGlobalChart(chart) {
     try {
@@ -160,7 +159,8 @@ async function loadGlobalChart(chart) {
 
         logs.forEach(l => {
             const name = `${l.vehicle.brand} ${l.vehicle.model}`;
-            totals[name] = (totals[name] || 0) + Number(l.liters);
+            const ratio = Number(l.liters) / Number(l.kilometers || 1);
+            totals[name] = (totals[name] || 0) + ratio;
         });
 
         chart.data.labels = Object.keys(totals);

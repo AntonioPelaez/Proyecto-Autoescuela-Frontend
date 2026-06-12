@@ -110,31 +110,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // 2. HAY DATOS → MOSTRAR RENTABILIDAD
-        const gasolina = Number(resumen.fuel_expenses) || 0;
-        const menores  = Number(resumen.other_expenses) || 0;
-        const total    = Number(resumen.total_expenses) || 0;
-        const income   = Number(resumen.income) || 0;
-        const rentable = resumen.is_profitable;
+const gasolina = Number(resumen.fuel_expenses) || 0;
+const menores  = Number(resumen.other_expenses) || 0;
+const total    = Number(resumen.total_expenses) || 0;
+const income   = Number(resumen.income) || 0;
+const rentable = resumen.is_profitable;
 
-        let periodo = "";
+// 🔥 NUEVO: cálculo de rentabilidad real
+const profit = income - total;
 
-        if (resumen.period_from && resumen.period_to) {
-            periodo = `<p><strong>Periodo:</strong> ${resumen.period_from} → ${resumen.period_to}</p>`;
-        } else if (resumen.since) {
-            periodo = `<p><strong>Desde:</strong> ${resumen.since}</p>`;
-        }
+let periodo = "";
 
-        box.innerHTML = `
-            ${periodo}
-            <p><strong>${gasolina.toFixed(2)} €</strong> gastados en gasolina.</p>
-            <p><strong>${menores.toFixed(2)} €</strong> gastados en mantenimiento menor.</p>
-            <p><strong>${total.toFixed(2)} €</strong> gasto total.</p>
-            <p><strong>${income.toFixed(2)} €</strong> ingresados por clases.</p>
+if (resumen.period_from && resumen.period_to) {
+    periodo = `<p><strong>Periodo:</strong> ${resumen.period_from} → ${resumen.period_to}</p>`;
+} else if (resumen.since) {
+    periodo = `<p><strong>Desde:</strong> ${resumen.since}</p>`;
+}
 
-            <p style="font-size:1.2rem; font-weight:bold; color:${rentable ? 'green' : 'red'};">
-                ${rentable ? '🚀 RENTABLE' : '⚠️ NO RENTABLE'}
-            </p>
-        `;
+box.innerHTML = `
+    ${periodo}
+    <p><strong>${gasolina.toFixed(2)} €</strong> gastados en gasolina.</p>
+    <p><strong>${menores.toFixed(2)} €</strong> gastados en mantenimiento menor.</p>
+    <p><strong>${total.toFixed(2)} €</strong> gasto total.</p>
+    <p><strong>${income.toFixed(2)} €</strong> ingresados por clases.</p>
+
+    <!-- 🔥 NUEVO: Rentabilidad exacta -->
+    <p><strong style="color:${profit >= 0 ? 'green' : 'red'};">
+        ${profit.toFixed(2)} €
+    </strong> de rentabilidad.</p>
+
+    <p style="font-size:1.2rem; font-weight:bold; color:${rentable ? 'green' : 'red'};">
+        ${rentable ? '🚀 RENTABLE' : '⚠️ NO RENTABLE'}
+    </p>
+`;
     } catch (err) {
         console.error(err);
         box.innerHTML = `<p class="text-danger">Error cargando rentabilidad.</p>`;

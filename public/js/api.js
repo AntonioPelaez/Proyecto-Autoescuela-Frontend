@@ -1263,8 +1263,13 @@ const Api = {
         }).then(handleResponse);
     },
     // CUADRO DE MANDO
-    getDashboardResumenGeneral(vehicleId) {
-        return fetch(`${API_BASE_URL}/dashboard/${vehicleId}/resumen-general`, {
+    getDashboardResumenGeneral(vehicleId, params = {}) {
+        const url = new URL(`${API_BASE_URL}/dashboard/${vehicleId}/resumen-general`);
+        // params: { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD' }
+        if (params.from) url.searchParams.append('from', params.from);
+        if (params.to) url.searchParams.append('to', params.to);
+
+        return fetch(url, {
             method: "GET",
             headers: getAuthHeaders(),
             credentials: "include",
